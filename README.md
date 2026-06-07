@@ -1,1 +1,1 @@
-# ai-skill-gap-anlayzer
+# ai-skill-gap-analyzer
