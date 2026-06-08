@@ -591,6 +591,7 @@ st.markdown("""
     <div class="nav-logo">TalentPulse <span>India</span></div>
     <div class="nav-tag">Tech Market Intelligence</div>
 </div>
+<div class="page-wrap"><div class="filter-bar">
 """, unsafe_allow_html=True)
 
 # ─────────────────────────────────────────────
@@ -614,7 +615,6 @@ df["experience_level"] = df["experience_level"].apply(normalise_exp)
 # ─────────────────────────────────────────────
 #  FILTER ROW
 # ─────────────────────────────────────────────
-st.markdown('<div class="page-wrap"><div class="filter-bar">', unsafe_allow_html=True)
 fc1, fc2, fc3 = st.columns([2, 2, 1])
 with fc1:
     role_options = ["All Roles"] + sorted(df["title"].dropna().unique().tolist())
