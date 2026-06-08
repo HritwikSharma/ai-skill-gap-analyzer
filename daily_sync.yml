@@ -1,0 +1,28 @@
+name: Daily Job Data Sync Pipeline
+
+on:
+  schedule:
+    # Triggers every day at 12:00 AM UTC (5:30 AM IST)
+    - cron: '0 0 * * *'
+  workflow_dispatch: # Gives you a manual button on GitHub to click anytime
+
+jobs:
+  run-pipeline:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Repository Code
+      uses: actions/checkout@v3
+
+    - name: Set up Python Environment
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Install Dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install requests psycopg2-binary
+
+    - name: Run Data Cleaning and Preprocessing Pipeline
+      run: python pipeline.py
