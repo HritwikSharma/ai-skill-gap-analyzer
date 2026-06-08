@@ -4,7 +4,7 @@ on:
   schedule:
     # Triggers every day at 12:00 AM UTC (5:30 AM IST)
     - cron: '0 0 * * *'
-  workflow_dispatch: # Gives you a manual button on GitHub to click anytime
+  workflow_dispatch:
 
 jobs:
   run-pipeline:
