@@ -614,9 +614,7 @@ df["experience_level"] = df["experience_level"].apply(normalise_exp)
 # ─────────────────────────────────────────────
 #  FILTER ROW
 # ─────────────────────────────────────────────
-st.markdown('<div class="page-wrap">', unsafe_allow_html=True)
-
-st.markdown('<div class="filter-bar">', unsafe_allow_html=True)
+st.markdown('<div class="page-wrap"><div class="filter-bar">', unsafe_allow_html=True)
 fc1, fc2, fc3 = st.columns([2, 2, 1])
 with fc1:
     role_options = ["All Roles"] + sorted(df["title"].dropna().unique().tolist())
@@ -627,7 +625,7 @@ with fc2:
 with fc3:
     exp_options = ["All Experience"] + ["Internship", "<1 Year", "1-5 Years", ">5 Years"]
     selected_exp = st.selectbox("Experience", exp_options, label_visibility="collapsed")
-st.markdown('</div>', unsafe_allow_html=True)
+st.markdown('</div></div>', unsafe_allow_html=True)
 
 # Apply filters
 fdf = df.copy()
@@ -691,8 +689,7 @@ with tab_market:
 
     # ── Chart 1: Top 15 Technical Skills ──
     with c1:
-        st.markdown('<div class="chart-card">', unsafe_allow_html=True)
-        st.markdown('<div class="chart-title">Top 15 In-Demand Technical Skills</div>', unsafe_allow_html=True)
+        st.markdown('<div class="chart-card"><div class="chart-title">Top 15 In-Demand Technical Skills</div>', unsafe_allow_html=True)
 
         all_tech = []
         for sl in fdf["tech_skills_found"].dropna():
@@ -734,11 +731,8 @@ with tab_market:
         else:
             st.info("No skill data available for this filter set.")
 
-        st.markdown('</div>', unsafe_allow_html=True)
-
     # ── Chart 2: Experience Level Donut ──
     with c2:
-        st.markdown('<div class="chart-card">', unsafe_allow_html=True)
         st.markdown('<div class="chart-title">Experience Level Distribution</div>', unsafe_allow_html=True)
 
         # Only the 4 buckets; Not Specified already mapped to None above
@@ -782,8 +776,6 @@ with tab_market:
         else:
             st.info("No experience data available.")
 
-        st.markdown('</div>', unsafe_allow_html=True)
-
 
 # ══════════════════════════════════════════════
 #  TAB 2 — SALARY INSIGHTS
@@ -796,7 +788,6 @@ with tab_salary:
     if sal_fdf.empty:
         st.info("Salary data is not disclosed in enough listings for this filter.")
     else:
-        st.markdown('<div class="chart-card">', unsafe_allow_html=True)
         st.markdown('<div class="chart-title">Overall Salary Distribution (LPA)</div>', unsafe_allow_html=True)
 
         fig_hist = go.Figure(go.Histogram(
@@ -822,7 +813,6 @@ with tab_salary:
             xaxis=dict(gridcolor="#EEEDE9", linecolor="#E0DFDC", tickfont=dict(size=11, color="#191919")),
         )
         st.plotly_chart(fig_hist, use_container_width=True)
-        st.markdown('</div>', unsafe_allow_html=True)
 
 
 # ══════════════════════════════════════════════
@@ -832,7 +822,6 @@ with tab_salary:
 # ══════════════════════════════════════════════
 with tab_companies:
     # ── Top 20 companies by posting volume ──
-    st.markdown('<div class="chart-card">', unsafe_allow_html=True)
     st.markdown('<div class="chart-title">Top 20 Hiring Companies</div>', unsafe_allow_html=True)
 
     co_counts = fdf["company"].value_counts().head(20).reset_index()
@@ -860,10 +849,8 @@ with tab_companies:
         xaxis=dict(gridcolor="#EEEDE9", linecolor="#E0DFDC", tickfont=dict(size=11, color="#191919")),
     )
     st.plotly_chart(fig_co, use_container_width=True)
-    st.markdown('</div>', unsafe_allow_html=True)
 
     # ── Role demand treemap — top 15 only ──
-    st.markdown('<div class="chart-card">', unsafe_allow_html=True)
     st.markdown('<div class="chart-title">Role Demand — Proportional View</div>', unsafe_allow_html=True)
 
     role_demand = fdf["title"].value_counts().head(15).reset_index()
@@ -884,7 +871,6 @@ with tab_companies:
         title="Top 15 roles — relative size reflects open positions",
     )
     st.plotly_chart(fig_tree, use_container_width=True)
-    st.markdown('</div>', unsafe_allow_html=True)
 
 
 # ══════════════════════════════════════════════
@@ -897,7 +883,6 @@ with tab_map:
     if map_df.empty:
         st.info("No recognisable Indian city names found in the location field for this filter set.")
     else:
-        st.markdown('<div class="chart-card">', unsafe_allow_html=True)
         st.markdown('<div class="chart-title">Geographic Distribution of Tech Hiring — India</div>',
                     unsafe_allow_html=True)
 
@@ -936,7 +921,6 @@ with tab_map:
             ),
         )
         st.plotly_chart(fig_map, use_container_width=True)
-        st.markdown('</div>', unsafe_allow_html=True)
 
 
 # ══════════════════════════════════════════════
