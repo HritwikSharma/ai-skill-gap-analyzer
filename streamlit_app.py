@@ -5,6 +5,8 @@ import plotly.express as px
 import plotly.graph_objects as go
 import json
 import re
+import re as _re
+import html as _html
 from collections import Counter
 
 # ─────────────────────────────────────────────
@@ -943,31 +945,19 @@ with tab_listings:
     start  = (page_num - 1) * PAGE_SIZE
     page_df = fdf.iloc[start: start + PAGE_SIZE]
 
-    for _, row in page_df.iterrows():
-        import html as _html
-
+   for _, row in page_df.iterrows():
         title   = _html.escape(str(row.get("title") or "Untitled"))
         company = _html.escape(str(row.get("company") or "Unknown Company"))
         loc     = _html.escape(str(row.get("location") or "Location not specified"))
         skills  = row.get("tech_skills_found") or []
         sal     = str(row.get("salary_str") or "Not disclosed")
         exp     = str(row.get("experience_level") or "Not specified")
-        raw_url = str(row.get("job_url") or "")
-        # The DB stores some URLs as raw HTML like:
-        # </div><a class="apply-btn" href="https://..." target=...
-        # Extract just the https:// part
-        _m = _re.search(r'https?://[^\s"\'<>]+', raw_url)
-        url = _m.group(0) if _m else ""
         posted  = str(row.get("posted_date") or "")[:10]
-        
-        import re as _re
-        href_match = _re.search(r'href=["\']?(https?://[^"\'>\s]+)', url)
-        if href_match:
-            url_clean = href_match.group(1)
-        else:
-            url_clean = url.split('"')[0].split("'")[0].split("<")[0].strip()
-        safe_url = url_clean if url_clean.startswith("http") else ""
-        
+
+        raw_url = str(row.get("job_url") or "")
+        _m = _re.search(r'https?://[^\s"\'<>]+', raw_url)
+        safe_url = _m.group(0) if _m else ""
+
         skills_html = "".join(
             f'<span class="skill-pill">{_html.escape(str(s))}</span>'
             for s in (skills[:6] if isinstance(skills, list) else [])
