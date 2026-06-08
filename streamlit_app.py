@@ -972,6 +972,10 @@ with tab_listings:
         url     = str(row.get("job_url") or "")
         posted  = str(row.get("posted_date") or "")[:10]
         
+        # DEBUG — remove after fixing
+        if "<" in url or ">" in url:
+            st.code(url)
+        
         import re as _re
         href_match = _re.search(r'href=["\']?(https?://[^"\'>\s]+)', url)
         if href_match:
