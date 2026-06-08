@@ -474,8 +474,7 @@ PLOTLY_LAYOUT = dict(
     colorway     = ["#0A66C2","#057642","#B24020","#7B5EA7","#D48806","#0891B2"],
 )
 
-PLOTLY_LAYOUT_NO_AXES = {k: v for k, v in PLOTLY_LAYOUT.items() if k not in ("xaxis", "yaxis")}
-
+PLOTLY_LAYOUT_NO_AXES = {k: v for k, v in PLOTLY_LAYOUT.items() if k not in ("xaxis", "yaxis", "title_font")}
 # ─────────────────────────────────────────────
 #  DATA FETCHING
 # ─────────────────────────────────────────────
