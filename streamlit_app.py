@@ -630,17 +630,29 @@ if df_raw.empty:
 
 df = extract_metadata_fields(df_raw.copy())
 
-#df["job_url"] = df["job_url"].apply(clean_job_url)
-
 # Normalise experience level
 df["experience_level"] = df["experience_level"].apply(normalise_exp)
+
+# ── Clean job titles for dropdown deduplication ──
+def clean_title(t):
+    if not t:
+        return t
+    t = str(t).strip()
+    # Remove trailing junk after - or ( or _ followed by numbers/extra words
+    t = re.sub(r'\s*[-–(|_].*$', '', t)
+    # Normalise whitespace
+    t = re.sub(r'\s+', ' ', t).strip()
+    # Title case for consistent dedup
+    return t.title()
+
+df["title_clean"] = df["title"].apply(clean_title)
 
 # ─────────────────────────────────────────────
 #  FILTER ROW
 # ─────────────────────────────────────────────
 fc1, fc2, fc3 = st.columns([2, 2, 1])
 with fc1:
-    role_options = ["All Roles"] + sorted(df["title"].dropna().unique().tolist())
+    role_options = ["All Roles"] + sorted(df["title_clean"].dropna().unique().tolist())
     selected_role = st.selectbox("Role", role_options, label_visibility="collapsed")
 with fc2:
     loc_options = ["All Locations"] + sorted(df["location"].dropna().unique().tolist())
@@ -653,7 +665,7 @@ st.markdown('</div>', unsafe_allow_html=True)
 # Apply filters
 fdf = df.copy()
 if selected_role != "All Roles":
-    fdf = fdf[fdf["title"] == selected_role]
+    fdf = fdf[fdf["title_clean"] == selected_role]
 if selected_loc != "All Locations":
     fdf = fdf[fdf["location"] == selected_loc]
 if selected_exp != "All Experience":
