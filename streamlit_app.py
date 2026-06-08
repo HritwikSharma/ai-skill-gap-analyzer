@@ -73,6 +73,26 @@ html, body,
 /* ── Hide Streamlit chrome ── */
 #MainMenu, footer, header { visibility: hidden; }
 .block-container { padding: 0 !important; max-width: 100% !important; }
+
+/* Kill top spacing and ghost elements */
+.stApp > div:first-child,
+[data-testid="stAppViewContainer"] > section > div:first-child {
+    padding-top: 0 !important;
+}
+[data-testid="stVerticalBlock"] > div:first-child,
+[data-testid="stVerticalBlock"] > div:empty {
+    padding: 0 !important;
+    margin: 0 !important;
+    min-height: 0 !important;
+}
+[data-testid="stMarkdownContainer"]:empty,
+div.element-container:empty,
+div.element-container:has(> div:empty) {
+    display: none !important;
+    height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
 section[data-testid="stSidebar"] { display: none; }
 
 /* ── Top navigation bar ── */
@@ -109,7 +129,7 @@ section[data-testid="stSidebar"] { display: none; }
 .page-wrap {
     max-width   : 1280px;
     margin      : 0 auto;
-    padding     : 28px 24px 60px;
+    padding     : 0 24px 60px;
 }
 
 /* ── Section header ── */
@@ -596,19 +616,18 @@ df["experience_level"] = df["experience_level"].apply(normalise_exp)
 # ─────────────────────────────────────────────
 st.markdown('<div class="page-wrap">', unsafe_allow_html=True)
 
-with st.container():
-    st.markdown('<div class="filter-bar">', unsafe_allow_html=True)
-    fc1, fc2, fc3 = st.columns([2, 2, 1])
-    with fc1:
-        role_options = ["All Roles"] + sorted(df["title"].dropna().unique().tolist())
-        selected_role = st.selectbox("Role", role_options, label_visibility="collapsed")
-    with fc2:
-        loc_options = ["All Locations"] + sorted(df["location"].dropna().unique().tolist())
-        selected_loc = st.selectbox("Location", loc_options, label_visibility="collapsed")
-    with fc3:
-        exp_options = ["All Experience"] + ["Internship", "<1 Year", "1-5 Years", ">5 Years"]
-        selected_exp = st.selectbox("Experience", exp_options, label_visibility="collapsed")
-    st.markdown('</div>', unsafe_allow_html=True)
+st.markdown('<div class="filter-bar">', unsafe_allow_html=True)
+fc1, fc2, fc3 = st.columns([2, 2, 1])
+with fc1:
+    role_options = ["All Roles"] + sorted(df["title"].dropna().unique().tolist())
+    selected_role = st.selectbox("Role", role_options, label_visibility="collapsed")
+with fc2:
+    loc_options = ["All Locations"] + sorted(df["location"].dropna().unique().tolist())
+    selected_loc = st.selectbox("Location", loc_options, label_visibility="collapsed")
+with fc3:
+    exp_options = ["All Experience"] + ["Internship", "<1 Year", "1-5 Years", ">5 Years"]
+    selected_exp = st.selectbox("Experience", exp_options, label_visibility="collapsed")
+st.markdown('</div>', unsafe_allow_html=True)
 
 # Apply filters
 fdf = df.copy()
