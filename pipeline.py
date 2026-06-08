@@ -5,39 +5,54 @@ import requests
 import psycopg2
 from psycopg2.extras import Json
 
+# AWS Database Connection Credentials
 DB_HOST = "job-db.clgqc6scelz7.eu-north-1.rds.amazonaws.com"
 DB_USER = "postgres"
 DB_NAME = "postgres"
 DB_PASSWORD = "HRITWIKSHARMA"
 
+# API Credentials
 ADZUNA_APP_ID = "856e2554"
 ADZUNA_APP_KEY = "89750d033fe565146c9e91e81966272e"
-SERPAPI_KEY = "c299062e7ebc88ee2796181d4618007c009e60de9c83f8324cc32c8297422436"
 
-def extract_database_skills(cursor, description_text):
-    if not description_text:
+# Core target sectors to prevent junk data from diluting the index
+TARGET_KEYWORDS = ["Data Analyst", "Data Scientist", "Business Analyst", "Data Engineer", "Machine Learning"]
+
+def load_skills_dictionaries(cursor):
+    """Fetches O*NET dictionary tables from AWS to perform processing entirely in local memory."""
+    try:
+        cursor.execute("SELECT DISTINCT LOWER(skill_name) FROM lookup_tech_skills;")
+        tech_skills = [row[0] for row in cursor.fetchall() if row[0]]
+        
+        cursor.execute("SELECT DISTINCT LOWER(skill_name) FROM lookup_soft_skills;")
+        soft_skills = [row[0] for row in cursor.fetchall() if row[0]]
+        
+        return tech_skills, soft_skills
+    except Exception as e:
+        print(f"Extraction Error: Failed to fetch lookup reference tables: {e}")
         return [], []
 
-    clean_text = description_text.replace("'", "''")
+def preprocess_and_parse_skills(description_text, tech_dict, soft_dict):
+    """Sanitizes raw text descriptions and parses them using standard word-boundary regex maps."""
+    if not description_text:
+        return [], []
+    
+    # Strip special punctuation marks and cast to lowercase for perfect matching
+    clean_text = re.sub(r'[^\w\s]', ' ', description_text.lower())
+    
+    # Extract string matching tokens based on exact O*NET boundary sets (\b)
+    tech_matches = [skill.title() for skill in tech_dict if re.search(r'\b' + re.escape(skill) + r'\b', clean_text)]
+    soft_matches = [skill.title() for skill in soft_dict if re.search(r'\b' + re.escape(skill) + r'\b', clean_text)]
+    
+    # Deduplicate list collections cleanly
+    return list(set(tech_matches)), list(set(soft_matches))
 
-    cursor.execute(f"""
-        SELECT skill_name FROM lookup_tech_skills 
-        WHERE '{clean_text}' ILIKE '%' || skill_name || '%';
-    """)
-    tech_matches = [row[0] for row in cursor.fetchall()]
-
-    cursor.execute(f"""
-        SELECT skill_name FROM lookup_soft_skills 
-        WHERE '{clean_text}' ILIKE '%' || skill_name || '%';
-    """)
-    soft_matches = [row[0] for row in cursor.fetchall()]
-
-    return tech_matches, soft_matches
-
-def extract_metrics(description_text, raw_job, source):
+def extract_metrics_metadata(job, description_text):
+    """Extracts raw salary data, system boundaries, and experience levels into a JSON matrix."""
     desc_lower = description_text.lower() if description_text else ""
     experience_found = "Not Specified"
     
+    # Regex pattern matching for standard year metrics (e.g., '2-5 years', '3+ years')
     exp_match = re.search(r"(\d+[\-+]\d*)\s*years", desc_lower)
     if exp_match:
         experience_found = exp_match.group(0)
@@ -46,105 +61,93 @@ def extract_metrics(description_text, raw_job, source):
     elif "fresher" in desc_lower:
         experience_found = "Fresher"
 
-    salary_found = "Not Specified"
-    if source == "adzuna" and raw_job.get("salary_min"):
-        salary_found = f"{raw_job.get('salary_min')} - {raw_job.get('salary_max')}"
-    elif source == "serpapi" and raw_job.get("detected_extensions", {}).get("salary"):
-        salary_found = raw_job.get("detected_extensions", {}).get("salary")
+    # Capture API structural salary variables or parse raw string definitions directly
+    salary_min = job.get("salary_min")
+    salary_max = job.get("salary_max")
+    
+    if salary_min and salary_max:
+        salary_string = f"₹ {salary_min} - ₹ {salary_max}"
+    elif salary_min:
+        salary_string = f"₹ {salary_min}+"
     else:
-        salary_match = re.search(r"(₹|\bRs\b)\s*\d+[\d,]*", description_text or "")
-        if salary_match:
-            salary_found = salary_match.group(0)
+        # Secondary fallback regex string lookup strategy for native character formats
+        salary_match = re.search(r"(₹|\bRs\b)\s*\d+[\d,]*", description_text)
+        salary_string = salary_match.group(0) if salary_match else "Not Specified"
 
     return {
         "experience_level": experience_found,
-        "salary_extracted": salary_found
+        "salary_extracted": salary_string,
+        "company_tier_raw": job.get("company", {}).get("display_name", "Unknown"),
+        "created_timestamp": job.get("created", "")
     }
 
-def fetch_adzuna(cursor):
-    print("\n--- Running Adzuna Extractor ---")
-    url = "https://api.adzuna.com/v1/api/jobs/in/search/1"
-    params = {
-        "app_id": ADZUNA_APP_ID,
-        "app_key": ADZUNA_APP_KEY,
-        "results_per_page": "50",
-        "what": "Data Analyst"
-    }
+def run_global_sync():
+    print("=== STARTING CLOUD PREPROCESSING PIPELINE ENGINE ===")
     try:
-        res = requests.get(url, params=params)
-        if res.status_code != 200: return
-        
-        jobs = res.json().get("results", [])
-        for job in jobs:
-            job_id = f"adz_{job.get('id')}"
-            title = job.get("title", "Unknown Title")
-            company = job.get("company", {}).get("display_name", "Unknown Company")
-            location = job.get("location", {}).get("display_name", "Remote")
-            description = job.get("description", "")
-            job_url = job.get("redirect_url", "")
-            
-            tech_skills, soft_skills = extract_database_skills(cursor, description)
-            metrics = extract_metrics(description, job, "adzuna")
-            
-            cursor.execute("""
-                INSERT INTO job_listings (job_id, data_source, title, company, location, description, job_url, tech_skills_found, soft_skills_found, extra_metadata)
-                VALUES (%s, 'adzuna', %s, %s, %s, %s, %s, %s, %s, %s)
-                ON CONFLICT (job_id) DO NOTHING;
-            """, (job_id, title, company, location, description, job_url, tech_skills, soft_skills, Json(metrics)))
-        print(f"Stored {len(jobs)} jobs from Adzuna.")
-    except Exception as e:
-        print(f"Adzuna script block error: {e}")
-
-def fetch_serpapi(cursor):
-    print("\n--- Running SerpApi Extractor ---")
-    url = "https://serpapi.com/search.json"
-    params = {
-        "engine": "google_jobs",
-        "q": "Data Analyst in India",
-        "hl": "en",
-        "api_key": SERPAPI_KEY,
-        "start": "0"
-    }
-    try:
-        res = requests.get(url, params=params)
-        if res.status_code != 200: return
-            
-        jobs = res.json().get("jobs_results", [])
-        for job in jobs:
-            job_id = f"serp_{job.get('job_id')}"
-            title = job.get("title", "Unknown Title")
-            company = job.get("company_name", "Unknown Company")
-            location = job.get("location", "Remote")
-            description = job.get("description", "")
-            job_url = job.get("related_links", [{}])[0].get("link", "https://google.com")
-            
-            tech_skills, soft_skills = extract_database_skills(cursor, description)
-            metrics = extract_metrics(description, job, "serpapi")
-            
-            cursor.execute("""
-                INSERT INTO job_listings (job_id, data_source, title, company, location, description, job_url, tech_skills_found, soft_skills_found, extra_metadata)
-                VALUES (%s, 'serpapi', %s, %s, %s, %s, %s, %s, %s, %s)
-                ON CONFLICT (job_id) DO NOTHING;
-            """, (job_id, title, company, location, description, job_url, tech_skills, soft_skills, Json(metrics)))
-        print(f"Stored {len(jobs)} jobs from SerpApi.")
-    except Exception as e:
-        print(f"SerpApi script block error: {e}")
-
-def run_pipeline():
-    print("=== STARTING UNIFIED DATA PIPELINE ===")
-    try:
+        # Establish AWS RDS Connection Gateway
         conn = psycopg2.connect(host=DB_HOST, user=DB_USER, database=DB_NAME, password=DB_PASSWORD, port="5432")
         cursor = conn.cursor()
         
-        fetch_adzuna(cursor)
-        fetch_serpapi(cursor)
+        # Load O*NET dictionaries from database tables
+        tech_dict, soft_dict = load_skills_dictionaries(cursor)
+        print(f"Dictionaries Synced. Technical Keywords: {len(tech_dict)} | Soft Keywords: {len(soft_dict)}")
         
-        conn.commit()
-        print("\n=== PIPELINE SUCCESS: DATA RESTRUCTURE COMPLETED ===")
+        if not tech_dict and not soft_dict:
+            print("Aborting Run: O*NET base schemas are missing from AWS destination database tables.")
+            return
+
+        for keyword in TARGET_KEYWORDS:
+            print(f"\nProcessing Pipeline Segment: [{keyword}]")
+            
+            # Request and loop across 10 complete pages to aggregate 500 job slots per category query
+            for page in range(1, 11):
+                url = f"https://api.adzuna.com/v1/api/jobs/in/search/{page}"
+                params = {
+                    "app_id": ADZUNA_APP_ID,
+                    "app_key": ADZUNA_APP_KEY,
+                    "results_per_page": "50",
+                    "what": keyword
+                }
+                try:
+                    res = requests.get(url, params=params)
+                    if res.status_code == 429:
+                        print("Rate limit flag thrown. Cool down interval active...")
+                        time.sleep(5)
+                        continue
+                    if res.status_code != 200:
+                        break
+                        
+                    jobs = res.json().get("results", [])
+                    if not jobs:
+                        break
+                        
+                    for job in jobs:
+                        job_id = f"adz_{job.get('id')}"
+                        title = job.get("title", "Unknown Title")
+                        company = job.get("company", {}).get("display_name", "Unknown Company")
+                        location = job.get("location", {}).get("display_name", "Remote")
+                        description = job.get("description", "")
+                        job_url = job.get("redirect_url", "")
+                        
+                        # Apply computational filtering and processing layer inside server memory
+                        tech_skills, soft_skills = preprocess_and_parse_skills(description, tech_dict, soft_dict)
+                        extra_metadata = extract_metrics_metadata(job, description)
+                        
+                        cursor.execute("""
+                            INSERT INTO job_listings (job_id, data_source, title, company, location, description, job_url, tech_skills_found, soft_skills_found, extra_metadata)
+                            VALUES (%s, 'adzuna', %s, %s, %s, %s, %s, %s, %s, %s)
+                            ON CONFLICT (job_id) DO NOTHING;
+                        """, (job_id, title, company, location, description, job_url, tech_skills, soft_skills, Json(extra_metadata)))
+                        
+                    conn.commit() # Safely commit data structures page-by-page
+                except Exception as page_err:
+                    print(f"Exception encountered inside pagination index: {page_err}")
+                    
+        print("\n=== PIPELINE SYNC SUCCESSFUL: AWS LEDGER IS COMPLETELY UPDATED ===")
         cursor.close()
         conn.close()
     except Exception as e:
-        print(f"Pipeline run stopped: {e}")
+        print(f"Critical System Failure: {e}")
 
 if __name__ == "__main__":
-    run_pipeline()
+    run_global_sync()
