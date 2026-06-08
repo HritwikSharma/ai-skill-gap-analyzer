@@ -426,13 +426,10 @@ PLOTLY_LAYOUT = dict(
     title_font   = dict(size=13, color="#666666", family="Inter, sans-serif"),
     xaxis        = _AXIS_STYLE,
     yaxis        = _AXIS_STYLE,
-    hoverlabel   = dict(bgcolor="#FFFFFF", font_color="#191919", font_size=12,
-                        font_family="Inter, sans-serif", bordercolor="#E0DFDC"),
     colorway     = ["#0A66C2","#057642","#B24020","#7B5EA7","#D48806","#0891B2"],
 )
 
-# Layout variant without pre-set axes
-PLOTLY_LAYOUT_NO_AXES = {k: v for k, v in PLOTLY_LAYOUT.items() if k not in ("xaxis", "yaxis", "hoverlabel")}
+PLOTLY_LAYOUT_NO_AXES = {k: v for k, v in PLOTLY_LAYOUT.items() if k not in ("xaxis", "yaxis")}
 
 # ─────────────────────────────────────────────
 #  DATA FETCHING
@@ -796,7 +793,7 @@ with tab_salary:
             title="Concentration of salary offers",
             bargap=0.05,
             hoverlabel=dict(bgcolor="#FFFFFF", font_color="#191919", font_size=12,
-                            font_family="Inter, sans-serif", bordercolor="#E0DFDC"),
+                font_family="Inter, sans-serif", bordercolor="#E0DFDC"),
         )
         st.plotly_chart(fig_hist, use_container_width=True)
         st.markdown('</div>', unsafe_allow_html=True)
@@ -831,7 +828,7 @@ with tab_companies:
         height=520,
         title="Volume of active job postings",
         hoverlabel=dict(bgcolor="#FFFFFF", font_color="#191919", font_size=12,
-                        font_family="Inter, sans-serif", bordercolor="#E0DFDC"),
+                font_family="Inter, sans-serif", bordercolor="#E0DFDC"),
         yaxis=dict(categoryorder="total ascending", tickfont=dict(size=11),
                    gridcolor="#EEEDE9", linecolor="#E0DFDC"),
         xaxis=dict(gridcolor="#EEEDE9", linecolor="#E0DFDC", tickfont=dict(size=11)),
@@ -860,7 +857,7 @@ with tab_companies:
         height=380,
         title="Top 15 roles — relative size reflects open positions",
         hoverlabel=dict(bgcolor="#FFFFFF", font_color="#191919", font_size=12,
-                        font_family="Inter, sans-serif", bordercolor="#E0DFDC"),
+                font_family="Inter, sans-serif", bordercolor="#E0DFDC"),
     )
     st.plotly_chart(fig_tree, use_container_width=True)
     st.markdown('</div>', unsafe_allow_html=True)
@@ -906,7 +903,7 @@ with tab_map:
             margin={"r": 0, "t": 0, "l": 0, "b": 0},
             height=580,
             hoverlabel=dict(bgcolor="#FFFFFF", font_color="#191919", font_size=12,
-                            font_family="Inter, sans-serif", bordercolor="#E0DFDC"),
+                font_family="Inter, sans-serif", bordercolor="#E0DFDC"),
             coloraxis_colorbar=dict(
                 title="Listings",
                 thickness=14,
