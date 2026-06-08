@@ -138,7 +138,10 @@ def fetch_data():
             password=DB_PASSWORD,
             dbname=DB_NAME
         )
-        query = "SELECT * FROM jobs" # Adjust table name if different
+        query = """"SELECT job_id, title, company, location,
+                   tech_skills_found, soft_skills_found,
+                   extra_metadata, job_url
+            FROM job_listings;""" # Adjust table name if different
         df = pd.read_sql_query(query, conn)
         conn.close()
         return df
