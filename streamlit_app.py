@@ -697,7 +697,7 @@ with tab_market:
                 y=skills_df["Skill"],
                 orientation="h",
                 marker=dict(color=bar_colors, line=dict(width=0)),
-                hovertemplate="<b>%{y}</b><br>%{x} postings<extra></extra>",
+                #hovertemplate="<b>%{y}</b><br>%{x} postings<extra></extra>",
             ))
             fig_skills.update_layout(
                 **PLOTLY_LAYOUT_NO_AXES,
@@ -824,7 +824,7 @@ with tab_companies:
             colorscale=[[0, "#BAD7F5"], [1, "#0A66C2"]],
             line=dict(width=0),
         ),
-        hovertemplate="<b>%{y}</b><br>%{x} listings<extra></extra>",
+        #hovertemplate="<b>%{y}</b><br>%{x} listings<extra></extra>",
     ))
     fig_co.update_layout(
         **PLOTLY_LAYOUT_NO_AXES,
