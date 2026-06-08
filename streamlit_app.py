@@ -416,7 +416,7 @@ st.markdown(THEME, unsafe_allow_html=True)
 # ─────────────────────────────────────────────
 #  PLOTLY BASE TEMPLATE (shared across all charts)
 # ─────────────────────────────────────────────
-_AXIS_STYLE = dict(gridcolor="#EEEDE9", linecolor="#E0DFDC", tickfont=dict(size=11))
+_AXIS_STYLE = dict(gridcolor="#EEEDE9", linecolor="#E0DFDC", tickfont=dict(size=11, color="#191919"))
 
 PLOTLY_LAYOUT = dict(
     font         = dict(family="Inter, sans-serif", color="#191919"),
