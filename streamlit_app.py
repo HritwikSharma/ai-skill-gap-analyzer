@@ -519,13 +519,14 @@ CITY_COORDS = {
     "remote":    (20.5937, 78.9629),
     "india":     (20.5937, 78.9629),
 }
+EXCLUDE_MAP = {"remote", "india"}
 
 def build_map_data(df):
     rows = []
     for loc in df["location"].dropna():
         loc_lower = str(loc).strip().lower()
         for city, (lat, lon) in CITY_COORDS.items():
-            if city in loc_lower:
+            if city in loc_lower and city not in EXCLUDE_MAP:
                 rows.append({"city": city.title(), "lat": lat, "lon": lon})
                 break
     if not rows:
@@ -651,12 +652,12 @@ st.markdown(f"""
 # ─────────────────────────────────────────────
 #  TABS
 # ─────────────────────────────────────────────
-tab_market, tab_salary, tab_companies, tab_map, tab_listings = st.tabs([
+tab_listings, tab_market, tab_salary, tab_companies, tab_map = st.tabs([
+    "📋  Job Listings",
     "📊  Market Overview",
     "💰  Salary Insights",
     "🏢  Company Intelligence",
     "🗺️  Geographic Heat Map",
-    "📋  Job Listings",
 ])
 
 # ══════════════════════════════════════════════
@@ -702,9 +703,9 @@ with tab_market:
                 title="Frequency across all active listings",
                 hoverlabel=dict(bgcolor="#FFFFFF", font_color="#191919", font_size=12,
                                 font_family="Inter, sans-serif", bordercolor="#E0DFDC"),
-                yaxis=dict(categoryorder="total ascending", tickfont=dict(size=11),
+                yaxis=dict(categoryorder="total ascending", tickfont=dict(size=11, color="#191919"),
                            gridcolor="#EEEDE9", linecolor="#E0DFDC"),
-                xaxis=dict(gridcolor="#EEEDE9", linecolor="#E0DFDC", tickfont=dict(size=11)),
+                xaxis=dict(gridcolor="#EEEDE9", linecolor="#E0DFDC", tickfont=dict(size=11, color="#191919")),
             )
             st.plotly_chart(fig_skills, use_container_width=True)
         else:
@@ -786,14 +787,18 @@ with tab_salary:
                 line=dict(color="#FFFFFF", width=1),
             ),
             hovertemplate="<b>Range: %{x} LPA</b><br>Count: %{y}<extra></extra>",
+            texttemplate="%{y}",
+            textposition="outside",
+            textfont=dict(size=11, color="#191919"),
         ))
         fig_hist.update_layout(
             **PLOTLY_LAYOUT,
             height=440,
             title="Concentration of salary offers",
             bargap=0.05,
-            hoverlabel=dict(bgcolor="#FFFFFF", font_color="#191919", font_size=12,
-                font_family="Inter, sans-serif", bordercolor="#E0DFDC"),
+            uniformtext=dict(mode="hide", minsize=9),
+            yaxis=dict(gridcolor="#EEEDE9", linecolor="#E0DFDC", tickfont=dict(size=11, color="#191919")),
+            xaxis=dict(gridcolor="#EEEDE9", linecolor="#E0DFDC", tickfont=dict(size=11, color="#191919")),
         )
         st.plotly_chart(fig_hist, use_container_width=True)
         st.markdown('</div>', unsafe_allow_html=True)
@@ -829,9 +834,9 @@ with tab_companies:
         title="Volume of active job postings",
         hoverlabel=dict(bgcolor="#FFFFFF", font_color="#191919", font_size=12,
                 font_family="Inter, sans-serif", bordercolor="#E0DFDC"),
-        yaxis=dict(categoryorder="total ascending", tickfont=dict(size=11),
+        yaxis=dict(categoryorder="total ascending", tickfont=dict(size=11, color="#191919"),
                    gridcolor="#EEEDE9", linecolor="#E0DFDC"),
-        xaxis=dict(gridcolor="#EEEDE9", linecolor="#E0DFDC", tickfont=dict(size=11)),
+        xaxis=dict(gridcolor="#EEEDE9", linecolor="#E0DFDC", tickfont=dict(size=11, color="#191919")),
     )
     st.plotly_chart(fig_co, use_container_width=True)
     st.markdown('</div>', unsafe_allow_html=True)
@@ -884,11 +889,11 @@ with tab_map:
             color="openings",
             # True gradient heatmap: yellow → orange → red → dark red
             color_continuous_scale=[
-                [0.0,  "#FFFFCC"],
-                [0.25, "#FECC5C"],
-                [0.5,  "#FD8D3C"],
+                [0.0,  "#FEB24C"],
+                [0.25, "#FD8D3C"],
+                [0.5,  "#FC4E2A"],
                 [0.75, "#E31A1C"],
-                [1.0,  "#800026"],
+                [1.0,  "#67000D"],
             ],
             size_max=55,
             zoom=4.0,
@@ -1000,19 +1005,24 @@ with tab_listings:
         posted_str = f'<span class="job-meta-item">{posted}</span>' if posted and posted != "None" else ""
 
         # Only render a proper anchor when we have a valid URL
+        import html as _html
+        safe_title = _html.escape(str(title))
+        safe_company = _html.escape(str(company))
+        safe_loc = _html.escape(str(loc))
+
         if safe_url:
             apply_html = f'<a class="apply-btn" href="{safe_url}" target="_blank" rel="noopener noreferrer">View &amp; Apply</a>'
-            title_html = f'<a href="{safe_url}" target="_blank" rel="noopener noreferrer">{title}</a>'
+            title_html = f'<a href="{safe_url}" target="_blank" rel="noopener noreferrer">{safe_title}</a>'
         else:
             apply_html = ""
-            title_html = title
+            title_html = safe_title
 
         st.markdown(f"""
         <div class="job-card">
             <div class="job-title">{title_html}</div>
-            <div class="job-company">{company}</div>
+            <div class="job-company">{safe_company}</div>
             <div class="job-meta">
-                <span class="job-meta-item">{loc}</span>
+                <span class="job-meta-item">{safe_loc}</span>
                 {posted_str}
             </div>
             <div class="job-skills">
