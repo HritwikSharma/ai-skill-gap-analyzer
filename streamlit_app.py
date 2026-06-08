@@ -1,127 +1,155 @@
 import streamlit as st
 import pandas as pd
 import psycopg2
-import requests
-from psycopg2.extras import Json
+import plotly.express as px
+import json
+from collections import Counter
 
+# --- AWS Database Credentials ---
 DB_HOST = "job-db.clgqc6scelz7.eu-north-1.rds.amazonaws.com"
 DB_USER = "postgres"
 DB_NAME = "postgres"
 DB_PASSWORD = "HRITWIKSHARMA"
-SERPAPI_KEY = "c299062e7ebc88ee2796181d4618007c009e60de9c83f8324cc32c8297422436"
 
-def get_db_connection():
-    return psycopg2.connect(host=DB_HOST, user=DB_USER, database=DB_NAME, password=DB_PASSWORD)
-
-def extract_skills_live(cursor, description_text):
-    if not description_text:
-        return [], []
-    clean_text = description_text.replace("'", "''")
-    
-    cursor.execute(f"SELECT skill_name FROM lookup_tech_skills WHERE '{clean_text}' ILIKE '%' || skill_name || '%';")
-    tech_matches = [row[0] for row in cursor.fetchall()]
-    
-    cursor.execute(f"SELECT skill_name FROM lookup_soft_skills WHERE '{clean_text}' ILIKE '%' || skill_name || '%';")
-    soft_matches = [row[0] for row in cursor.fetchall()]
-    
-    return tech_matches, soft_matches
-
-def trigger_live_serpapi_search(search_query):
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    
-    url = "https://serpapi.com/search.json"
-    params = {
-        "engine": "google_jobs",
-        "q": search_query,
-        "hl": "en",
-        "gl": "in",
-        "api_key": SERPAPI_KEY
-    }
+@st.cache_data(ttl=300)  # Caches the data for 5 minutes to stay snappy
+def fetch_job_data():
+    """Connects to AWS RDS and fetches the processed job marketplace data."""
     try:
-        res = requests.get(url, params=params)
-        if res.status_code == 200:
-            jobs = res.json().get("jobs_results", [])
-            for job in jobs:
-                job_id = f"serp_{job.get('job_id')}"
-                title = job.get("title", "Unknown Title")
-                company = job.get("company_name", "Unknown Company")
-                location = job.get("location", "India")
-                description = job.get("description", "")
-                job_url = job.get("related_links", [{}])[0].get("link", "https://google.com")
-                
-                tech_skills, soft_skills = extract_skills_live(cursor, description)
-                
-                cursor.execute("""
-                    INSERT INTO job_listings (job_id, data_source, title, company, location, description, job_url, tech_skills_found, soft_skills_found)
-                    VALUES (%s, 'serpapi_live', %s, %s, %s, %s, %s, %s, %s)
-                    ON CONFLICT (job_id) DO NOTHING;
-                """, (job_id, title, company, location, description, job_url, tech_skills, soft_skills))
-            conn.commit()
-    except Exception as e:
-        st.error(f"Live search retrieval failed: {e}")
-    finally:
-        cursor.close()
+        conn = psycopg2.connect(host=DB_HOST, user=DB_USER, database=DB_NAME, password=DB_PASSWORD, port="5432")
+        query = """
+            SELECT title, company, location, tech_skills_found, extra_metadata 
+            FROM job_listings;
+        """
+        df = pd.read_sql(query, conn)
         conn.close()
+        return df
+    except Exception as e:
+        st.error(f"Error connecting to AWS Database: {e}")
+        return pd.DataFrame()
 
-st.set_page_config(page_title="Indian Market Job Analytics Engine", layout="wide")
-st.title("📊 Data Analytics Job Market Intelligence (India)")
+# --- Pre-defined Coordinates for Major Indian Job Hubs ---
+# This translates text locations from Adzuna directly into Map coordinates
+INDIAN_CITIES_COORDS = {
+    'bengaluru': [12.9716, 77.5946], 'bangalore': [12.9716, 77.5946],
+    'hyderabad': [17.3850, 78.4867],
+    'pune': [18.5204, 73.8567],
+    'mumbai': [19.0760, 72.8777],
+    'chennai': [13.0827, 80.2707],
+    'delhi': [28.6139, 77.2090], 'new delhi': [28.6139, 77.2090],
+    'gurgaon': [28.4595, 77.0266], 'gurugram': [28.4595, 77.0266],
+    'noida': [28.5355, 77.3910],
+    'kolkata': [22.5726, 88.3639],
+    'ahmedabad': [23.0225, 72.5714],
+    'jaipur': [26.9124, 75.7873],
+    'coimbatore': [11.0168, 76.9558],
+    'thiruvananthapuram': [8.5241, 76.9366], 'trivandrum': [8.5241, 76.9366],
+    'kochi': [9.9312, 76.2673], 'cochin': [9.9312, 76.2673],
+    'remote': [20.5937, 78.9629] # Center of India for remote listings
+}
 
-st.sidebar.header("🔍 Real-Time Job Discovery")
-user_query = st.sidebar.text_input("Enter target job role or specific keyword:")
-run_search = st.sidebar.button("Execute Live Search Query")
-
-if run_search and user_query:
-    with st.spinner(f"Querying SerpApi for fresh listings matching '{user_query}'..."):
-        trigger_live_serpapi_search(user_query)
-        st.sidebar.success("Database synchronized with live search results!")
-
-try:
-    conn = get_db_connection()
-    df = pd.read_sql("SELECT title, company, location, tech_skills_found, soft_skills_found FROM job_listings;", conn)
-    conn.close()
-    
-    if not df.empty:
-        st.sidebar.header("🎛️ Interactive Filters")
+def process_locations_for_map(dataframe):
+    """Maps text locations to lat/lon coordinates and aggregates job counts."""
+    map_data = []
+    for loc in dataframe['location'].dropna():
+        loc_clean = str(loc).strip().lower()
         
-        locations = ["All"] + sorted(list(df['location'].dropna().unique()))
-        selected_location = st.sidebar.selectbox("Filter by Location:", locations)
-        
-        titles = ["All"] + sorted(list(df['title'].dropna().unique()))
-        selected_title = st.sidebar.selectbox("Filter by Job Title:", titles)
-        
-        filtered_df = df.copy()
-        if selected_location != "All":
-            filtered_df = filtered_df[filtered_df['location'] == selected_location]
-        if selected_title != "All":
-            filtered_df = filtered_df[filtered_df['title'] == selected_title]
-
-        st.subheader("📈 Aggregated Market Dashboard")
-        
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            all_tech = [skill for sublist in filtered_df['tech_skills_found'].dropna() for skill in sublist]
-            if all_tech:
-                tech_counts = pd.Series(all_tech).value_counts().head(10)
-                st.write("### Top Technical Skills in Demand")
-                st.bar_chart(tech_counts)
-            else:
-                st.info("No technical skills extracted for this specific filter view.")
+        # Check if the city exists in our Indian coordinates dictionary
+        matched_city = None
+        for city in INDIAN_CITIES_COORDS:
+            if city in loc_clean:
+                matched_city = city
+                break
                 
-        with col2:
-            all_soft = [skill for sublist in filtered_df['soft_skills_found'].dropna() for skill in sublist]
-            if all_soft:
-                soft_counts = pd.Series(all_soft).value_counts().head(10)
-                st.write("### Top Soft Skills in Demand")
-                st.bar_chart(soft_counts)
-            else:
-                st.info("No soft skills extracted for this specific filter view.")
+        if matched_city:
+            lat, lon = INDIAN_CITIES_COORDS[matched_city]
+            map_data.append({'City': matched_city.title(), 'lat': lat, 'lon': lon})
+            
+    if not map_data:
+        return pd.DataFrame()
+        
+    map_df = pd.DataFrame(map_data)
+    # Count how many jobs are in each city to set the map bubble sizes
+    agg_df = map_df.groupby(['City', 'lat', 'lon']).size().reset_index(name='Job Openings')
+    return agg_df
 
-        st.subheader("💼 Active Job Ledger Database View")
-        st.dataframe(filtered_df, use_container_width=True)
-    else:
-        st.info("The AWS database is currently empty. Enter an industry search term in the sidebar menu to run your first automated scrape pipeline cycle.")
+# --- Page UI Configuration ---
+st.set_page_config(page_title="AI Skill Gap & Market Analyzer", layout="wide")
+st.title("📊 Tech Market Demand & Skill Gap Analyzer")
+st.markdown("Real-time data visualization layer connected directly to automated AWS data processing.")
 
-except Exception as e:
-    st.error(f"Could not connect or fetch data from AWS database: {e}")
+# Load data from your database
+df = fetch_job_data()
+
+if df.empty:
+    st.warning("⚠️ Waiting for data or connection failed. Make sure your GitHub Action run completed successfully and rows are visible in pgAdmin.")
+else:
+    # --- Sidebar Filtering Layer ---
+    st.sidebar.header("🎯 Filter Market Options")
+    
+    # Standardize job categories based on raw titles
+    raw_titles = df['title'].dropna().unique()
+    # Provide a few key categories or let them choose raw titles
+    selected_role = st.sidebar.selectbox("Select Target Job Role", ["All Technical Roles"] + list(raw_titles)[:15])
+    
+    # Filter dataset based on selection
+    filtered_df = df if selected_role == "All Technical Roles" else df[df['title'] == selected_role]
+
+    # --- Top Key Performance Metrics Row ---
+    st.markdown("### 📈 Market At A Glance")
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.metric("Total Jobs Evaluated", len(filtered_df))
+    with col2:
+        st.metric("Unique Employers Hiring", filtered_df['company'].nunique())
+    with col3:
+        # Extract location hotspot
+        top_loc = filtered_df['location'].mode().dropna()
+        st.metric("Top Hiring Hub", top_loc[0] if not top_loc.empty else "N/A")
+
+    st.markdown("---")
+
+    # --- Layout Grid: Split Dashboard into 2 Columns ---
+    left_col, right_col = st.columns([1, 1])
+
+    with left_col:
+        st.markdown("### 🔥 In-Demand Technical Skills")
+        # Flatten string arrays from PostgreSQL
+        all_tech_skills = []
+        for skill_list in filtered_df['tech_skills_found'].dropna():
+            if isinstance(skill_list, list):
+                all_tech_skills.extend(skill_list)
+                
+        if all_tech_skills:
+            skill_counts = Counter(all_tech_skills)
+            top_skills_df = pd.DataFrame(skill_counts.most_common(12), columns=['Skill', 'Mentions'])
+            
+            fig_skills = px.bar(top_skills_df, x='Mentions', y='Skill', orientation='h',
+                                color='Mentions', color_continuous_scale='teal',
+                                labels={'Mentions': 'Number of Job Postings'})
+            fig_skills.update_layout(yaxis={'categoryorder':'total ascending'}, showlegend=False, height=450)
+            st.plotly_chart(fig_skills, use_container_width=True)
+        else:
+            st.info("No explicit O*NET skills matched in this specific category subset yet.")
+
+    with right_col:
+        st.markdown("### 🗺️ India Job Hotspot Distribution")
+        map_plot_data = process_locations_for_map(filtered_df)
+        
+        if not map_plot_data.empty:
+            # Render interactive geographic scatter plot on an actual map layout
+            fig_map = px.scatter_mapbox(
+                map_plot_data, lat="lat", lon="lon", size="Job Openings", color="Job Openings",
+                color_continuous_scale="Viridis", size_max=40, zoom=3.8,
+                center={"lat": 22.5937, "lon": 78.9629},  # Centers view precisely on India
+                mapbox_style="carto-positron", hover_name="City",
+                title="Geographic Hiring Concentrations"
+            )
+            fig_map.update_layout(margin={"r":0,"t":40,"l":0,"b":0}, height=450)
+            st.plotly_chart(fig_map, use_container_width=True)
+        else:
+            st.info("Mapping location data points... Make sure fields contain recognized Indian city names.")
+
+    # --- Full Data Inspection Layer ---
+    st.markdown("---")
+    st.markdown("### 🔍 Raw Market Data Records Exploratory View")
+    st.dataframe(filtered_df[['title', 'company', 'location', 'tech_skills_found']], use_container_width=True)
