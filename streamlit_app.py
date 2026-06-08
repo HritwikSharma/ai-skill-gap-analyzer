@@ -952,9 +952,13 @@ with tab_listings:
         exp     = str(row.get("experience_level") or "Not specified")
         url     = str(row.get("job_url") or "")
         posted  = str(row.get("posted_date") or "")[:10]
-
-        # Strictly validate URL — must start with http and contain no HTML chars
-        url_clean = url.split('"')[0].split("'")[0].split("<")[0].strip()
+        
+        import re as _re
+        href_match = _re.search(r'href=["\']?(https?://[^"\'>\s]+)', url)
+        if href_match:
+            url_clean = href_match.group(1)
+        else:
+            url_clean = url.split('"')[0].split("'")[0].split("<")[0].strip()
         safe_url = url_clean if url_clean.startswith("http") else ""
         
         skills_html = "".join(
