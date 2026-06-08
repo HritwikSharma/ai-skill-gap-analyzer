@@ -974,7 +974,7 @@ with tab_listings:
             apply_html = ""
             title_html = title
 
-        st.markdown(f"""
+        st.html(f"""
         <div class="job-card">
             <div class="job-title">{title_html}</div>
             <div class="job-company">{company}</div>
@@ -989,8 +989,8 @@ with tab_listings:
             </div>
             {apply_html}
         </div>
-        """, unsafe_allow_html=True)
-
+        """)
+        
     # ── Pagination buttons (bottom) ──
     MAX_VISIBLE = 9
     half = MAX_VISIBLE // 2
