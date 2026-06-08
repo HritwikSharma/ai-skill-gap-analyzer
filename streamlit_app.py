@@ -944,8 +944,8 @@ with tab_listings:
     # ── Pagination buttons (top) ──
     start  = (page_num - 1) * PAGE_SIZE
     page_df = fdf.iloc[start: start + PAGE_SIZE]
-
-   for _, row in page_df.iterrows():
+    
+    for _, row in page_df.iterrows():
         title   = _html.escape(str(row.get("title") or "Untitled"))
         company = _html.escape(str(row.get("company") or "Unknown Company"))
         loc     = _html.escape(str(row.get("location") or "Location not specified"))
