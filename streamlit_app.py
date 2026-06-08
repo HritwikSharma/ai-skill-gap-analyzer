@@ -73,6 +73,9 @@ html, body,
 /* ── Hide Streamlit chrome ── */
 #MainMenu, footer, header { visibility: hidden; }
 .block-container { padding: 0 !important; max-width: 100% !important; }
+[data-testid="stMainBlockContainer"] { padding: 0 !important; }
+[data-testid="stAppViewBlockContainer"] { padding: 0 !important; }
+[data-testid="stMain"] { padding: 0 !important; }
 
 /* Kill top spacing and ghost elements */
 .stApp > div:first-child,
