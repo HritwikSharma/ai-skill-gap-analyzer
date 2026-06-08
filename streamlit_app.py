@@ -584,7 +584,7 @@ if df_raw.empty:
 
 df = extract_metadata_fields(df_raw.copy())
 
-df["job_url"] = df["job_url"].apply(clean_job_url)
+#df["job_url"] = df["job_url"].apply(clean_job_url)
 
 # Normalise experience level
 df["experience_level"] = df["experience_level"].apply(normalise_exp)
