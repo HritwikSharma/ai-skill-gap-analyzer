@@ -584,6 +584,25 @@ if df_raw.empty:
 
 df = extract_metadata_fields(df_raw.copy())
 
+# Clean job_url column — extract actual URL from any HTML wrapper stored in DB
+import re as _re
+
+def clean_job_url(raw):
+    if not raw:
+        return ""
+    raw = str(raw)
+    # Try to find href="https://..." inside any HTML
+    match = _re.search(r'href=["\']?(https?://[^"\'>\s]+)', raw)
+    if match:
+        return match.group(1)
+    # Otherwise strip everything before http
+    http_pos = raw.find("http")
+    if http_pos != -1:
+        return raw[http_pos:].split('"')[0].split("'")[0].split("<")[0].strip()
+    return ""
+
+df["job_url"] = df["job_url"].apply(clean_job_url)
+
 # Normalise experience level
 df["experience_level"] = df["experience_level"].apply(normalise_exp)
 
