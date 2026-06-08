@@ -584,23 +584,6 @@ if df_raw.empty:
 
 df = extract_metadata_fields(df_raw.copy())
 
-# Clean job_url column — extract actual URL from any HTML wrapper stored in DB
-import re as _re
-
-def clean_job_url(raw):
-    if not raw:
-        return ""
-    raw = str(raw)
-    # Try to find href="https://..." inside any HTML
-    match = _re.search(r'href=["\']?(https?://[^"\'>\s]+)', raw)
-    if match:
-        return match.group(1)
-    # Otherwise strip everything before http
-    http_pos = raw.find("http")
-    if http_pos != -1:
-        return raw[http_pos:].split('"')[0].split("'")[0].split("<")[0].strip()
-    return ""
-
 df["job_url"] = df["job_url"].apply(clean_job_url)
 
 # Normalise experience level
@@ -969,12 +952,13 @@ with tab_listings:
         skills  = row.get("tech_skills_found") or []
         sal     = str(row.get("salary_str") or "Not disclosed")
         exp     = str(row.get("experience_level") or "Not specified")
-        url     = str(row.get("job_url") or "")
+        raw_url = str(row.get("job_url") or "")
+        # The DB stores some URLs as raw HTML like:
+        # </div><a class="apply-btn" href="https://..." target=...
+        # Extract just the https:// part
+        _m = _re.search(r'https?://[^\s"\'<>]+', raw_url)
+        url = _m.group(0) if _m else ""
         posted  = str(row.get("posted_date") or "")[:10]
-        
-        # DEBUG — remove after fixing
-        if "<" in url or ">" in url:
-            st.code(url)
         
         import re as _re
         href_match = _re.search(r'href=["\']?(https?://[^"\'>\s]+)', url)
