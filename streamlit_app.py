@@ -954,8 +954,9 @@ with tab_listings:
         posted  = str(row.get("posted_date") or "")[:10]
 
         # Strictly validate URL — must start with http and contain no HTML chars
-        safe_url = url if (url.startswith("http") and "<" not in url and ">" not in url) else ""
-
+        url_clean = url.split('"')[0].split("'")[0].split("<")[0].strip()
+        safe_url = url_clean if url_clean.startswith("http") else ""
+        
         skills_html = "".join(
             f'<span class="skill-pill">{_html.escape(str(s))}</span>'
             for s in (skills[:6] if isinstance(skills, list) else [])
@@ -990,6 +991,11 @@ with tab_listings:
         """, unsafe_allow_html=True)
 
     # ── Pagination buttons (bottom) ──
+    MAX_VISIBLE = 9
+    half = MAX_VISIBLE // 2
+    start_p = max(1, page_num - half)
+    end_p   = min(total_pages, start_p + MAX_VISIBLE - 1)
+    start_p = max(1, end_p - MAX_VISIBLE + 1)
     st.markdown(
         f'<div style="font-size:0.78rem;color:#999;margin:20px 0 8px;">'
         f'Page {page_num} of {total_pages}</div>',
