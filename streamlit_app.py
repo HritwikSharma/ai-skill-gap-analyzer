@@ -432,7 +432,7 @@ PLOTLY_LAYOUT = dict(
 )
 
 # Layout variant without pre-set axes
-PLOTLY_LAYOUT_NO_AXES = {k: v for k, v in PLOTLY_LAYOUT.items() if k not in ("xaxis", "yaxis")}
+PLOTLY_LAYOUT_NO_AXES = {k: v for k, v in PLOTLY_LAYOUT.items() if k not in ("xaxis", "yaxis", "hoverlabel")}
 
 # ─────────────────────────────────────────────
 #  DATA FETCHING
