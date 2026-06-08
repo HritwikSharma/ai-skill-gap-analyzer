@@ -747,11 +747,9 @@ with tab_market:
                 hovertemplate="<b>%{label}</b><br>%{value} jobs (%{percent})<extra></extra>",
             ))
             fig_exp.update_layout(
-                **PLOTLY_LAYOUT,
+                **PLOTLY_LAYOUT_NO_AXES,
                 height=460,
                 showlegend=False,
-                hoverlabel=dict(bgcolor="#FFFFFF", font_color="#191919", font_size=12,
-                                font_family="Inter, sans-serif", bordercolor="#E0DFDC"),
                 annotations=[dict(
                     text=f"<b>{len(fdf)}</b><br><span style='font-size:10px'>listings</span>",
                     x=0.5, y=0.5, font_size=15, showarrow=False,
@@ -792,7 +790,7 @@ with tab_salary:
             textfont=dict(size=11, color="#191919"),
         ))
         fig_hist.update_layout(
-            **PLOTLY_LAYOUT,
+            **PLOTLY_LAYOUT_NO_AXES,
             height=440,
             title="Concentration of salary offers",
             bargap=0.05,
@@ -858,11 +856,9 @@ with tab_companies:
         hovertemplate="<b>%{label}</b><br>%{value} listings<extra></extra>",
     )
     fig_tree.update_layout(
-        **PLOTLY_LAYOUT,
+        **PLOTLY_LAYOUT_NO_AXES,
         height=380,
         title="Top 15 roles — relative size reflects open positions",
-        hoverlabel=dict(bgcolor="#FFFFFF", font_color="#191919", font_size=12,
-                font_family="Inter, sans-serif", bordercolor="#E0DFDC"),
     )
     st.plotly_chart(fig_tree, use_container_width=True)
     st.markdown('</div>', unsafe_allow_html=True)
