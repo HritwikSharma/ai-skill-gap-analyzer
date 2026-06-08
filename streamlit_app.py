@@ -450,6 +450,12 @@ def fetch_job_data():
             FROM job_listings;
         """
         df = pd.read_sql(query, conn)
+        # DEBUG
+        sample = df["job_url"].dropna().head(20).tolist()
+        for s in sample:
+            if "<" in str(s) or ">" in str(s):
+                st.write("BAD URL IN DB:", s)
+                break
         conn.close()
         return df
     except Exception as e:
