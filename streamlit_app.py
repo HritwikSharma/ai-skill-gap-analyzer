@@ -203,22 +203,18 @@ section[data-testid="stSidebar"] { display: none; }
 }
 
 /* ── Filter bar ── */
+/* ── Filter bar ── */
 .filter-bar {
+    display: none !important;
+}
+[data-testid="stHorizontalBlock"]:first-of-type {
     background    : var(--surface);
     border        : 1px solid var(--border);
     border-radius : var(--radius);
     padding       : 14px 20px;
     margin-bottom : 22px;
     box-shadow    : var(--shadow-sm);
-    display       : flex;
-    gap           : 16px;
     align-items   : center;
-    flex-wrap     : wrap;
-}
-.filter-label {
-    font-size  : 0.8rem;
-    font-weight: 600;
-    color      : var(--text-secondary);
 }
 
 /* ── Job listing cards ── */
@@ -594,7 +590,7 @@ st.markdown("""
     <div class="nav-logo">TalentPulse <span>India</span></div>
     <div class="nav-tag">Tech Market Intelligence</div>
 </div>
-<div class="page-wrap"><div class="filter-bar">
+<div class="page-wrap">
 """, unsafe_allow_html=True)
 
 # ─────────────────────────────────────────────
@@ -628,7 +624,7 @@ with fc2:
 with fc3:
     exp_options = ["All Experience"] + ["Internship", "<1 Year", "1-5 Years", ">5 Years"]
     selected_exp = st.selectbox("Experience", exp_options, label_visibility="collapsed")
-st.markdown('</div></div>', unsafe_allow_html=True)
+st.markdown('</div>', unsafe_allow_html=True)
 
 # Apply filters
 fdf = df.copy()
