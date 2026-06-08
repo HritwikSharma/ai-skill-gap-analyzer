@@ -956,8 +956,8 @@ with tab_listings:
 
         raw_url = str(row.get("job_url") or "")
         _m = _re.search(r'https?://[^\s"\'<>]+', raw_url)
-        safe_url = _m.group(0) if _m else ""
-
+        safe_url = _html.escape(_m.group(0), quote=True) if _m else ""
+        
         skills_html = "".join(
             f'<span class="skill-pill">{_html.escape(str(s))}</span>'
             for s in (skills[:6] if isinstance(skills, list) else [])
