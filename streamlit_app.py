@@ -803,8 +803,9 @@ with tab_market:
                 height=460,
                 showlegend=False,
                 annotations=[dict(
-                    text=f"<b>{len(fdf)}</b><br><span style='font-size:10px'>listings</span>",
+                    text=f"<b>{len(fdf)}</b><br>listings",
                     x=0.5, y=0.5, font_size=15, showarrow=False,
+                    font=dict(size=15, family="Inter, sans-serif", color="#191919"),
                 )],
             )
             st.plotly_chart(fig_exp, use_container_width=True)
