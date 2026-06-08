@@ -938,87 +938,46 @@ with tab_listings:
     page_num = st.session_state["listing_page"]
 
     # ── Pagination buttons (top) ──
-    MAX_VISIBLE = 9  # max page buttons to show at once
-    half = MAX_VISIBLE // 2
-    start_p = max(1, page_num - half)
-    end_p   = min(total_pages, start_p + MAX_VISIBLE - 1)
-    start_p = max(1, end_p - MAX_VISIBLE + 1)
-
-    btn_cols = st.columns(min(total_pages, MAX_VISIBLE) + 2)
-    col_idx  = 0
-
-    # Prev
-    with btn_cols[col_idx]:
-        if st.button("‹", key="prev_top", disabled=(page_num == 1)):
-            st.session_state["listing_page"] = max(1, page_num - 1)
-            st.rerun()
-    col_idx += 1
-
-    for p in range(start_p, end_p + 1):
-        with btn_cols[col_idx]:
-            label = f"**{p}**" if p == page_num else str(p)
-            btn_type = "primary" if p == page_num else "secondary"
-            if st.button(label, key=f"page_{p}_top", type=btn_type):
-                st.session_state["listing_page"] = p
-                st.rerun()
-        col_idx += 1
-
-    # Next
-    with btn_cols[col_idx]:
-        if st.button("›", key="next_top", disabled=(page_num == total_pages)):
-            st.session_state["listing_page"] = min(total_pages, page_num + 1)
-            st.rerun()
-
-    st.markdown(
-        f'<div style="font-size:0.78rem;color:#999;margin:6px 0 16px;">'
-        f'Page {page_num} of {total_pages}</div>',
-        unsafe_allow_html=True,
-    )
-
     start  = (page_num - 1) * PAGE_SIZE
     page_df = fdf.iloc[start: start + PAGE_SIZE]
 
     for _, row in page_df.iterrows():
-        title   = row.get("title") or "Untitled"
-        company = row.get("company") or "Unknown Company"
-        loc     = row.get("location") or "Location not specified"
+        import html as _html
+
+        title   = _html.escape(str(row.get("title") or "Untitled"))
+        company = _html.escape(str(row.get("company") or "Unknown Company"))
+        loc     = _html.escape(str(row.get("location") or "Location not specified"))
         skills  = row.get("tech_skills_found") or []
-        sal     = row.get("salary_str") or "Not disclosed"
-        exp     = row.get("experience_level") or "Not specified"
-        url     = row.get("job_url") or ""
+        sal     = str(row.get("salary_str") or "Not disclosed")
+        exp     = str(row.get("experience_level") or "Not specified")
+        url     = str(row.get("job_url") or "")
         posted  = str(row.get("posted_date") or "")[:10]
 
-        # ── Sanitise URL — only allow http/https to prevent XSS / broken buttons ──
-        safe_url = url if (url and str(url).startswith("http")) else ""
+        # Strictly validate URL — must start with http and contain no HTML chars
+        safe_url = url if (url.startswith("http") and "<" not in url and ">" not in url) else ""
 
         skills_html = "".join(
-            f'<span class="skill-pill">{s}</span>'
+            f'<span class="skill-pill">{_html.escape(str(s))}</span>'
             for s in (skills[:6] if isinstance(skills, list) else [])
         )
 
-        sal_badge  = f'<span class="salary-badge">{sal}</span>'  if sal != "Not disclosed"  else ""
-        exp_badge  = f'<span class="exp-badge">{exp}</span>'     if exp != "Not specified"   else ""
-        posted_str = f'<span class="job-meta-item">{posted}</span>' if posted and posted != "None" else ""
-
-        # Only render a proper anchor when we have a valid URL
-        import html as _html
-        safe_title = _html.escape(str(title))
-        safe_company = _html.escape(str(company))
-        safe_loc = _html.escape(str(loc))
+        sal_badge  = f'<span class="salary-badge">{_html.escape(sal)}</span>' if sal != "Not disclosed" else ""
+        exp_badge  = f'<span class="exp-badge">{_html.escape(exp)}</span>'    if exp != "Not specified"  else ""
+        posted_str = f'<span class="job-meta-item">{posted}</span>'           if posted and posted != "None" else ""
 
         if safe_url:
             apply_html = f'<a class="apply-btn" href="{safe_url}" target="_blank" rel="noopener noreferrer">View &amp; Apply</a>'
-            title_html = f'<a href="{safe_url}" target="_blank" rel="noopener noreferrer">{safe_title}</a>'
+            title_html = f'<a href="{safe_url}" target="_blank" rel="noopener noreferrer">{title}</a>'
         else:
             apply_html = ""
-            title_html = safe_title
+            title_html = title
 
         st.markdown(f"""
         <div class="job-card">
             <div class="job-title">{title_html}</div>
-            <div class="job-company">{safe_company}</div>
+            <div class="job-company">{company}</div>
             <div class="job-meta">
-                <span class="job-meta-item">{safe_loc}</span>
+                <span class="job-meta-item">{loc}</span>
                 {posted_str}
             </div>
             <div class="job-skills">
@@ -1031,7 +990,11 @@ with tab_listings:
         """, unsafe_allow_html=True)
 
     # ── Pagination buttons (bottom) ──
-    st.markdown('<div style="margin-top:20px;"></div>', unsafe_allow_html=True)
+    st.markdown(
+        f'<div style="font-size:0.78rem;color:#999;margin:20px 0 8px;">'
+        f'Page {page_num} of {total_pages}</div>',
+        unsafe_allow_html=True,
+    )
     btn_cols_b = st.columns(min(total_pages, MAX_VISIBLE) + 2)
     col_idx    = 0
 
