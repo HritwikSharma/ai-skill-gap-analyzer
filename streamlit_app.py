@@ -418,8 +418,32 @@ div[data-baseweb="select"] div {
 }
 
 /* ── Hide number input widget ── */
+/* ── Hide number input widget ── */
 [data-testid="stNumberInput"] {
     display: none !important;
+}
+
+/* ── Pagination buttons ── */
+[data-testid="stHorizontalBlock"] button[kind="secondary"] {
+    background    : var(--surface) !important;
+    color         : var(--text-primary) !important;
+    border        : 1px solid var(--border) !important;
+    border-radius : 6px !important;
+    font-size     : 0.82rem !important;
+    font-weight   : 500 !important;
+}
+[data-testid="stHorizontalBlock"] button[kind="secondary"]:hover {
+    background    : var(--blue-light) !important;
+    border-color  : var(--blue-primary) !important;
+    color         : var(--blue-primary) !important;
+}
+[data-testid="stHorizontalBlock"] button[kind="primary"] {
+    background    : var(--blue-primary) !important;
+    color         : #fff !important;
+    border        : 1px solid var(--blue-primary) !important;
+    border-radius : 6px !important;
+    font-size     : 0.82rem !important;
+    font-weight   : 700 !important;
 }
 
 /* ── Responsive ── */
