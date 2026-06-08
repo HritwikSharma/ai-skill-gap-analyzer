@@ -20,7 +20,7 @@ DB_PASSWORD = "HRITWIKSHARMA"
 # ─────────────────────────────────────────────
 st.set_page_config(
     page_title  = "TalentPulse — India Tech Market Intelligence",
-    page_icon   = "assets/favicon.ico",
+    page_icon   = "📊",
     layout      = "wide",
     initial_sidebar_state = "collapsed",
 )
@@ -51,11 +51,21 @@ THEME = """
     --font-display  : 'Sora', sans-serif;
 }
 
-/* ── Reset & base ── */
-html, body, [class*="css"] {
-    font-family : var(--font-sans);
-    color       : var(--text-primary);
-    background  : var(--surface-2) !important;
+/* ── Reset & base — force white/light background ── */
+html, body,
+[class*="css"],
+.stApp,
+.main,
+.block-container,
+[data-testid="stAppViewContainer"],
+[data-testid="stAppViewBlockContainer"],
+[data-testid="stMainBlockContainer"],
+[data-testid="stMain"],
+[data-testid="stVerticalBlock"],
+[data-testid="stHorizontalBlock"] {
+    font-family  : var(--font-sans) !important;
+    color        : var(--text-primary) !important;
+    background   : var(--surface-2) !important;
 }
 
 /* ── Hide Streamlit chrome ── */
@@ -281,26 +291,62 @@ section[data-testid="stSidebar"] { display: none; }
 }
 .apply-btn:hover { background: var(--blue-hover); text-decoration: none; }
 
-/* ── Tab styling overrides ── */
-div[data-baseweb="tab-list"] {
+/* ── Tab styling — always visible, not just on hover ── */
+[data-testid="stTabs"] {
     background   : var(--surface);
-    border-bottom: 1px solid var(--border);
-    gap          : 0;
-    padding      : 0 4px;
+    border-radius: var(--radius) var(--radius) 0 0;
 }
-div[data-baseweb="tab"] {
-    font-size  : 0.85rem;
-    font-weight: 500;
-    color      : var(--text-secondary);
-    padding    : 12px 18px;
-    border-bottom: 2px solid transparent;
+
+/* Tab list container */
+[data-testid="stTabs"] > div:first-child,
+div[data-baseweb="tab-list"] {
+    background   : var(--surface) !important;
+    border-bottom: 2px solid var(--border) !important;
+    gap          : 0 !important;
+    padding      : 0 8px !important;
 }
-div[data-baseweb="tab"][aria-selected="true"] {
-    color        : var(--blue-primary);
-    border-bottom: 2px solid var(--blue-primary);
-    font-weight  : 600;
+
+/* Individual tabs — always show text in dark color */
+div[data-baseweb="tab"],
+button[data-baseweb="tab"],
+[role="tab"] {
+    font-family  : var(--font-sans) !important;
+    font-size    : 0.88rem !important;
+    font-weight  : 500 !important;
+    color        : var(--text-secondary) !important;
+    background   : transparent !important;
+    padding      : 12px 20px !important;
+    border-bottom: 3px solid transparent !important;
+    transition   : color .15s, border-color .15s !important;
+    white-space  : nowrap !important;
+    opacity      : 1 !important;
 }
-div[data-testid="stTabContent"] { padding-top: 24px; }
+
+/* Hover state */
+div[data-baseweb="tab"]:hover,
+button[data-baseweb="tab"]:hover,
+[role="tab"]:hover {
+    color        : var(--blue-primary) !important;
+    border-bottom: 3px solid #BAD7F5 !important;
+    background   : var(--blue-light) !important;
+}
+
+/* Active / selected tab */
+div[data-baseweb="tab"][aria-selected="true"],
+button[data-baseweb="tab"][aria-selected="true"],
+[role="tab"][aria-selected="true"] {
+    color        : var(--blue-primary) !important;
+    border-bottom: 3px solid var(--blue-primary) !important;
+    font-weight  : 600 !important;
+    background   : transparent !important;
+}
+
+/* Tab content area */
+div[data-testid="stTabContent"],
+[data-baseweb="tab-panel"] {
+    background   : var(--surface-2) !important;
+    padding-top  : 24px !important;
+}
 
 /* ── Selectbox / multiselect ── */
 div[data-baseweb="select"] > div:first-child {
@@ -308,6 +354,22 @@ div[data-baseweb="select"] > div:first-child {
     border-radius : var(--radius) !important;
     font-size     : 0.85rem !important;
     min-height    : 38px !important;
+    background    : var(--surface) !important;
+}
+
+/* Selectbox label text */
+div[data-baseweb="select"] span,
+div[data-baseweb="select"] div {
+    color : var(--text-primary) !important;
+}
+
+/* ── Number input ── */
+input[type="number"],
+[data-testid="stNumberInput"] input {
+    background   : var(--surface) !important;
+    color        : var(--text-primary) !important;
+    border-color : var(--border) !important;
+    border-radius: var(--radius) !important;
 }
 
 /* ── Responsive ── */
@@ -324,19 +386,28 @@ st.markdown(THEME, unsafe_allow_html=True)
 
 # ─────────────────────────────────────────────
 #  PLOTLY BASE TEMPLATE (shared across all charts)
+#  NOTE: xaxis / yaxis are defined here ONCE.
+#  Do NOT pass xaxis= or yaxis= again in update_layout(**PLOTLY_LAYOUT, ...)
+#  Use PLOTLY_LAYOUT_NO_AXES for charts that need custom axes.
 # ─────────────────────────────────────────────
+_AXIS_STYLE = dict(gridcolor="#EEEDE9", linecolor="#E0DFDC", tickfont=dict(size=11))
+
 PLOTLY_LAYOUT = dict(
     font         = dict(family="Inter, sans-serif", color="#191919"),
     paper_bgcolor= "rgba(0,0,0,0)",
-    plot_bgcolor = "rgba(0,0,0,0)",
+    plot_bgcolor = "#FFFFFF",
     margin       = dict(l=8, r=8, t=36, b=8),
     title_font   = dict(size=13, color="#666666", family="Inter, sans-serif"),
-    xaxis        = dict(gridcolor="#EEEDE9", linecolor="#E0DFDC", tickfont=dict(size=11)),
-    yaxis        = dict(gridcolor="#EEEDE9", linecolor="#E0DFDC", tickfont=dict(size=11)),
+    xaxis        = _AXIS_STYLE,
+    yaxis        = _AXIS_STYLE,
     hoverlabel   = dict(bgcolor="#FFFFFF", font_size=12, font_family="Inter, sans-serif",
                         bordercolor="#E0DFDC"),
     colorway     = ["#0A66C2","#057642","#B24020","#7B5EA7","#D48806","#0891B2"],
 )
+
+# Layout variant without pre-set axes (use when you need custom xaxis/yaxis params)
+PLOTLY_LAYOUT_NO_AXES = {k: v for k, v in PLOTLY_LAYOUT.items() if k not in ("xaxis", "yaxis")}
+
 BLUE_SEQ = ["#EBF3FB","#BAD7F5","#7BB8ED","#3D92D9","#0A66C2","#004182"]
 
 # ─────────────────────────────────────────────
@@ -367,11 +438,6 @@ def fetch_job_data():
 #  HELPER — parse salary string → numeric
 # ─────────────────────────────────────────────
 def _parse_salary_to_lpa(salary_str):
-    """
-    Converts various salary formats to a mid-point float in LPA.
-    Handles: '₹ 300000 - ₹ 800000', '₹ 500000+', 'Not Specified'.
-    Returns None if not parseable.
-    """
     if not salary_str or salary_str == "Not Specified":
         return None
     nums = re.findall(r"\d[\d,]*", salary_str.replace(",", ""))
@@ -379,14 +445,12 @@ def _parse_salary_to_lpa(salary_str):
     if not nums:
         return None
     mid = sum(nums) / len(nums)
-    # Assume raw numbers < 500 are already in LPA notation (e.g. "12 LPA")
     if mid > 500:
-        mid = mid / 100_000          # convert paise/rupees → LPA
+        mid = mid / 100_000
     return round(mid, 1)
 
 
 def extract_metadata_fields(df):
-    """Flatten extra_metadata JSON column into separate DataFrame columns."""
     def _get(row, key):
         try:
             m = row if isinstance(row, dict) else json.loads(row)
@@ -402,7 +466,7 @@ def extract_metadata_fields(df):
 
 
 # ─────────────────────────────────────────────
-#  INDIAN CITY COORDINATES  (comprehensive)
+#  INDIAN CITY COORDINATES
 # ─────────────────────────────────────────────
 CITY_COORDS = {
     "bengaluru": (12.9716, 77.5946), "bangalore": (12.9716, 77.5946),
@@ -538,11 +602,11 @@ st.markdown(f"""
 #  TABS
 # ─────────────────────────────────────────────
 tab_market, tab_salary, tab_companies, tab_map, tab_listings = st.tabs([
-    "Market Overview",
-    "Salary Insights",
-    "Company Intelligence",
-    "Geographic Heat Map",
-    "Job Listings",
+    "📊  Market Overview",
+    "💰  Salary Insights",
+    "🏢  Company Intelligence",
+    "🗺️  Geographic Heat Map",
+    "📋  Job Listings",
 ])
 
 # ══════════════════════════════════════════════
@@ -576,8 +640,9 @@ with tab_market:
                 ),
                 hovertemplate="<b>%{y}</b><br>%{x} postings<extra></extra>",
             ))
+            # Use PLOTLY_LAYOUT_NO_AXES and define custom axes separately to avoid duplicate key error
             fig_skills.update_layout(
-                **PLOTLY_LAYOUT,
+                **PLOTLY_LAYOUT_NO_AXES,
                 height=460,
                 title="Frequency across all active listings",
                 yaxis=dict(categoryorder="total ascending", tickfont=dict(size=11),
@@ -777,10 +842,12 @@ with tab_companies:
             hovertemplate="<b>%{y}</b><br>%{x} listings<extra></extra>",
         ))
         fig_co.update_layout(
-            **PLOTLY_LAYOUT,
+            **PLOTLY_LAYOUT_NO_AXES,
             height=520,
             title="Volume of active job postings",
-            yaxis=dict(categoryorder="total ascending"),
+            yaxis=dict(categoryorder="total ascending", tickfont=dict(size=11),
+                       gridcolor="#EEEDE9", linecolor="#E0DFDC"),
+            xaxis=dict(gridcolor="#EEEDE9", linecolor="#E0DFDC", tickfont=dict(size=11)),
         )
         st.plotly_chart(fig_co, use_container_width=True)
         st.markdown('</div>', unsafe_allow_html=True)
@@ -806,10 +873,12 @@ with tab_companies:
                 labels={"count":"Listings", "company":"", "title":"Role"},
             )
             fig_div.update_layout(
-                **PLOTLY_LAYOUT,
+                **PLOTLY_LAYOUT_NO_AXES,
                 height=520,
                 title="How each employer distributes hiring across roles",
-                yaxis=dict(categoryorder="total ascending"),
+                yaxis=dict(categoryorder="total ascending", tickfont=dict(size=11),
+                           gridcolor="#EEEDE9", linecolor="#E0DFDC"),
+                xaxis=dict(gridcolor="#EEEDE9", linecolor="#E0DFDC", tickfont=dict(size=11)),
                 legend=dict(font=dict(size=10), orientation="h", y=-0.18),
                 barmode="stack",
             )
