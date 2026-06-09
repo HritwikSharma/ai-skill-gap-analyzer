@@ -3,7 +3,7 @@ import streamlit.components.v1 as components
 
 st.set_page_config(page_title="TalentPulse", layout="centered")
 
-if st.experimental_user.email:
+if st.user.is_logged_in:
     st.switch_page("pages/dashboard.py")
     
 st.markdown("""
