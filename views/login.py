@@ -1,7 +1,7 @@
 import streamlit as st
 import streamlit.components.v1 as components
 
-def render_login():
+def render_login(auth_url: str):
     st.markdown("""
     <style>
     html, body, .stApp, [data-testid="stAppViewContainer"],
@@ -19,52 +19,6 @@ def render_login():
         display: flex !important;
         flex-direction: column !important;
         align-items: center !important;
-    }
-    
-    div[data-testid="stButton"] {
-        display: flex !important;
-        justify-content: center !important;
-        width: 100% !important;
-        margin-top: -8px !important;
-    }
-    
-    div[data-testid="stButton"] > button {
-        background: #141414 !important;
-        border: 1px solid #1e1e1e !important;
-        color: #fff !important;
-        font-family: 'Inter', sans-serif !important;
-        font-size: 14px !important;
-        font-weight: 500 !important;
-        width: 364px !important;
-        padding: 12px 16px !important;
-        border-radius: 10px !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        gap: 10px !important;
-    }
-    div[data-testid="stButton"] > button:hover {
-        background: #1a1a1a !important;
-        border-color: #333 !important;
-        color: #fff !important;
-    }
-    
-    div[data-testid="stButton"] > button::before {
-        content: '';
-        display: inline-block;
-        width: 18px;
-        height: 18px;
-        flex-shrink: 0;
-        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 18 18'%3E%3Cpath d='M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z' fill='%234285F4'/%3E%3Cpath d='M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z' fill='%2334A853'/%3E%3Cpath d='M3.964 10.707A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.707V4.961H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.039l3.007-2.332z' fill='%23FBBC05'/%3E%3Cpath d='M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.961L3.964 7.293C4.672 5.163 6.656 3.58 9 3.58z' fill='%23EA4335'/%3E%3C/svg%3E");
-        background-repeat: no-repeat;
-        background-size: contain;
-    }
-    
-    div[data-testid="stButton"] > button > div {
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        width: 100% !important;
     }
     </style>
     """, unsafe_allow_html=True)
@@ -147,11 +101,42 @@ def render_login():
     </script>
     </body>
     </html>
-    """, height=480, scrolling=False)
-    st.markdown("<style>div[data-testid='stButton']</style>", unsafe_allow_html=True)
-    if st.button("Continue with Google"):
-        st.login()  # Streamlit's native multi-tenant login engine trigger
+    """, height=420, scrolling=False)
 
-
-
-
+    # RENDER THE PUBLIC AUTHENTICATION LINK BUTTON
+    left_co, cent_co, last_co = st.columns([2, 1, 2])
+    with cent_co:
+        st.markdown(
+            f'''
+            <a href="{auth_url}" target="_self" style="text-decoration: none;">
+                <div style="
+                    background: #141414; 
+                    border: 1px solid #1e1e1e; 
+                    color: #fff; 
+                    font-family: 'Inter', sans-serif; 
+                    font-size: 14px; 
+                    font-weight: 500; 
+                    width: 364px; 
+                    padding: 12px 16px; 
+                    border-radius: 10px; 
+                    display: flex; 
+                    align-items: center; 
+                    justify-content: center; 
+                    gap: 10px;
+                    margin-left: -110px;
+                    cursor: pointer;
+                    transition: background 0.15s, border-color 0.15s;
+                " onmouseover="this.style.background='#1a1a1a'; this.style.borderColor='#333';" 
+                  onmouseout="this.style.background='#141414'; this.style.borderColor='#1e1e1e';">
+                    <svg width="18" height="18" viewBox="0 0 18 18" style="flex-shrink: 0;">
+                        <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/>
+                        <path d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z" fill="#34A853"/>
+                        <path d="M3.964 10.707A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.707V4.961H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.039l3.007-2.332z" fill="#FBBC05"/>
+                        <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.961L3.964 7.293C4.672 5.163 6.656 3.58 9 3.58z" fill="#EA4335"/>
+                    </svg>
+                    <span>Continue with Google</span>
+                </div>
+            </a>
+            ''',
+            unsafe_allow_html=True
+        )
