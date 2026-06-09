@@ -6,3 +6,4 @@ plotly
 authlib
 streamlit[auth]
 httpx
+httpx-oauth
