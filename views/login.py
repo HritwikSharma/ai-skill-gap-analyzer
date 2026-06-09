@@ -113,5 +113,5 @@ function switchTab(tab) {
 """, height=360, scrolling=False)
 
 # THIS is the real button — only this can call st.login()
-if st.button("🔵  Continue with Google", use_container_width=False):
+if st.button("Continue with Google", use_container_width=False):
     st.login()
