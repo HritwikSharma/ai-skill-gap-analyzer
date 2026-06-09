@@ -14,7 +14,6 @@ html, body, .stApp, [data-testid="stAppViewContainer"],
 #MainMenu, footer, header { visibility: hidden; }
 .block-container { padding: 0 !important; max-width: 100% !important; }
 
-/* Target the full Streamlit button column/row wrapper chain */
 .stMainBlockContainer,
 [data-testid="stVerticalBlockBorderWrapper"],
 [data-testid="stVerticalBlock"] {
@@ -23,7 +22,6 @@ html, body, .stApp, [data-testid="stAppViewContainer"],
     align-items: center !important;
 }
 
-/* The immediate button parent */
 div[data-testid="stButton"] {
     display: flex !important;
     justify-content: center !important;
@@ -32,8 +30,8 @@ div[data-testid="stButton"] {
 }
 
 div[data-testid="stButton"] > button {
-    background: #252528 !important;
-    border: 1px solid #333 !important;
+    background: #141414 !important;
+    border: 1px solid #1e1e1e !important;
     color: #fff !important;
     font-family: 'Inter', sans-serif !important;
     font-size: 14px !important;
@@ -47,12 +45,11 @@ div[data-testid="stButton"] > button {
     gap: 10px !important;
 }
 div[data-testid="stButton"] > button:hover {
-    background: #2e2e32 !important;
-    border-color: #444 !important;
+    background: #1a1a1a !important;
+    border-color: #333 !important;
     color: #fff !important;
 }
 
-/* Google G icon via ::before */
 div[data-testid="stButton"] > button::before {
     content: '';
     display: inline-block;
@@ -64,7 +61,6 @@ div[data-testid="stButton"] > button::before {
     background-size: contain;
 }
 
-/* Streamlit's inner button layout wrappers — force them to center too */
 div[data-testid="stButton"] > button > div {
     display: flex !important;
     align-items: center !important;
@@ -88,23 +84,23 @@ components.html("""
     display: flex;
     align-items: center;
     justify-content: center;
-    padding-top: 40px;
+    padding-top: 0px;
   }
-  .card { width: 420px; border-radius: 16px; overflow: hidden; border: 1px solid #2a2a2a; box-shadow: 0 24px 60px rgba(0,0,0,0.6); }
-  .card-header { background: #1A56DB; padding: 32px 28px; text-align: center; }
+  .card { width: 420px; border-radius: 0; overflow: hidden; border: none; box-shadow: none; }
+  .card-header { background: #0f0f0f; padding: 32px 28px 16px; text-align: center; }
   .card-header h1 { font-size: 22px; font-weight: 600; color: #fff; letter-spacing: -0.03em; }
-  .card-header p { font-size: 13px; color: rgba(255,255,255,0.65); margin-top: 6px; }
-  .card-body { background: #1c1c1e; }
-  .tabs { display: flex; border-bottom: 1px solid #2e2e2e; }
-  .tab { flex: 1; padding: 14px; text-align: center; font-size: 14px; color: #666; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: color 0.15s, border-color 0.15s; user-select: none; }
+  .card-header p { font-size: 13px; color: rgba(255,255,255,0.4); margin-top: 6px; }
+  .card-body { background: #0f0f0f; }
+  .tabs { display: flex; border-bottom: 1px solid #1e1e1e; }
+  .tab { flex: 1; padding: 14px; text-align: center; font-size: 14px; color: #555; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: color 0.15s, border-color 0.15s; user-select: none; }
   .tab.active { color: #4d9fff; border-bottom: 2px solid #4d9fff; font-weight: 500; }
   .panel { display: none; padding: 28px 28px 20px; }
   .panel.active { display: block; }
-  .panel p.subtitle { font-size: 14px; color: #888; margin-bottom: 12px; line-height: 1.5; }
-  .features { background: #252528; border-radius: 10px; padding: 16px 18px; margin-bottom: 16px; border: 1px solid #2e2e2e; }
+  .panel p.subtitle { font-size: 14px; color: #666; margin-bottom: 12px; line-height: 1.5; }
+  .features { background: #141414; border-radius: 10px; padding: 16px 18px; margin-bottom: 16px; border: 1px solid #1e1e1e; }
   .feature-item { display: flex; align-items: center; gap: 10px; font-size: 13px; color: #bbb; padding: 5px 0; }
   .feature-item .check { color: #4d9fff; font-size: 15px; flex-shrink: 0; }
-  .footer-note { font-size: 11px; color: #444; text-align: center; padding: 4px 28px 16px; display: flex; align-items: center; justify-content: center; gap: 5px; }
+  .footer-note { font-size: 11px; color: #333; text-align: center; padding: 4px 28px 16px; display: flex; align-items: center; justify-content: center; gap: 5px; }
 </style>
 </head>
 <body>
@@ -134,7 +130,7 @@ components.html("""
       </div>
       <p class="subtitle">Create your free account — no password needed.</p>
     </div>
-        <div class="footer-note">
+    <div class="footer-note">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
       </svg>
@@ -154,13 +150,6 @@ function switchTab(tab) {
 </html>
 """, height=480, scrolling=False)
 
-
 st.markdown("<style>div[data-testid='stButton']{display:none}</style>", unsafe_allow_html=True)
 if st.button("Continue with Google"):
     st.login()
-
-
-
-
-
-
