@@ -27,8 +27,6 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="collapsed",
 )
-if not st.user.is_logged_in:
-    st.switch_page("views/login.py") 
 
 # Strip ALL Streamlit chrome — we own the full canvas
 st.markdown("""
