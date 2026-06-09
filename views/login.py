@@ -3,6 +3,12 @@ import streamlit.components.v1 as components
 
 st.set_page_config(page_title="TalentPulse", layout="centered")
 
+# ── Check if iframe triggered login ──────────────────────────
+if st.query_params.get("do_login") == "1":
+    st.query_params.clear()
+    st.login()
+    st.stop()
+
 st.markdown("""
 <style>
 html, body, .stApp, [data-testid="stAppViewContainer"],
@@ -13,38 +19,9 @@ html, body, .stApp, [data-testid="stAppViewContainer"],
 }
 #MainMenu, footer, header { visibility: hidden; }
 .block-container { padding: 0 !important; max-width: 100% !important; }
-
-/* Hide the real Streamlit button visually but keep it clickable via JS */
-div[data-testid="stButton"] {
-    position: absolute;
-    top: -9999px;
-    left: -9999px;
-}
 </style>
 """, unsafe_allow_html=True)
 
-# Hidden real Streamlit button — triggered by JS below
-if st.button("login_trigger", key="login_btn"):
-    st.login()
-
-# Listen for postMessage from iframe and click the hidden button
-components.html("""
-<script>
-window.addEventListener('message', function(e) {
-    if (e.data === 'trigger_google_login') {
-        // Find the hidden Streamlit button and click it
-        const buttons = window.parent.document.querySelectorAll('button');
-        buttons.forEach(btn => {
-            if (btn.innerText.trim() === 'login_trigger') {
-                btn.click();
-            }
-        });
-    }
-});
-</script>
-""", height=0)
-
-# Your beautiful HTML card with the Google button intact
 components.html("""
 <!DOCTYPE html>
 <html>
@@ -68,64 +45,31 @@ components.html("""
     border: 1px solid #2a2a2a;
     box-shadow: 0 24px 60px rgba(0,0,0,0.6);
   }
-  .card-header {
-    background: #1A56DB;
-    padding: 32px 28px;
-    text-align: center;
-  }
-  .card-header h1 {
-    font-size: 22px;
-    font-weight: 600;
-    color: #fff;
-    letter-spacing: -0.03em;
-  }
-  .card-header p {
-    font-size: 13px;
-    color: rgba(255,255,255,0.65);
-    margin-top: 6px;
-  }
+  .card-header { background: #1A56DB; padding: 32px 28px; text-align: center; }
+  .card-header h1 { font-size: 22px; font-weight: 600; color: #fff; letter-spacing: -0.03em; }
+  .card-header p { font-size: 13px; color: rgba(255,255,255,0.65); margin-top: 6px; }
   .card-body { background: #1c1c1e; padding: 0; }
   .tabs { display: flex; border-bottom: 1px solid #2e2e2e; }
-  .tab {
-    flex: 1; padding: 14px; text-align: center;
-    font-size: 14px; color: #666; cursor: pointer;
-    border-bottom: 2px solid transparent; margin-bottom: -1px;
-    transition: color 0.15s, border-color 0.15s; user-select: none;
-  }
+  .tab { flex: 1; padding: 14px; text-align: center; font-size: 14px; color: #666; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: color 0.15s, border-color 0.15s; user-select: none; }
   .tab.active { color: #4d9fff; border-bottom: 2px solid #4d9fff; font-weight: 500; }
   .panel { display: none; padding: 28px; }
   .panel.active { display: block; }
-  .panel p.subtitle {
-    font-size: 14px; color: #888;
-    margin-bottom: 22px; line-height: 1.5;
-  }
+  .panel p.subtitle { font-size: 14px; color: #888; margin-bottom: 22px; line-height: 1.5; }
   .google-btn {
     display: flex; align-items: center; justify-content: center;
     gap: 10px; width: 100%; padding: 12px 16px;
     border-radius: 10px; border: 1px solid #333;
     background: #252528; color: #fff;
-    font-size: 14px; font-weight: 500;
-    cursor: pointer;
+    font-size: 14px; font-weight: 500; cursor: pointer;
     transition: background 0.15s, border-color 0.15s, transform 0.1s;
     font-family: 'Inter', sans-serif;
   }
   .google-btn:hover { background: #2e2e32; border-color: #444; }
   .google-btn:active { transform: scale(0.98); }
-  .features {
-    background: #252528; border-radius: 10px;
-    padding: 16px 18px; margin-bottom: 20px;
-    border: 1px solid #2e2e2e;
-  }
-  .feature-item {
-    display: flex; align-items: center; gap: 10px;
-    font-size: 13px; color: #bbb; padding: 5px 0;
-  }
+  .features { background: #252528; border-radius: 10px; padding: 16px 18px; margin-bottom: 20px; border: 1px solid #2e2e2e; }
+  .feature-item { display: flex; align-items: center; gap: 10px; font-size: 13px; color: #bbb; padding: 5px 0; }
   .feature-item .check { color: #4d9fff; font-size: 15px; flex-shrink: 0; }
-  .footer-note {
-    font-size: 11px; color: #444; text-align: center;
-    margin-top: 20px; display: flex;
-    align-items: center; justify-content: center; gap: 5px;
-  }
+  .footer-note { font-size: 11px; color: #444; text-align: center; margin-top: 20px; display: flex; align-items: center; justify-content: center; gap: 5px; }
 </style>
 </head>
 <body>
@@ -194,8 +138,10 @@ function switchTab(tab) {
 }
 
 function triggerLogin() {
-  // Send message to the listener iframe above
-  window.parent.postMessage('trigger_google_login', '*');
+  // Modify the PARENT window URL directly — this is allowed
+  const url = new URL(window.parent.location.href);
+  url.searchParams.set('do_login', '1');
+  window.parent.location.href = url.toString();
 }
 </script>
 </body>
