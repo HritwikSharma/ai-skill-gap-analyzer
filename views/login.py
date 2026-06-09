@@ -150,7 +150,7 @@ function switchTab(tab) {
 </html>
 """, height=480, scrolling=False)
 
-st.markdown("<style>div[data-testid='stButton']{display:none}</style>", unsafe_allow_html=True)
+st.markdown("<style>div[data-testid='stButton']</style>", unsafe_allow_html=True)
 if st.button("Continue with Google"):
     st.login()
 
