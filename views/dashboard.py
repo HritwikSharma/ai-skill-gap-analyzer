@@ -465,70 +465,34 @@ with col2:
 # ─────────────────────────────────────────────
 #  TAB NAV (pure HTML — drives session state)
 # ─────────────────────────────────────────────
-active = st.session_state["active_tab"]
-tabs_def = [
-    ("listings",  "📋 Job Listings"),
-    ("market",    "📊 Market Overview"),
-    ("salary",    "💰 Salary Insights"),
-    ("companies", "🏢 Companies"),
-    ("map",       "🗺️ Heat Map"),
-]
+# ─────────────────────────────────────────────
+#  TAB NAV (Native Segmented Control)
+# ─────────────────────────────────────────────
+# Use the existing session state value as the default index
+tab_options = ["listings", "market", "salary", "companies", "map"]
+default_index = tab_options.index(st.session_state["active_tab"])
 
-tab_items = "".join(
-    f'<div class="tab {"active" if t[0]==active else ""}" onclick="setTab(\'{t[0]}\')">{t[1]}</div>'
-    for t in tabs_def
+# Render the native, fully-functional selector
+selected_tab = st.segmented_control(
+    "Navigation",
+    options=tab_options,
+    default=st.session_state["active_tab"],
+    format_func=lambda x: {
+        "listings": "📋 Job Listings",
+        "market": "📊 Market Overview",
+        "salary": "💰 Salary Insights",
+        "companies": "🏢 Companies",
+        "map": "🗺️ Heat Map"
+    }[x],
+    label_visibility="collapsed"
 )
 
-tab_result = components.html(f"""
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-<style>
-* {{ margin:0; padding:0; box-sizing:border-box; font-family:'Inter',sans-serif; }}
-body {{ background:#0d0d0d; padding: 0 32px; }}
-.tabs {{
-    display: flex;
-    gap: 0;
-    border-bottom: 1px solid #1e1e1e;
-    background: #111;
-    border-radius: 12px 12px 0 0;
-    padding: 0 8px;
-    overflow-x: auto;
-    scrollbar-width: none;
-}}
-.tabs::-webkit-scrollbar {{ display:none; }}
-.tab {{
-    padding: 14px 20px;
-    font-size: 0.85rem;
-    font-weight: 500;
-    color: #555;
-    cursor: pointer;
-    border-bottom: 2px solid transparent;
-    margin-bottom: -1px;
-    white-space: nowrap;
-    transition: color 0.15s, border-color 0.15s;
-    user-select: none;
-}}
-.tab:hover {{ color: #3b82f6; }}
-.tab.active {{
-    color: #3b82f6;
-    border-bottom: 2px solid #3b82f6;
-    font-weight: 600;
-}}
-</style>
-<div class="tabs">{tab_items}</div>
-<script>
-function setTab(name) {{
-    window.parent.postMessage({{
-        type: 'streamlit:setComponentValue',
-        value: 'tab:' + name
-    }}, '*');
-}}
-</script>
-""", height=52, scrolling=False)
-
-if tab_result and str(tab_result).startswith("tab:"):
-    st.session_state["active_tab"] = tab_result.replace("tab:", "")
+# React instantly to user interaction without breaking the layout
+if selected_tab and selected_tab != st.session_state["active_tab"]:
+    st.session_state["active_tab"] = selected_tab
     st.rerun()
 
+# Re-assign the active pointer variable used by the downstream IF/ELIF statements
 active = st.session_state["active_tab"]
 
 # ─────────────────────────────────────────────
