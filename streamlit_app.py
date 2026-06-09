@@ -1,27 +1,25 @@
 import streamlit as st
 
-# Must be the very first Streamlit command called
+# MUST be the very first Streamlit command in the script
 st.set_page_config(layout="wide", initial_sidebar_state="collapsed")
 
-# Initialize session state for your view tracking if not present
+# Initialize universal navigation parameters if missing
 if "authenticated" not in st.session_state:
     st.session_state["authenticated"] = False
 if "active_tab" not in st.session_state:
     st.session_state["active_tab"] = "listings"
 
-# Streamlit native auth engine mapping check
-if not st.experimental_user.get("is_logged_in", False):
-    # User is not logged in through Google yet -> show login screen
+# FIXED: Using the native st.user object properties
+if not st.user.is_logged_in:
     st.session_state["authenticated"] = False
     
-    # Import and run your view logic directly as a module
+    # Import and render your customized login screen layout
     from views.login import render_login
     render_login()
 else:
-    # Google Auth success! Mark state true and forward traffic
+    # Google account authenticated successfully! Forward to your dashboard
     st.session_state["authenticated"] = True
-    st.session_state["user_info"] = st.experimental_user
+    st.session_state["user_info"] = st.user
     
-    # Import and run your dashboard view directly as a module
     from views.dashboard import render_dashboard
     render_dashboard()
