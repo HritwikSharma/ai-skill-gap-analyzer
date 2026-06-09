@@ -3,6 +3,11 @@ import streamlit.components.v1 as components
 
 st.set_page_config(page_title="TalentPulse", layout="centered")
 
+# Handle login trigger from query param
+if st.query_params.get("trigger_login") == "1":
+    st.query_params.clear()
+    st.login()
+
 st.markdown("""
 <style>
 html, body, .stApp, [data-testid="stAppViewContainer"],
@@ -234,16 +239,14 @@ function switchTab(tab) {
 }
 
 function handleLogin() {
-  // Signal Streamlit to trigger st.login
-  window.parent.postMessage({type: 'streamlit:setComponentValue', value: 'login_clicked'}, '*');
+  // Add query param to parent Streamlit URL to trigger st.login()
+  const url = new URL(window.parent.location.href);
+  url.searchParams.set('trigger_login', '1');
+  window.parent.location.href = url.toString();
 }
 </script>
 </body>
 </html>
 """
 
-result = components.html(AUTH_HTML, height=520, scrolling=False)
-
-# Handle login trigger from the component
-if result == "login_clicked":
-    st.login()
+components.html(AUTH_HTML, height=520, scrolling=False)
