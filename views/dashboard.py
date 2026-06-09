@@ -21,12 +21,6 @@ DB_PASSWORD = "HRITWIKSHARMA"
 # ─────────────────────────────────────────────
 #  PAGE CONFIG — minimal Streamlit chrome
 # ─────────────────────────────────────────────
-st.set_page_config(
-    page_title="TalentPulse — India Tech Market Intelligence",
-    page_icon="📊",
-    layout="wide",
-    initial_sidebar_state="collapsed",
-)
 
 # Strip ALL Streamlit chrome — we own the full canvas
 st.markdown("""
