@@ -1,10 +1,8 @@
 import streamlit as st
 import streamlit.components.v1 as components
-from httpx_oauth.clients.google import GoogleOAuth2
-import asyncio
 
-def render_login():
-    # --- 1. HOIST STYLING DOM GRAPH PARAMETERS ---
+# Notice the variable inside the parentheses here—this is what stops the TypeError!
+def render_login(auth_url: str):
     st.markdown("""
     <style>
     html, body, .stApp, [data-testid="stAppViewContainer"],
@@ -26,7 +24,6 @@ def render_login():
     </style>
     """, unsafe_allow_html=True)
     
-    # --- 2. RENDER THE INTERACTIVE DESIGN HOVER CARDS ---
     components.html("""
     <!DOCTYPE html>
     <html>
@@ -107,25 +104,12 @@ def render_login():
     </html>
     """, height=420, scrolling=False)
 
-    # --- 3. CALCULATE SECURE LINK OAUTH ENDPOINTS INTERNALLY ---
-    CLIENT_ID = st.secrets["auth"]["client_id"]
-    CLIENT_SECRET = st.secrets["auth"]["client_secret"]
-    REDIRECT_URI = st.secrets["auth"]["redirect_uri"]
-    
-    client = GoogleOAuth2(CLIENT_ID, CLIENT_SECRET)
-    
-    async def write_authorization_url():
-        url = await client.get_authorization_url(REDIRECT_URI, scope=["profile", "email"])
-        return url
-
-    authorization_url = asyncio.run(write_authorization_url())
-
-    # --- 4. RENDER INJECTION MARGIN INTERFACE ANCHORS ---
+    # Render your layout matching button directly via custom anchor href
     left_co, cent_co, last_co = st.columns([2, 1, 2])
     with cent_co:
         st.markdown(
             f'''
-            <a href="{authorization_url}" target="_self" style="text-decoration: none;">
+            <a href="{auth_url}" target="_self" style="text-decoration: none;">
                 <div style="
                     background: #141414; 
                     border: 1px solid #1e1e1e; 
