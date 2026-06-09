@@ -27,8 +27,7 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="collapsed",
 )
-# ADD THIS after st.set_page_config(...)
-if not st.experimental_user or not st.experimental_user.get("email"):
+if not st.experimental_user.email:
     st.switch_page("login.py")
 
 # Strip ALL Streamlit chrome — we own the full canvas
