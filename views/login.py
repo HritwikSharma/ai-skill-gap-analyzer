@@ -3,6 +3,9 @@ import streamlit.components.v1 as components
 
 st.set_page_config(page_title="TalentPulse", layout="centered")
 
+if st.experimental_user and st.experimental_user.get("email"):
+    st.switch_page("pages/dashboard.py")
+    
 st.markdown("""
 <style>
 html, body, .stApp, [data-testid="stAppViewContainer"],
