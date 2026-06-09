@@ -119,12 +119,12 @@ components.html("""
       <div class="tab" id="tab-create" onclick="switchTab('create')">Create account</div>
     </div>
     <div class="panel active" id="panel-signin">
-      <p class="subtitle">Welcome back. Sign in to access your dashboard.</p>
       <div class="features">
         <div class="feature-item"><span class="check">✦</span> Live job market analytics across India</div>
         <div class="feature-item"><span class="check">✦</span> Salary insights &amp; hiring trend data</div>
         <div class="feature-item"><span class="check">✦</span> Skill gap analysis powered by AI</div>
       </div>
+      <p class="subtitle">Welcome back. Sign in to access your dashboard.</p>
     </div>
     <div class="panel" id="panel-create">
       <div class="features">
