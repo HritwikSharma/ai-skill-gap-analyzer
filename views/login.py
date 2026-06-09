@@ -1,108 +1,249 @@
 import streamlit as st
+import streamlit.components.v1 as components
 
 st.set_page_config(page_title="TalentPulse", layout="centered")
 
-if "auth_tab" not in st.session_state:
-    st.session_state.auth_tab = "signin"
-
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
 html, body, .stApp, [data-testid="stAppViewContainer"],
 [data-testid="stMain"], .block-container {
-    background: #1a1a1a !important;
-    font-family: 'Inter', sans-serif !important;
+    background: #0f0f0f !important;
+    padding: 0 !important;
+    margin: 0 !important;
 }
 #MainMenu, footer, header { visibility: hidden; }
 .block-container {
-    padding: 2rem 1rem !important;
-    max-width: 460px !important;
-    margin: 0 auto !important;
+    padding: 0 !important;
+    max-width: 100% !important;
 }
-/* Tab buttons */
-.tab-btn {
-    all: unset;
-    flex: 1;
+</style>
+""", unsafe_allow_html=True)
+
+AUTH_HTML = """
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: #0f0f0f;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .card {
+    width: 420px;
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid #2a2a2a;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.6);
+  }
+
+  .card-header {
+    background: #1A56DB;
+    padding: 32px 28px;
     text-align: center;
-    padding: 13px;
+  }
+
+  .card-header h1 {
+    font-size: 22px;
+    font-weight: 600;
+    color: #fff;
+    letter-spacing: -0.03em;
+  }
+
+  .card-header p {
+    font-size: 13px;
+    color: rgba(255,255,255,0.65);
+    margin-top: 6px;
+  }
+
+  .card-body {
+    background: #1c1c1e;
+    padding: 0;
+  }
+
+  .tabs {
+    display: flex;
+    border-bottom: 1px solid #2e2e2e;
+  }
+
+  .tab {
+    flex: 1;
+    padding: 14px;
+    text-align: center;
     font-size: 14px;
+    color: #666;
     cursor: pointer;
     border-bottom: 2px solid transparent;
-    color: #888;
-}
-.tab-btn.active {
-    color: #1A56DB;
-    border-bottom: 2px solid #1A56DB;
+    margin-bottom: -1px;
+    transition: color 0.15s, border-color 0.15s;
+    user-select: none;
+  }
+
+  .tab.active {
+    color: #4d9fff;
+    border-bottom: 2px solid #4d9fff;
     font-weight: 500;
-}
-/* Google button */
-.google-btn {
+  }
+
+  .panel {
+    display: none;
+    padding: 28px;
+  }
+
+  .panel.active {
+    display: block;
+  }
+
+  .panel p.subtitle {
+    font-size: 14px;
+    color: #888;
+    margin-bottom: 22px;
+    line-height: 1.5;
+  }
+
+  .google-btn {
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 10px;
     width: 100%;
-    padding: 11px;
-    border-radius: 8px;
-    border: 1px solid #444;
-    background: #2a2a2a;
+    padding: 12px 16px;
+    border-radius: 10px;
+    border: 1px solid #333;
+    background: #252528;
     color: #fff;
     font-size: 14px;
     font-weight: 500;
     cursor: pointer;
-}
+    transition: background 0.15s, border-color 0.15s, transform 0.1s;
+    font-family: 'Inter', sans-serif;
+  }
+
+  .google-btn:hover {
+    background: #2e2e32;
+    border-color: #444;
+  }
+
+  .google-btn:active {
+    transform: scale(0.98);
+  }
+
+  .features {
+    background: #252528;
+    border-radius: 10px;
+    padding: 16px 18px;
+    margin-bottom: 20px;
+    border: 1px solid #2e2e2e;
+  }
+
+  .feature-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    color: #bbb;
+    padding: 5px 0;
+    line-height: 1.4;
+  }
+
+  .feature-item .check {
+    color: #4d9fff;
+    font-size: 15px;
+    flex-shrink: 0;
+  }
+
+  .footer-note {
+    font-size: 11px;
+    color: #444;
+    text-align: center;
+    margin-top: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+  }
 </style>
-""", unsafe_allow_html=True)
-
-# Brand header + tab row + panel in ONE markdown block
-tab = st.session_state.auth_tab
-signin_active = "active" if tab == "signin" else ""
-create_active = "active" if tab == "create" else ""
-
-st.markdown(f"""
-<div style="border-radius:12px 12px 0 0;overflow:hidden;margin-top:2rem;">
-  <div style="background:#1A56DB;padding:28px;text-align:center;">
-    <div style="font-size:20px;font-weight:600;color:#fff;letter-spacing:-0.02em;">TalentPulse</div>
-    <div style="font-size:13px;color:rgba(255,255,255,0.75);margin-top:5px;">India Tech Market Intelligence</div>
+</head>
+<body>
+<div class="card">
+  <div class="card-header">
+    <h1>TalentPulse</h1>
+    <p>India Tech Market Intelligence</p>
   </div>
-  <div style="background:#2a2a2a;border:1px solid #333;border-top:none;border-radius:0 0 12px 12px;">
-    <div style="display:flex;border-bottom:1px solid #444;">
-      <div class="tab-btn {signin_active}">Sign in</div>
-      <div class="tab-btn {create_active}">Create account</div>
+  <div class="card-body">
+    <div class="tabs">
+      <div class="tab active" id="tab-signin" onclick="switchTab('signin')">Sign in</div>
+      <div class="tab" id="tab-create" onclick="switchTab('create')">Create account</div>
     </div>
-    <div style="padding:24px;">
-""", unsafe_allow_html=True)
 
-# Actual interactive buttons (Streamlit handles clicks)
-col1, col2 = st.columns(2)
-with col1:
-    if st.button("Sign in", use_container_width=True, type="secondary"):
-        st.session_state.auth_tab = "signin"
-        st.rerun()
-with col2:
-    if st.button("Create account", use_container_width=True, type="secondary"):
-        st.session_state.auth_tab = "create"
-        st.rerun()
-
-if tab == "signin":
-    st.markdown("<p style='font-size:14px;color:#aaa;margin:8px 0 16px;'>Welcome back. Sign in to access your dashboard.</p>", unsafe_allow_html=True)
-    st.button("🔵 Continue with Google →", on_click=st.login, use_container_width=True, type="primary")
-else:
-    st.markdown("""
-    <div style="background:#333;border-radius:8px;padding:14px;margin-bottom:14px;font-size:13px;color:#ccc;line-height:2;">
-        ✅ Live job market analytics across India<br>
-        ✅ Salary insights & hiring trend data<br>
-        ✅ Skill gap analysis powered by AI
+    <div class="panel active" id="panel-signin">
+      <p class="subtitle">Welcome back. Sign in to access your dashboard.</p>
+      <button class="google-btn" onclick="handleLogin()">
+        <svg width="18" height="18" viewBox="0 0 48 48">
+          <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+          <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+          <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+          <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+        </svg>
+        Continue with Google
+      </button>
+      <div class="footer-note">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        Secure sign-in · Your data is never shared
+      </div>
     </div>
-    <p style="font-size:13px;color:#aaa;margin-bottom:16px;">Create your free account — no password needed.</p>
-    """, unsafe_allow_html=True)
-    st.button("🔵 Sign up with Google →", on_click=st.login, use_container_width=True, type="primary")
 
-st.markdown("""
-      <p style='font-size:11px;color:#666;text-align:center;margin-top:16px;'>
-        🔒 Secure sign-in · Your data is never shared
-      </p>
+    <div class="panel" id="panel-create">
+      <div class="features">
+        <div class="feature-item"><span class="check">✦</span> Live job market analytics across India</div>
+        <div class="feature-item"><span class="check">✦</span> Salary insights &amp; hiring trend data</div>
+        <div class="feature-item"><span class="check">✦</span> Skill gap analysis powered by AI</div>
+      </div>
+      <p class="subtitle" style="margin-bottom: 16px;">Create your free account — no password needed.</p>
+      <button class="google-btn" onclick="handleLogin()">
+        <svg width="18" height="18" viewBox="0 0 48 48">
+          <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+          <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+          <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+          <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+        </svg>
+        Sign up with Google
+      </button>
+      <div class="footer-note" style="margin-top:16px;">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        Secure sign-in · Your data is never shared
+      </div>
     </div>
   </div>
 </div>
-""", unsafe_allow_html=True)
+
+<script>
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  document.getElementById('panel-' + tab).classList.add('active');
+}
+
+function handleLogin() {
+  // Signal Streamlit to trigger st.login
+  window.parent.postMessage({type: 'streamlit:setComponentValue', value: 'login_clicked'}, '*');
+}
+</script>
+</body>
+</html>
+"""
+
+result = components.html(AUTH_HTML, height=520, scrolling=False)
+
+# Handle login trigger from the component
+if result == "login_clicked":
+    st.login()
