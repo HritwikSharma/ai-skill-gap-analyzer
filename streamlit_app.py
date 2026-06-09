@@ -4,7 +4,7 @@ import asyncio
 
 st.set_page_config(layout="wide", initial_sidebar_state="collapsed")
 
-# 1. Pull secret environments
+# Read your existing credentials directly from Streamlit secrets
 CLIENT_ID = st.secrets["auth"]["client_id"]
 CLIENT_SECRET = st.secrets["auth"]["client_secret"]
 REDIRECT_URI = st.secrets["auth"]["redirect_uri"]
@@ -14,7 +14,7 @@ client = GoogleOAuth2(CLIENT_ID, CLIENT_SECRET)
 if "authenticated" not in st.session_state:
     st.session_state["authenticated"] = False
 
-# 2. Extract authorization redirects seamlessly from browser query strings
+# Handle incoming redirects after clicking "Sign in"
 query_params = st.query_params
 if "code" in query_params and not st.session_state["authenticated"]:
     try:
@@ -27,14 +27,20 @@ if "code" in query_params and not st.session_state["authenticated"]:
         st.query_params.clear()
         st.rerun()
     except Exception as e:
-        st.error(f"Authentication token mismatch or expired: {e}")
+        st.error(f"Authentication failed: {e}")
 
-# 3. Secure Core Page Verification Checks
+# Page routing firewall
 if not st.session_state["authenticated"]:
+    # Generate the Google Link
+    async def get_url():
+        return await client.get_authorization_url(REDIRECT_URI, scope=["profile", "email"])
+    google_login_url = asyncio.run(get_url())
+    
+    # Pass the link directly into your custom login page layout
     from views.login import render_login
-    render_login() # Look! Clean, parameter-free call back again!
+    render_login(google_login_url)  # This matches the function definition exactly!
     st.stop()
 
-# --- Post-authentication landing block dashboard environment ---
+# Load dashboard on successful validation
 from views.dashboard import render_dashboard
 render_dashboard()
