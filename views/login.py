@@ -1,46 +1,37 @@
 import streamlit as st
 
-# 1. Create native tabs
-tab1, tab2 = st.tabs(["🔒 Sign In", "✨ Create Account"])
+# Helper functions (Replace these with your actual database/JSON logic)
+def check_if_user_exists(email):
+    # e.g., check your database or user file
+    # return True if email exists, False otherwise
+    return False 
 
-with tab1:
-    st.markdown("### Welcome Back")
-    st.write("Sign in to access your skill gap analysis.")
-    # We store the intent in a variable or session state
-    if st.button("Continue with Google", key="sign_in_btn"):
-        st.session_state.auth_intent = "sign_in"
-        st.login()
+def register_new_user(email):
+    # e.g., insert email into your database/file
+    pass
 
-with tab2:
-    st.markdown("### Join Us")
-    st.write("Create an account to start tracking your skills.")
-    if st.button("Sign up with Google", key="sign_up_btn"):
-        st.session_state.auth_intent = "sign_up"
-        st.login()
 
-# 2. The Check: What happens AFTER they select their Google Account
+# --- STEP 1: THE BACKEND CHECK (Runs when returning from Google) ---
 if st.user.is_logged_in:
     user_email = st.user.email
     
-    # Placeholder functions: Replace these with your actual database/file checks
-    user_exists = check_if_user_exists_in_db(user_email) 
+    # The check happens here natively in Python
+    if check_if_user_exists(user_email):
+        # Existing User -> Route straight to dashboard
+        st.toast(f"Welcome back, {user_email}!")
+        st.switch_page("views/dashboard.py")
+    else:
+        # New User -> Automatically register them, then route
+        register_new_user(user_email)
+        st.toast("Account created successfully!")
+        st.switch_page("views/dashboard.py")
+
+
+# --- STEP 2: THE UI (Only shows if they aren't logged in yet) ---
+else:
+    st.markdown("## AI Skill Gap Analyzer")
+    st.write("Sign in or create your account instantly using Google.")
     
-    intent = st.session_state.get("auth_intent", "sign_in")
-    
-    if intent == "sign_up":
-        if user_exists:
-            st.error("An account with this email already exists. Please use the Sign In tab.")
-            st.logout() # Log them out of the session so they can try again
-        else:
-            # Create the user profile in your database here
-            register_new_user(user_email)
-            st.success("Account created successfully!")
-            st.switch_page("views/dashboard.py")
-            
-    elif intent == "sign_in":
-        if not user_exists:
-            st.error("No account found with this email. Please use the Create Account tab first.")
-            st.logout()
-        else:
-            st.success("Logged in successfully!")
-            st.switch_page("views/dashboard.py")
+    # One unified button that handles both entry points seamlessly
+    if st.button("💡 Continue with Google", type="primary", use_container_width=True):
+        st.login()
