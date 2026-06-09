@@ -27,6 +27,9 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="collapsed",
 )
+# ADD THIS after st.set_page_config(...)
+if not st.experimental_user or not st.experimental_user.get("email"):
+    st.switch_page("login.py")
 
 # Strip ALL Streamlit chrome — we own the full canvas
 st.markdown("""
@@ -245,7 +248,9 @@ body { background:#0d0d0d; }
 </style>
 <div class="nav">
     <div class="logo">TalentPulse <span>India</span></div>
-    <div class="tag"><span class="live-dot"></span>Live Tech Market Intelligence</div>
+    <div style="display:flex;align-items:center;gap:16px;">
+        <div class="tag"><span class="live-dot"></span>Live Tech Market Intelligence</div>
+    </div>
 </div>
 """, height=58, scrolling=False)
 
@@ -341,18 +346,22 @@ function applyFilters() {{
 </script>
 """
 
-filter_result = components.html(filter_html, height=72, scrolling=False)
+components.html(filter_html, height=72, scrolling=False)
 
-if filter_result:
-    try:
-        fv = json.loads(filter_result)
-        st.session_state["filter_role"] = fv["role"]
-        st.session_state["filter_loc"]  = fv["loc"]
-        st.session_state["filter_exp"]  = fv["exp"]
-        st.session_state["listing_page"] = 1
-        st.rerun()
-    except Exception:
-        pass
+fc1, fc2, fc3 = st.columns(3)
+with fc1:
+    sel_role = st.selectbox("Role", role_options, index=role_options.index(st.session_state["filter_role"]), label_visibility="collapsed")
+with fc2:
+    sel_loc = st.selectbox("Location", loc_options, index=loc_options.index(st.session_state["filter_loc"]), label_visibility="collapsed")
+with fc3:
+    sel_exp = st.selectbox("Experience", exp_options, index=exp_options.index(st.session_state["filter_exp"]), label_visibility="collapsed")
+
+if sel_role != st.session_state["filter_role"] or sel_loc != st.session_state["filter_loc"] or sel_exp != st.session_state["filter_exp"]:
+    st.session_state["filter_role"] = sel_role
+    st.session_state["filter_loc"] = sel_loc
+    st.session_state["filter_exp"] = sel_exp
+    st.session_state["listing_page"] = 1
+    st.rerun()
 
 # Apply filters to dataframe
 fdf = df.copy()
@@ -457,6 +466,10 @@ body {{ background:#0d0d0d; padding: 0 32px 16px; }}
     </div>
 </div>
 """, height=140, scrolling=False)
+col1, col2 = st.columns([10, 1])
+with col2:
+    if st.button("Sign out"):
+        st.logout()
 
 # ─────────────────────────────────────────────
 #  TAB NAV (pure HTML — drives session state)
