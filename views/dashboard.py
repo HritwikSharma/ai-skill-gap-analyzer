@@ -10,6 +10,7 @@ import re as _re
 import html as _html
 from collections import Counter
 from utils.groq_analyzer import get_ai_analysis
+from utils.gemini_analyzer import get_ai_analysis
 
 def render_dashboard():
     #st.title("TalentPulse Dashboard")
@@ -1027,17 +1028,54 @@ def render_dashboard():
     #  TAB: AI SKILL GAP ANALYZER
     # ══════════════════════════════════════════════
     elif active == "ai_analyzer":
-        section_header("🎯 AI Career Strategist & Skill Gap Analyzer")
+        section_header("🎯 AI Career Strategist & Persistent Skill Gap Analyzer")
+        user_email = st.session_state.get("user_info", {}).get("email")
         
+        # ─────────────────────────────────────────────────────────
+        # 1. DATABASE INITIALIZATION LAYER (AUTO-FETCH ON LOAD)
+        # ─────────────────────────────────────────────────────────
+        if "profile_data" not in st.session_state or st.session_state["profile_data"] is None:
+            try:
+                with psycopg2.connect(host=DB_HOST, user=DB_USER, password=DB_PASSWORD, database=DB_NAME) as conn:
+                    with conn.cursor() as cur:
+                        # Attempt to auto-restore profile parameters from AWS RDS
+                        cur.execute("""
+                            SELECT target_role, employment_preference, experience_level, salary_target, 
+                                   work_history, education, skills, tools_and_infra, certifications, languages 
+                            FROM user_profiles WHERE email = %s;
+                        """, (user_email,))
+                        prof_row = cur.fetchone()
+                        
+                        if prof_row:
+                            st.session_state["profile_data"] = {
+                                "role": prof_row[0], "employment_preference": prof_row[1],
+                                "experience_level": prof_row[2], "salary_target": float(prof_row[3]),
+                                "work_history": prof_row[4], "education": prof_row[5],
+                                "skills": prof_row[6], "tools_and_infra": prof_row[7],
+                                "certifications": prof_row[8], "languages": prof_row[9]
+                            }
+                            st.session_state["user_profile_saved"] = True
+                            
+                        # Attempt to auto-restore cached structured AI responses
+                        cur.execute("SELECT raw_ai_json FROM ai_cached_strategies WHERE email = %s;", (user_email,))
+                        ai_row = cur.fetchone()
+                        if ai_row:
+                            st.session_state["ai_analysis"] = ai_row[0]
+            except Exception as db_init_err:
+                st.error(f"Failed to query database cache profiles: {db_init_err}")
+
         if "user_profile_saved" not in st.session_state:
             st.session_state["user_profile_saved"] = False
-            
+
+        # ─────────────────────────────────────────────────────────
+        # 2. ONBOARDING PROFILE FORM VIEW
+        # ─────────────────────────────────────────────────────────
         if not st.session_state["user_profile_saved"]:
             st.markdown("""
                 <div class='metric-card' style='margin-bottom: 25px;'>
-                    <h3 style='color: #67e8f9; margin-top:0;'>Setup Your Career Profile</h3>
+                    <h3 style='color: #67e8f9; margin-top:0;'>Configure Global Intelligence Profile</h3>
                     <p style='color: #94a3b8; font-size: 0.9rem;'>
-                        All fields are mandatory. Complete your profile to unlock your AI strategy.
+                        Complete your career objectives. Your profile variables will be securely synchronized to your cloud warehouse.
                     </p>
                 </div>
             """, unsafe_allow_html=True)
@@ -1045,101 +1083,171 @@ def render_dashboard():
             available_roles = sorted(list(set(str(r).strip() for r in fdf["title"].dropna() if str(r).strip())))
             options = ["Select from Market Roles..."] + available_roles + ["✨ Add Custom Role..."]
 
-            with st.form("onboarding_profile_form"):
-                # 1. Target Role Logic
+            with st.form("persistent_onboarding_form"):
                 selected_role = st.selectbox("🎯 Target Career Objective", options=options)
-                target_role = ""
-                if selected_role == "✨ Add Custom Role...":
-                    target_role = st.text_input("Enter your custom role:")
-                elif selected_role != "Select from Market Roles...":
-                    target_role = selected_role
+                target_role = selected_role if selected_role != "Select from Market Roles..." else ""
                 
-                # 2. Employment Preference
-                job_pref = st.selectbox("💼 Employment Preference", ["Internship", "Full-time", "Part-time", "Remote / Freelance"])
-
-                # 3. Experience, Salary, and History
+                job_pref = st.selectbox("💼 Employment Preference", ["Full-time", "Remote / Freelance", "Internship"])
                 exp_level = st.selectbox("Experience Level", ["Student / Fresher", "Entry-Level (1-2 Years)", "Mid-Level (3-5 Years)", "Senior (5+ Years)"])
                 expected_salary = st.number_input("💰 Expected Annual Salary (INR)", min_value=0, step=50000)
-                work_history = st.text_input("🏢 Past Job Roles (comma separated, or N/A if fresher)")
+                work_history = st.text_input("🏢 Past Job Roles (or N/A)")
                 
-                # 4. Education (Multi-select)
-                education = st.multiselect("🎓 Educational Qualifications", [
-                    "Primary School (10th)", "Secondary School (12th)", 
-                    "B.E. / B.Tech", "M.Tech / M.S.", "BCA", "MCA", "BSc / MSc", "MBA", "Other"
-                ])
-
-                # 5. Skills & Languages
+                education = st.multiselect("🎓 Educational Qualifications", ["B.E. / B.Tech", "M.Tech / M.S.", "BCA", "MCA", "BSc / MSc", "Other"])
                 skills_input = st.text_input("💻 Core Languages & Frameworks (comma separated)")
                 tools_input = st.text_input("🛠️ Cloud & Infrastructure (comma separated)")
                 certs_input = st.text_input("📜 Certifications (comma separated)")
-                languages = st.multiselect("🗣️ Languages Spoken", ["English", "Hindi", "Bengali", "Marathi", "Telugu", "Tamil", "Kannada", "Other"])
+                languages = st.multiselect("🗣️ Languages Spoken", ["English", "Hindi", "Other"])
                 
-                submit = st.form_submit_button("🚀 Generate AI Strategy", use_container_width=True)
+                submit = st.form_submit_button("🚀 Compile and Synchronize Profile", use_container_width=True)
                 
                 if submit:
-                    if not target_role or not skills_input or not tools_input or not education or not languages:
-                        st.error("Please fill in ALL mandatory fields to proceed.")
+                    if not target_role or not skills_input or not tools_input or not education:
+                        st.error("Please fill in mandatory fields.")
                     else:
-                        # 💡 FIX: Compile and save form data into session state BEFORE calling Groq
+                        skills_arr = [s.strip() for s in skills_input.split(",") if s.strip()]
+                        tools_arr = [t.strip() for t in tools_input.split(",") if t.strip()]
+                        certs_arr = [c.strip() for c in certs_input.split(",") if c.strip()]
+                        
                         st.session_state["profile_data"] = {
-                            "role": target_role,
-                            "employment_preference": job_pref,
-                            "experience_level": exp_level,
-                            "salary_target": expected_salary,
-                            "work_history": [w.strip() for w in work_history.split(",") if w.strip()],
-                            "education": education,
-                            "skills": [s.strip() for s in skills_input.split(",") if s.strip()],
-                            "tools_and_infra": [t.strip() for t in tools_input.split(",") if t.strip()],
-                            "certifications": [c.strip() for c in certs_input.split(",") if c.strip()],
-                            "languages": languages
+                            "role": target_role, "employment_preference": job_pref, "experience_level": exp_level,
+                            "salary_target": expected_salary, "work_history": work_history, "education": education,
+                            "skills": skills_arr, "tools_and_infra": tools_arr, "certifications": certs_arr, "languages": languages
                         }
                         
-                        # Mark profile as active/saved
-                        st.session_state["user_profile_saved"] = True
-                        st.rerun()
+                        # Write data variables directly into PostgreSQL DB
+                        try:
+                            with psycopg2.connect(host=DB_HOST, user=DB_USER, password=DB_PASSWORD, database=DB_NAME) as conn:
+                                with conn.cursor() as cur:
+                                    cur.execute("""
+                                        INSERT INTO user_profiles (email, target_role, employment_preference, experience_level, 
+                                                                  salary_target, work_history, education, skills, tools_and_infra, certifications, languages)
+                                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                                        ON CONFLICT (email) DO UPDATE SET
+                                            target_role=EXCLUDED.target_role, employment_preference=EXCLUDED.employment_preference,
+                                            experience_level=EXCLUDED.experience_level, salary_target=EXCLUDED.salary_target,
+                                            work_history=EXCLUDED.work_history, education=EXCLUDED.education, skills=EXCLUDED.skills,
+                                            tools_and_infra=EXCLUDED.tools_and_infra, certifications=EXCLUDED.certifications, languages=EXCLUDED.languages;
+                                    """, (user_email, target_role, job_pref, exp_level, expected_salary, work_history, education, skills_arr, tools_arr, certs_arr, languages))
+                                    conn.commit()
+                            st.session_state["user_profile_saved"] = True
+                            st.rerun()
+                        except Exception as save_err:
+                            st.error(f"Cloud write synchronization aborted: {save_err}")
 
-        # ─── RENDERING LAYER ───
-        # This handles rendering once the session state data has been successfully created
+        # ─────────────────────────────────────────────────────────
+        # 3. STRATEGY AND METRICS RENDERING LAYER
+        # ─────────────────────────────────────────────────────────
         if st.session_state["user_profile_saved"]:
-            if "ai_analysis" not in st.session_state:
-                with st.spinner("🚀 AI Architect is researching global market trends..."):
-                    try:
-                        # Aggregate local database skills safely
-                        if "tech_skills_found" in fdf.columns:
-                            all_skills = fdf["tech_skills_found"].dropna().explode().unique().tolist()
-                        else:
-                            all_skills = []
-                        
-                        # Securely process analysis using the newly saved state parameters
-                        st.session_state["ai_analysis"] = get_ai_analysis(st.session_state["profile_data"], all_skills[:100])
-                    except Exception as e:
-                        st.error(f"Groq Processing Failure: {e}")
-                        st.session_state["user_profile_saved"] = False
-                        st.stop()
-            
-            # Render results
-            analysis = st.session_state["ai_analysis"]
             profile = st.session_state["profile_data"]
             
-            st.markdown(f"### 📈 Analysis for: {profile['role']}")
+            if "ai_analysis" not in st.session_state:
+                with st.spinner("⚡ Connecting with Gemini 3.5 Engine cluster for comprehensive blueprint..."):
+                    try:
+                        all_skills = fdf["tech_skills_found"].dropna().explode().unique().tolist() if "tech_skills_found" in fdf.columns else []
+                        analysis_res = get_ai_analysis(profile, all_skills[:100])
+                        
+                        # Cache processed JSON schema directly into DB
+                        with psycopg2.connect(host=DB_HOST, user=DB_USER, password=DB_PASSWORD, database=DB_NAME) as conn:
+                            with conn.cursor() as cur:
+                                cur.execute("""
+                                    INSERT INTO ai_cached_strategies (email, raw_ai_json) VALUES (%s, %s)
+                                    ON CONFLICT (email) DO UPDATE SET raw_ai_json=EXCLUDED.raw_ai_json, generated_at=CURRENT_TIMESTAMP;
+                                """, (user_email, json.dumps(analysis_res)))
+                                conn.commit()
+                        
+                        st.session_state["ai_analysis"] = analysis_res
+                    except Exception as err:
+                        st.error(f"Analysis Generation Engine Failed: {err}")
+                        if st.button("↩️ Return to Profile Setup"):
+                            st.session_state["user_profile_saved"] = False
+                            st.rerun()
+                        st.stop()
+
+            analysis = st.session_state["ai_analysis"]
             
-            col1, col2 = st.columns(2)
-            with col1:
-                st.write("#### 🛠️ Skill Gap")
-                for skill in analysis.get('skill_gap', []):
-                    st.warning(f"• {skill}")
+            st.markdown(f"""
+                <div style='background: #11111b; border: 1px solid #1e1e2f; border-radius: 12px; padding: 20px; margin-bottom: 25px;'>
+                    <span style='background: #7c6ef5; color: white; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight:600;'>SECURE PERSISTENT REPORT</span>
+                    <h2 style='margin-top: 10px; color: #fff;'>Strategic Roadmap: {profile['role']}</h2>
+                    <p style='color: #6c6c8c; font-size: 13px; margin: 0;'>Cross-compiled against current live metrics from our database warehouse.</p>
+                </div>
+            """, unsafe_allow_html=True)
+
+            # 📊 VISUALIZATION LAYER: TECHNICAL STRATEGY PRIORITY MATRIX
+            if "skill_inventory_matrix" in analysis:
+                st.write("### 📊 Market Priority Matrix")
+                try:
+                    matrix_df = pd.DataFrame(analysis["skill_inventory_matrix"])
+                    
+                    fig = px.bar(
+                        matrix_df,
+                        x="skill",
+                        y="priority_score",
+                        color="difficulty_level",
+                        facet_col="category",
+                        title="Skill Breakdown by Category and Priority Value",
+                        labels={"priority_score": "Market Demand Weight", "skill": "Technology"},
+                        color_discrete_map={"Advanced": "#f43f5e", "Intermediate": "#3b82f6", "Foundational": "#10b981", "Beginner": "#10b981"},
+                        hover_data=["difficulty_level"]
+                    )
+                    
+                    fig.update_layout(
+                        template="plotly_dark",
+                        paper_bgcolor="rgba(0,0,0,0)",
+                        plot_bgcolor="rgba(0,0,0,0)",
+                        font_family="Inter",
+                        xaxis={"categoryorder": "total descending"}
+                    )
+                    st.plotly_chart(fig, use_container_width=True)
+                except Exception as chart_err:
+                    st.info(f"Visual Matrix rendering paused: {chart_err}")
+
+            # ─── SKILL GAP & DETAILED ROADMAP GRID ───
+            col_gap, col_road = st.columns([1, 2.1], gap="medium")
             
-            with col2:
-                st.write("#### 🗺️ 7-Step Roadmap")
-                for i, step in enumerate(analysis.get('comprehensive_roadmap', [])):
-                    st.markdown(f"**{i+1}.** {step}")
-            
-            # Reset Button
-            if st.button("🔄 Reset Profile"):
-                if "profile_data" in st.session_state: del st.session_state["profile_data"]
-                if "ai_analysis" in st.session_state: del st.session_state["ai_analysis"]
-                st.session_state["user_profile_saved"] = False
-                st.rerun()
+            with col_gap:
+                st.markdown("### 🛠️ Key Technical Gaps")
+                for gap in analysis.get('skill_gap', []):
+                    st.markdown(f"""
+                        <div style='background: #1a1118; border-left: 4px solid #f43f5e; padding: 12px; border-radius: 0 8px 8px 0; margin-bottom: 10px;'>
+                            <p style='color: #fca5a5; font-size: 13px; font-weight: 500; margin: 0;'>{gap}</p>
+                        </div>
+                    """, unsafe_allow_html=True)
+
+            with col_road:
+                st.markdown("### 🗺️ Comprehensive Milestone Roadmap")
+                for phase in analysis.get('structured_roadmap', []):
+                    with st.expander(f"📌 Phase {phase.get('phase')}: {phase.get('phase_name')} ({phase.get('timeframe')})"):
+                        st.markdown(f"**Objective:** {phase.get('core_objective')}")
+                        st.markdown("**Detailed Action Deliverables:**")
+                        for item in phase.get('action_items', []):
+                            st.markdown(f"- {item}")
+                        
+                        st.markdown(f"""
+                            <div style='background: #111827; border: 1px dashed #3b82f6; padding: 12px; border-radius: 6px; margin-top: 10px;'>
+                                <span style='color: #60a5fa; font-size: 11px; font-weight: 600; text-transform: uppercase;'>PORTFOLIO CAPSTONE PROJECT</span>
+                                <p style='color: #e5e7eb; font-size: 13px; margin: 4px 0 0 0;'>{phase.get('capstone_project')}</p>
+                                <span style='color: #9ca3af; font-size: 11px;'>⏱️ Estimated Dedication: {phase.get('estimated_hours_required')} Hours</span>
+                            </div>
+                        """, unsafe_allow_html=True)
+
+            # ─── HARD DATA FLUSH (RESET SYSTEM) ───
+            st.markdown("<br><hr style='border-color: #252538;'>", unsafe_allow_html=True)
+            if st.button("🔄 Purge Strategy Cache and Reset Profile", use_container_width=True):
+                try:
+                    with psycopg2.connect(host=DB_HOST, user=DB_USER, password=DB_PASSWORD, database=DB_NAME) as conn:
+                        with conn.cursor() as cur:
+                            cur.execute("DELETE FROM ai_cached_strategies WHERE email = %s;", (user_email,))
+                            cur.execute("DELETE FROM user_profiles WHERE email = %s;", (user_email,))
+                            conn.commit()
+                    
+                    if "profile_data" in st.session_state: del st.session_state["profile_data"]
+                    if "ai_analysis" in st.session_state: del st.session_state["ai_analysis"]
+                    st.session_state["user_profile_saved"] = False
+                    st.success("Cloud profiles successfully cleared from AWS database storage cells.")
+                    st.rerun()
+                except Exception as purge_err:
+                    st.error(f"Purge request rejected by warehouse: {purge_err}")
 
 
 
