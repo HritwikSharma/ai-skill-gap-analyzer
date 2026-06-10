@@ -680,15 +680,17 @@ def render_dashboard():
     body {{ background:#0d0d0d; }}
     .card {{
         background: #111;
-        border: 1px solid #1e1e1e;
+        border: 1px solid transparent;
         border-radius: 12px;
         padding: 18px 20px;
         margin-bottom: 10px;
         transition: border-color 0.15s, transform 0.15s;
+        width: 100% !important;
+        box-sizing:border-box !important;
+        transition: border-color 0.15s ease;
     }}
     .card:hover {{
         border-color: #2a4a7f;
-        transform: translateX(3px);
     }}
     .job-title {{
         font-size: 1rem;
