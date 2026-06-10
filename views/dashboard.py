@@ -567,37 +567,46 @@ def render_dashboard():
     # Injected absolute layout overriding rules targeting global canvas paths
     st.markdown("""
         <style>
-        /* Force any block housing the segmented tabs to snap to the layout center */
+        /* 1. Target the outermost container element for the segmented control */
         div.element-container:has(div[data-testid="stSegmentedControl"]) {
-            display: flex !important;
+            display: grid !important;
             justify-content: center !important;
+            align-items: center !important;
             width: 100% !important;
+            margin: 10px auto !important; /* Forces vertical spacing and absolute center */
         }
         
-        /* Force the core block framework row to drop left floating alignment constraints */
+        /* 2. Target the block container to stop it from sticking left */
         div[data-testid="stHorizontalBlock"]:has(div[data-testid="stSegmentedControl"]) {
-            display: flex !important;
+            display: grid !important;
             justify-content: center !important;
             width: 100% !important;
+            margin: 0 auto !important;
         }
         
-        /* Strip default wide-stretching fluid metrics from column boxes */
+        /* 3. Collapse width constraints so it wraps cleanly around button sizes */
         div[data-testid="stHorizontalBlock"]:has(div[data-testid="stSegmentedControl"]) > div {
             flex: 0 1 auto !important;
             min-width: unset !important;
             max-width: unset !important;
+            width: auto !important;
+            margin: 0 auto !important;
         }
 
-        /* Enforce tight center distribution directly on internal tabs button group track */
+        /* 4. Center-align internal tracking rows inside the segmented control component */
         div[data-testid="stSegmentedControl"] {
             display: flex !important;
             justify-content: center !important;
+            align-items: center !important;
             width: auto !important;
+            margin: 0 auto !important;
         }
         div[data-testid="stSegmentedControl"] > div {
             display: flex !important;
             justify-content: center !important;
+            align-items: center !important;
             width: auto !important;
+            margin: 0 auto !important;
         }
         </style>
     """, unsafe_allow_html=True)
