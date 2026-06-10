@@ -1013,59 +1013,61 @@ def render_dashboard():
             
         if not st.session_state["user_profile_saved"]:
             st.markdown("""
-                <div class='metric-card' style='margin-bottom: 25px;'>
-                    <h3 style='color: #67e8f9; margin-top:0;'>Setup Your Career Profile</h3>
-                    <p style='color: #94a3b8; font-size: 0.9rem;'>
-                        Complete your profile below to receive AI-driven market gap analysis.
-                    </p>
-                </div>
+                <style>
+                /* Force form to occupy full width and prevent column-like side-by-side behavior */
+                div[data-testid="stForm"] {
+                    display: block !important;
+                    width: 100% !important;
+                    max-width: 800px !important;
+                    margin: 0 auto !important;
+                }
+                </style>
             """, unsafe_allow_html=True)
-            
+
             # --- Unique Role Extraction ---
             available_roles = sorted(list(set(str(r).strip() for r in fdf["title"].dropna() if str(r).strip())))
             options = ["Select from Market Roles..."] + available_roles + ["✨ Add Custom Role..."]
 
-            with st.container():
-                with st.form("onboarding_profile_form"):
-                    # 1. Target Role Logic
-                    selected_role = st.selectbox("🎯 Target Career Objective", options=options)
-                    
-                    target_role = ""
-                    if selected_role == "✨ Add Custom Role...":
-                        target_role = st.text_input("Enter your custom role:")
-                    elif selected_role != "Select from Market Roles...":
-                        target_role = selected_role
+            with st.form("onboarding_profile_form"):
+                st.subheader("Profile Details")
+                
+                # 1. Role Selection
+                selected_role = st.selectbox("🎯 Target Career Objective", options=options)
+                target_role = ""
+                if selected_role == "✨ Add Custom Role...":
+                    target_role = st.text_input("Enter your custom role:")
+                elif selected_role != "Select from Market Roles...":
+                    target_role = selected_role
 
-                    # 2. Dropdown Experience
-                    exp_level = st.selectbox("💼 Professional Experience Level", [
-                        "Student / Fresher", "Entry-Level (1-2 Years)", 
-                        "Mid-Level (3-5 Years)", "Senior / Lead (5+ Years)"
-                    ])
-                    
-                    # 3. Typed Fields (Long Vertical Stack)
-                    skills_input = st.text_input("💻 Core Languages & Frameworks (comma separated)", placeholder="e.g., Python, SQL, React")
-                    tools_input = st.text_input("🛠️ Cloud & Infrastructure (comma separated)", placeholder="e.g., AWS, Docker, PostgreSQL")
-                    preferred_city = st.text_input("📍 Preferred Job Location", placeholder="e.g., Bengaluru")
-                    education = st.text_input("🎓 Educational Background", placeholder="e.g., B.Tech in Computer Science")
-                    
-                    submit = st.form_submit_button("🚀 Generate AI Strategy", use_container_width=True)
-                    
-                    if submit:
-                        if target_role and skills_input and tools_input:
-                            st.session_state["profile_data"] = {
-                                "role": target_role,
-                                "skills": [s.strip() for s in skills_input.split(",")],
-                                "tools": [t.strip() for t in tools_input.split(",")],
-                                "experience": exp_level,
-                                "city": preferred_city,
-                                "education": education
-                            }
-                            st.session_state["user_profile_saved"] = True
-                            st.rerun()
-                        else:
-                            st.error("Please fill in the role, skills, and tools fields.")
+                # 2. Experience (Dropdown)
+                exp_level = st.selectbox("💼 Professional Experience Level", [
+                    "Student / Fresher", "Entry-Level (1-2 Years)", 
+                    "Mid-Level (3-5 Years)", "Senior / Lead (5+ Years)"
+                ])
+                
+                # 3. Typed Fields (Strictly Vertical)
+                skills_input = st.text_input("💻 Core Languages & Frameworks (use commas)")
+                tools_input = st.text_input("🛠️ Cloud & Infrastructure (use commas)")
+                preferred_city = st.text_input("📍 Preferred Job Location")
+                education = st.text_input("🎓 Educational Background")
+                
+                submit = st.form_submit_button("🚀 Generate AI Strategy", use_container_width=True)
+                
+                if submit:
+                    if target_role and skills_input and tools_input:
+                        st.session_state["profile_data"] = {
+                            "role": target_role,
+                            "skills": [s.strip() for s in skills_input.split(",")],
+                            "tools": [t.strip() for t in tools_input.split(",")],
+                            "experience": exp_level,
+                            "city": preferred_city,
+                            "education": education
+                        }
+                        st.session_state["user_profile_saved"] = True
+                        st.rerun()
+                    else:
+                        st.error("Please fill in the role, skills, and tools fields.")
         else:
-            # Dashboard View
             st.success(f"Profile Active: {st.session_state['profile_data']['role']}")
             if st.button("🔄 Reset Profile"):
                 st.session_state["user_profile_saved"] = False
