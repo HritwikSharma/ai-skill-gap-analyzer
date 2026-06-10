@@ -33,17 +33,8 @@ def render_login():
     }
     #MainMenu, footer, header { visibility: hidden; }
     [data-testid="stVerticalBlock"] > div { gap: 0 !important; }
-    div[data-testid="stColumn"] { background: #0d0d14 !important; padding: 0 !important; }
+    div[data-testid="stColumn"] { background: #0d0d14 !important; padding: 0 2px !important; }
     [data-testid="stMainBlockContainer"] { padding-top: 60px !important; }
-
-    /* Hide the real radio completely but keep it in DOM so Streamlit can read it */
-    div[data-testid="stRadio"] {
-        position: absolute !important;
-        opacity: 0 !important;
-        pointer-events: none !important;
-        height: 0 !important;
-        overflow: hidden !important;
-    }
 
     /* inputs */
     div[data-testid="stTextInput"] { margin-bottom: 0 !important; }
@@ -69,21 +60,57 @@ def render_login():
     }
     div[data-testid="stTextInput"] input::placeholder { color: #2e2e45 !important; }
 
-    /* action button */
+    /* ALL buttons reset first */
     div[data-testid="stButton"] > button {
-        background: #7c6ef5 !important; color: #fff !important;
-        border: none !important; border-radius: 8px !important;
         font-family: 'Space Grotesk', sans-serif !important;
-        font-size: 14px !important; font-weight: 600 !important;
-        padding: 11px 0 !important; width: 100% !important;
-        transition: background 0.18s, transform 0.12s !important;
+        border-radius: 8px !important;
+        font-size: 13.5px !important;
+        font-weight: 500 !important;
+        width: 100% !important;
+        transition: background 0.18s, color 0.18s, transform 0.12s !important;
+        border: none !important;
+    }
+
+    /* Tab buttons — identified by key prefix via aria-label isn't reliable,
+       so we use nth-of-type on the tab row columns */
+    .tab-col div[data-testid="stButton"] > button {
+        background: transparent !important;
+        color: #555570 !important;
+        padding: 10px 0 !important;
+        border-radius: 7px !important;
+        margin: 0 !important;
+    }
+    .tab-col div[data-testid="stButton"] > button:hover {
+        background: #1a1a28 !important;
+        color: #aaaacc !important;
+        transform: none !important;
+    }
+
+    /* Active tab */
+    .tab-active div[data-testid="stButton"] > button {
+        background: #1e1e2d !important;
+        color: #ffffff !important;
+        padding: 10px 0 !important;
+        border-radius: 7px !important;
+        margin: 0 !important;
+    }
+
+    /* Action button (sign in / register) */
+    .action-btn div[data-testid="stButton"] > button {
+        background: #7c6ef5 !important;
+        color: #fff !important;
+        padding: 12px 0 !important;
+        font-size: 14px !important;
+        font-weight: 600 !important;
         margin-top: 6px !important;
     }
-    div[data-testid="stButton"] > button:hover {
-        background: #9080f7 !important; transform: translateY(-1px) !important;
+    .action-btn div[data-testid="stButton"] > button:hover {
+        background: #9080f7 !important;
+        transform: translateY(-1px) !important;
     }
-    div[data-testid="stButton"] > button:active {
-        background: #6355d4 !important; transform: scale(0.985) !important;
+    .action-btn div[data-testid="stButton"] > button:active {
+        background: #6355d4 !important;
+        transform: scale(0.985) !important;
     }
 
     /* alerts */
@@ -100,111 +127,99 @@ def render_login():
         background: #1e1e2d !important; border-radius: 8px !important;
         font-family: 'Space Grotesk', sans-serif !important; color: #fff !important;
     }
-
-    /* custom HTML styles */
-    .tp-logo {
-        font-family: 'Space Grotesk', sans-serif; font-size: 32px; font-weight: 600;
-        color: #fff; text-align: center; letter-spacing: -0.03em; margin-bottom: 6px;
-    }
-    .tp-logo span { color: #7c6ef5; }
-    .tp-sub {
-        font-family: 'Space Grotesk', sans-serif; font-size: 15px; color: #555570;
-        text-align: center; letter-spacing: 0.01em; margin-bottom: 32px;
-    }
-    .tp-tabs {
-        display: flex; background: #16161f; border-radius: 10px;
-        padding: 4px; gap: 4px; margin-bottom: 6px;
-    }
-    .tp-tab {
-        flex: 1; padding: 10px 0; border-radius: 7px; border: none;
-        font-family: 'Space Grotesk', sans-serif; font-size: 13.5px; font-weight: 500;
-        text-align: center; cursor: pointer; transition: background 0.2s, color 0.2s;
-    }
-    .tp-tab-on  { background: #1e1e2d; color: #ffffff; }
-    .tp-tab-off { background: transparent; color: #555570; }
-    .tp-tab-off:hover { color: #9090aa; }
-    .tp-sep { height: 1px; background: #1a1a28; margin-bottom: 18px; }
-    .tp-hints {
-        background: #16161f; border: 1px solid #1e1e2d; border-radius: 10px;
-        padding: 14px 18px; margin-bottom: 20px;
-    }
-    .tp-hint {
-        display: flex; align-items: center; gap: 10px;
-        font-family: 'Space Grotesk', sans-serif; font-size: 13px;
-        color: #555570; padding: 4px 0;
-    }
-    .tp-dot {
-        width: 5px; height: 5px; min-width: 5px;
-        background: #7c6ef5; border-radius: 50%; display: inline-block;
-    }
     </style>
     """, unsafe_allow_html=True)
 
     _, col, _ = st.columns([1, 1.1, 1])
 
     with col:
-        signin_cls = "tp-tab tp-tab-on"  if mode == "signin"   else "tp-tab tp-tab-off"
-        reg_cls    = "tp-tab tp-tab-on"  if mode == "register" else "tp-tab tp-tab-off"
-
-        hints_signin = """
-            <div class="tp-hint"><span class="tp-dot"></span>Live job market analytics across India</div>
-            <div class="tp-hint"><span class="tp-dot"></span>Real-time salary benchmarks by role &amp; city</div>
-            <div class="tp-hint"><span class="tp-dot"></span>Hiring trends across 50+ tech companies</div>
-            <div class="tp-hint"><span class="tp-dot"></span>Skill demand shifts updated weekly</div>
-        """
-        hints_register = """
-            <div class="tp-hint"><span class="tp-dot"></span>Full dashboard access from day one</div>
-            <div class="tp-hint"><span class="tp-dot"></span>AI-powered skill gap analysis</div>
-            <div class="tp-hint"><span class="tp-dot"></span>Personalised market reports for your role</div>
-            <div class="tp-hint"><span class="tp-dot"></span>Free forever — no credit card needed</div>
-        """
-        hints = hints_signin if mode == "signin" else hints_register
-
-        # Render brand, custom tabs, hints
-        st.markdown(f"""
-        <div class="tp-logo">Talent<span>Pulse</span></div>
-        <div class="tp-sub">India Tech Market Intelligence</div>
-
-        <div class="tp-tabs">
-            <button class="{signin_cls}"  onclick="switchTab('signin')">Sign In</button>
-            <button class="{reg_cls}"     onclick="switchTab('register')">Create Account</button>
+        # Brand
+        st.markdown("""
+        <div style="font-family:'Space Grotesk',sans-serif;font-size:32px;font-weight:600;
+                    color:#fff;text-align:center;letter-spacing:-0.03em;margin-bottom:6px;">
+            Talent<span style="color:#7c6ef5;">Pulse</span>
         </div>
-        <div class="tp-sep"></div>
-        <div class="tp-hints">{hints}</div>
+        <div style="font-family:'Space Grotesk',sans-serif;font-size:15px;color:#555570;
+                    text-align:center;margin-bottom:28px;">
+            India Tech Market Intelligence
+        </div>
 
-        <script>
-        function switchTab(tab) {{
-            // Find the hidden Streamlit radio inputs and click the right one
-            const labels = window.parent.document.querySelectorAll('[data-testid="stRadio"] label');
-            labels.forEach(label => {{
-                const txt = label.innerText.trim().toLowerCase();
-                if (tab === 'signin'   && txt === 'sign in')       label.click();
-                if (tab === 'register' && txt === 'create account') label.click();
-            }});
-        }}
-        </script>
+        <!-- Tab tray background -->
+        <div style="background:#16161f;border-radius:10px;padding:4px;margin-bottom:6px;display:flex;gap:4px;" id="tab-tray">
+        </div>
         """, unsafe_allow_html=True)
 
-        # Hidden radio — Streamlit drives the actual state
-        mode_choice = st.radio(
-            "mode",
-            ["Sign In", "Create Account"],
-            index=0 if mode == "signin" else 1,
-            label_visibility="collapsed",
-            horizontal=True,
-            key="tp_radio"
-        )
-        # Sync back to session state if radio changed
-        new_mode = "signin" if mode_choice == "Sign In" else "register"
-        if new_mode != mode:
-            st.session_state["login_mode"] = new_mode
-            st.rerun()
+        # Tab tray — two columns inside a styled wrapper
+        st.markdown('<div style="background:#16161f;border-radius:10px;padding:4px;display:flex;gap:0;">', unsafe_allow_html=True)
+        tab_l, tab_r = st.columns([1, 1], gap="small")
 
+        with tab_l:
+            cls = "tab-active" if mode == "signin" else "tab-col"
+            st.markdown(f'<div class="{cls}">', unsafe_allow_html=True)
+            if st.button("Sign In", key="tab_si", use_container_width=True):
+                st.session_state["login_mode"] = "signin"
+                st.rerun()
+            st.markdown('</div>', unsafe_allow_html=True)
+
+        with tab_r:
+            cls = "tab-active" if mode == "register" else "tab-col"
+            st.markdown(f'<div class="{cls}">', unsafe_allow_html=True)
+            if st.button("Create Account", key="tab_reg", use_container_width=True):
+                st.session_state["login_mode"] = "register"
+                st.rerun()
+            st.markdown('</div>', unsafe_allow_html=True)
+
+        st.markdown('</div>', unsafe_allow_html=True)
+
+        # Underline indicator
+        left_ul  = "2px solid #7c6ef5" if mode == "signin"   else "2px solid transparent"
+        right_ul = "2px solid #7c6ef5" if mode == "register" else "2px solid transparent"
+        st.markdown(f"""
+        <div style="display:flex;margin-top:-10px;margin-bottom:20px;">
+            <div style="flex:1;border-bottom:{left_ul};"></div>
+            <div style="flex:1;border-bottom:{right_ul};"></div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        # Hints
+        if mode == "signin":
+            hints = [
+                "Live job market analytics across India",
+                "Real-time salary benchmarks by role &amp; city",
+                "Hiring trends across 50+ tech companies",
+                "Skill demand shifts updated weekly",
+            ]
+        else:
+            hints = [
+                "Full dashboard access from day one",
+                "AI-powered skill gap analysis",
+                "Personalised market reports for your role",
+                "Free forever — no credit card needed",
+            ]
+
+        hints_html = "".join(
+            f'<div style="display:flex;align-items:center;gap:10px;font-family:Space Grotesk,sans-serif;'
+            f'font-size:13px;color:#555570;padding:4px 0;">'
+            f'<span style="width:5px;height:5px;min-width:5px;background:#7c6ef5;border-radius:50%;display:inline-block;"></span>'
+            f'{h}</div>'
+            for h in hints
+        )
+        st.markdown(f"""
+        <div style="background:#16161f;border:1px solid #1e1e2d;border-radius:10px;
+                    padding:14px 18px;margin-bottom:20px;">
+            {hints_html}
+        </div>
+        """, unsafe_allow_html=True)
+
+        # Inputs
         email    = st.text_input("Email Address", placeholder="name@company.com", key="tp_email").strip().lower()
         password = st.text_input("Password", type="password", placeholder="••••••••", key="tp_pw")
 
+        # Action button
+        st.markdown('<div class="action-btn">', unsafe_allow_html=True)
+
         if mode == "signin":
-            if st.button("Sign in →", use_container_width=True, key="tp_btn"):
+            if st.button("Sign in →", use_container_width=True, key="tp_action"):
                 if not email or not password:
                     st.error("Please fill in all fields.")
                 else:
@@ -225,7 +240,7 @@ def render_login():
                     except Exception as e:
                         st.error(f"Database error: {e}")
         else:
-            if st.button("Create free account →", use_container_width=True, key="tp_btn"):
+            if st.button("Create free account →", use_container_width=True, key="tp_action"):
                 if not email or not password:
                     st.error("Please fill in all fields.")
                 elif "@" not in email or "." not in email:
@@ -248,3 +263,5 @@ def render_login():
                                     st.success("Account created — switch to Sign In to continue.")
                     except Exception as e:
                         st.error(f"Registration failed: {e}")
+
+        st.markdown('</div>', unsafe_allow_html=True)
