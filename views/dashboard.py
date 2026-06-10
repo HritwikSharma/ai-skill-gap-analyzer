@@ -341,20 +341,6 @@ def render_dashboard():
     
     components.html(filter_html, height=72, scrolling=False)
     
-    fc1, fc2, fc3 = st.columns(3)
-    with fc1:
-        sel_role = st.selectbox("Role", role_options, index=role_options.index(st.session_state["filter_role"]), label_visibility="collapsed")
-    with fc2:
-        sel_loc = st.selectbox("Location", loc_options, index=loc_options.index(st.session_state["filter_loc"]), label_visibility="collapsed")
-    with fc3:
-        sel_exp = st.selectbox("Experience", exp_options, index=exp_options.index(st.session_state["filter_exp"]), label_visibility="collapsed")
-    
-    if sel_role != st.session_state["filter_role"] or sel_loc != st.session_state["filter_loc"] or sel_exp != st.session_state["filter_exp"]:
-        st.session_state["filter_role"] = sel_role
-        st.session_state["filter_loc"] = sel_loc
-        st.session_state["filter_exp"] = sel_exp
-        st.session_state["listing_page"] = 1
-        st.rerun()
     
     # Apply filters to dataframe
     fdf = df.copy()
