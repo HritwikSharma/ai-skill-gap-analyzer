@@ -1006,11 +1006,14 @@ def render_dashboard():
             fig = px.scatter_mapbox(
                 map_df, lat="lat", lon="lon",
                 size="openings", color="openings",
-                # Bright neon palette so data stands out clearly over text and terrain
+                # Bright neon palette so data stands out clearly over text and dark green terrain
                 color_continuous_scale=[[0,"#00ffff"],[0.5,"#ff00ff"],[1,"#ffff00"]],
                 size_max=45, zoom=4.2, 
                 center={"lat": 21.5937, "lon": 78.9629}, 
-                mapbox_style="white-bg",
+                
+                # FIX: Uses the native combination style containing pre-compiled city labels
+                mapbox_style="satellite-streets", 
+                
                 hover_name="city",
                 hover_data={"openings":True,"lat":False,"lon":False},
                 labels={"openings":"Open Positions"},
@@ -1020,26 +1023,6 @@ def render_dashboard():
                 template="plotly_dark",
                 paper_bgcolor="rgba(0,0,0,0)",
                 margin={"r":0,"t":0,"l":0,"b":0}, height=580,
-                
-                # FIX: Twin layers configuration (Layer 1 = Satellite Photo, Layer 2 = Transparent Labels)
-                mapbox_layers=[
-                    {
-                        "below": 'traces',
-                        "sourcetype": "raster",
-                        "source": [
-                            "https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryOnly/MapServer/tile/{z}/{y}/{x}"
-                        ]
-                    },
-                    {
-                        "below": 'traces',
-                        "sourcetype": "raster",
-                        # Pulls transparent administrative boundaries and city labels natively
-                        "source": [
-                            "https://b.ash.openstreetmap.org/edges/{z}/{x}/{y}.png" 
-                        ],
-                        "opacity": 0.85 # Keeps text clear but lets the terrain show through
-                    }
-                ],
                 coloraxis_colorbar=dict(
                     title="Listings", thickness=14, len=0.6,
                     tickfont=dict(size=11, family="Inter,sans-serif", color="#fff"),
