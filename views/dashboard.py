@@ -677,7 +677,7 @@ def render_dashboard():
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
     * {{ margin:0; padding:0; box-sizing:border-box; font-family:'Inter',sans-serif; }}
-    body {{ background:#0d0d0d; }}
+    body {{ background:#0d0d0d; overflow-x: hidden; padding-right: 4px;}}
     .card {{
         background: #111;
         border: 1px solid transparent;
