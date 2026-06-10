@@ -1056,7 +1056,7 @@ def render_dashboard():
                     col_form_left, col_form_right = st.columns(2)
                     
                     with col_form_left:
-                        # 1. Profile Mode Selection (Separates Dropdown vs Manual Entry cleanly to avoid resetting)
+                        # 1. Profile Mode Selection
                         role_mode = st.radio(
                             "How would you like to specify your Target Role?",
                             options=["Choose from live market jobs", "Type a custom target role"],
@@ -1101,11 +1101,42 @@ def render_dashboard():
                         )
 
                     with col_form_right:
+                        # 4. Technical Languages input field
+                        skills_input = st.text_input(
+                            "Core Programming Languages & Frameworks",
+                            placeholder="e.g., Python, SQL, Git, FastAPI, React",
+                            help="Separate your items explicitly using a comma."
+                        )
+                        
+                        # 5. Engineering Infrastructure tooling layout fields
+                        tools_input = st.text_input(
+                            "Cloud Frameworks, System Infrastructures & Databases",
+                            placeholder="e.g., AWS, Docker, PostgreSQL, Kubernetes, Tableau",
+                            help="Separate your items explicitly using a comma."
+                        )
+                        
+                        # 6. Education background profile classification
+                        edu_background = st.selectbox(
+                            "Highest Educational Qualification Track",
+                            options=[
+                                "B.E. / B.Tech / M.Tech (Computer Science/IT)", 
+                                "Non-CS Engineering Background", 
+                                "BCA / MCA / BSc IT", 
+                                "Self-Taught / Bootcamp Graduate", 
+                                "Other Degree Framework"
+                            ],
+                            index=0
+                        )
+                    
+                    st.write("") # Structural Spacer line
+                    
+                    # Centered action form controller trigger matching corporate branding colors
+                    submit_profile = st.form_submit_button("🚀 Compile My AI Strategy Profile", use_container_width=True)
                     
                     if submit_profile:
-                        if selected_role_option == "✨ Type my own custom role..." and not final_target_role:
+                        if role_mode == "Type a custom target role" and not final_target_role.strip():
                             st.error("Please specify your custom career objective title.")
-                        elif not skills_input or not tools_input:
+                        elif not skills_input.strip() or not tools_input.strip():
                             st.error("Please enter your current Core Languages and Infrastructure Tools to unlock your profile metrics matrix.")
                         else:
                             # Standard comma delimitation cleaning parser loop 
@@ -1114,9 +1145,9 @@ def render_dashboard():
                             
                             # Compile structured dictionary parameters payload onto the app session layer
                             st.session_state["profile_data"] = {
-                                "role": final_target_role,
+                                "role": final_target_role.strip(),
                                 "experience": exp_level,
-                                "city": preferred_city if preferred_city else "All India Market",
+                                "city": preferred_city.strip() if preferred_city.strip() else "All India Market",
                                 "skills": user_skills,
                                 "tools": user_tools,
                                 "education": edu_background
@@ -1124,9 +1155,28 @@ def render_dashboard():
                             st.session_state["user_profile_saved"] = True
                             st.success("Profile parsed successfully! Running AI core strategy metrics calculation routines...")
                             st.rerun()
-
-                        
+                            
+        else:
+            # --- Placeholder for Phase 4 & Phase 5 Dashboard View ---
+            profile = st.session_state["profile_data"]
+            st.markdown(f"""
+                <div class='metric-card'>
+                    <h3 style='color: #3b82f6; margin-top:0;'>🎯 Active Goal Profile Loaded: {profile['role']}</h3>
+                    <p style='color: #cbd5e1; font-size: 0.90rem;'><strong>Stated Track Stack:</strong> {', '.join(profile['skills'])} | {', '.join(profile['tools'])}</p>
+                    <p style='color: #94a3b8; font-size: 0.85rem;'>Experience Target: {profile['experience']} — Location Focus: {profile['city']}</p>
+                </div>
+            """, unsafe_allow_html=True)
+            
+            if st.button("🔄 Clear Profile & Reset"):
+                del st.session_state["profile_data"]
+                st.session_state["user_profile_saved"] = False
+                st.rerun()
+    
     st.markdown('</div>', unsafe_allow_html=True)
 
 
 
+
+
+
+    
