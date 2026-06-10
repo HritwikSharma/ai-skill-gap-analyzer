@@ -10,3 +10,5 @@ httpx-oauth
 gunicorn
 flask
 groq
+google-genai
+pydantic
