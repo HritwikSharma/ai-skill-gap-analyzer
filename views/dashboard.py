@@ -1006,13 +1006,13 @@ def render_dashboard():
             fig = px.scatter_mapbox(
                 map_df, lat="lat", lon="lon",
                 size="openings", color="openings",
-                # Bright neon palette so data stands out clearly over text and dark green terrain
-                color_continuous_scale=[[0,"#00ffff"],[0.5,"#ff00ff"],[1,"#ffff00"]],
-                size_max=45, zoom=4.2, 
+                # Deep High-Contrast Colors (Vibrant Crimson to Emerald Green) so it pops on a white layout
+                color_continuous_scale=[[0,"#e11d48"],[0.5,"#2563eb"],[1,"#10b981"]],
+                size_max=40, zoom=4.1, 
                 center={"lat": 21.5937, "lon": 78.9629}, 
                 
-                # FIX: Uses the native combination style containing pre-compiled city labels
-                mapbox_style="satellite-streets", 
+                # FIX 1: Clean, high-resolution light base map with pre-rendered city names natively included
+                mapbox_style="carto-positron", 
                 
                 hover_name="city",
                 hover_data={"openings":True,"lat":False,"lon":False},
@@ -1020,13 +1020,15 @@ def render_dashboard():
             )
             
             fig.update_layout(
-                template="plotly_dark",
+                # FIX 2: Swaps engine to a white-base template so text elements don't get washed out
+                template="plotly_white",
                 paper_bgcolor="rgba(0,0,0,0)",
                 margin={"r":0,"t":0,"l":0,"b":0}, height=580,
                 coloraxis_colorbar=dict(
                     title="Listings", thickness=14, len=0.6,
-                    tickfont=dict(size=11, family="Inter,sans-serif", color="#fff"),
-                    title_font=dict(color="#fff"),
+                    # Dark grey text so scale numbers are fully readable
+                    tickfont=dict(size=11, family="Inter,sans-serif", color="#333"),
+                    title_font=dict(color="#333"),
                 ),
             )
             st.plotly_chart(fig, use_container_width=True)
