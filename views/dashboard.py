@@ -629,15 +629,11 @@ def render_dashboard():
     # ─────────────────────────────────────────────
     st.markdown("""
     <style>
-    /* Content area gets dark bg + padding from the page wrap */
-    .content-wrap {
-        background: #0d0d0d;
-        padding: 24px 32px 60px;
+    [data-testid="stMainBlockContainer"] {
+        padding: 24px 32px 60px !important;
     }
-    /* Plotly charts: override bg */
     .js-plotly-plot .plotly, .plot-container { background: transparent !important; }
     </style>
-    <div class="content-wrap">
     """, unsafe_allow_html=True)
     
     # ─────────────────────────────────────────────
@@ -1108,7 +1104,6 @@ def render_dashboard():
                             if "ai_analysis" in st.session_state: del st.session_state["ai_analysis"]
                             st.session_state["user_profile_saved"] = False
                             st.rerun()    
-    st.markdown('</div>', unsafe_allow_html=True)
 
 
 
