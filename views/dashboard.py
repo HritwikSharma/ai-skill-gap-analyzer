@@ -879,43 +879,51 @@ def render_dashboard():
                 # Force browser view to reload view context to the top via query param mutation
                 st.query_params["p"] = str(st.session_state["listing_page"])
                 st.rerun()
-        # ──────────────────────────────────────────────────────────
-        # ✅ BACK TO TOP BUTTON WITH A TARGET ELEMENT
-        # ──────────────────────────────────────────────────────────
-        # 1. This hidden target tells the browser exactly where "top" is
-        st.markdown('<div id="top-marker"></div>', unsafe_allow_html=True)
+        st.write("") # Spacer Layout Row
 
-        st.write("") # Spacer
-        
-        # 2. Render a clean button that natively points focus back up to the marker
-        st.markdown("""
-            <style>
-            .back-to-top-link {
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                margin: 20px auto 10px;
-                width: 140px;
-                height: 38px;
-                background-color: #1a2744;
-                color: #3b82f6 !important;
-                border: 1px solid #2a3f6f;
-                border-radius: 8px;
-                font-family: 'Inter', sans-serif;
-                font-size: 0.8rem;
-                font-weight: 600;
-                text-decoration: none !important;
-                transition: background-color 0.15s ease, border-color 0.15s ease;
-            }
-            .back-to-top-link:hover {
-                background-color: #243560;
-                border-color: #3b82f6;
-                color: #67e8f9 !important;
-            }
-            </style>
+        # We construct an interactive layout box that handles native browser scroll execution
+        with st.form(key="scroll_top_form", clear_on_submit=True):
+            # Injected styling to strip out Streamlit's default heavy form borders and padding boxes
+            st.markdown("""
+                <style>
+                div[data-testid="stForm"] {
+                    border: none !important;
+                    background: transparent !important;
+                    padding: 0 !important;
+                    margin: 0 !important;
+                }
+                .back-to-top-btn {
+                    display: flex !important;
+                    align-items: center !important;
+                    justify-content: center !important;
+                    margin: 16px auto 0 !important;
+                    width: 140px !important;
+                    height: 38px !important;
+                    background-color: #1a2744 !important;
+                    color: #3b82f6 !important;
+                    border: 1px solid #2a3f6f !important;
+                    border-radius: 8px !important;
+                    font-family: 'Inter', sans-serif !important;
+                    font-size: 0.8rem !important;
+                    font-weight: 600 !important;
+                    cursor: pointer !important;
+                    transition: background-color 0.15s ease, border-color 0.15s ease !important;
+                }
+                .back-to-top-btn:hover {
+                    background-color: #243560 !important;
+                    border-color: #3b82f6 !important;
+                    color: #67e8f9 !important;
+                }
+                </style>
+            """, unsafe_allow_html=True)
             
-            <a href="#top-marker" class="back-to-top-link" target="_self">▲ Back to Top</a>
-        """, unsafe_allow_html=True)
+            # Use native submit action to refresh form visibility metrics 
+            submit_scroll = st.form_submit_button(label="▲ Back to Top")
+            
+            if submit_scroll:
+                # Triggering a query parameter alteration forces the viewport layout to initialize fresh from point (0,0)
+                st.query_params["top"] = "true"
+                st.rerun()
     
     # ══════════════════════════════════════════════
     #  TAB: MARKET OVERVIEW
