@@ -1029,67 +1029,89 @@ def render_dashboard():
     elif active == "ai_analyzer":
         section_header("🎯 AI Career Strategist & Skill Gap Analyzer")
         
-        # 1. Initialize State
         if "user_profile_saved" not in st.session_state:
             st.session_state["user_profile_saved"] = False
             
-        # 2. RENDER FORM (Only if not saved)
         if not st.session_state["user_profile_saved"]:
+            st.markdown("""
+                <div class='metric-card' style='margin-bottom: 25px;'>
+                    <h3 style='color: #67e8f9; margin-top:0;'>Setup Your Career Profile</h3>
+                    <p style='color: #94a3b8; font-size: 0.9rem;'>
+                        All fields are mandatory. Complete your profile to unlock your AI strategy.
+                    </p>
+                </div>
+            """, unsafe_allow_html=True)
+
+            available_roles = sorted(list(set(str(r).strip() for r in fdf["title"].dropna() if str(r).strip())))
+            options = ["Select from Market Roles..."] + available_roles + ["✨ Add Custom Role..."]
+
             with st.form("onboarding_profile_form"):
-                target_role = st.selectbox("🎯 Target Career Objective", ["Data Engineer", "Data Scientist", "ML Engineer", "Other"])
-                exp_level = st.selectbox("Experience Level", ["Student / Fresher", "Entry-Level", "Mid-Level", "Senior"])
+                # 1. Target Role Logic
+                selected_role = st.selectbox("🎯 Target Career Objective", options=options)
+                target_role = ""
+                if selected_role == "✨ Add Custom Role...":
+                    target_role = st.text_input("Enter your custom role:")
+                elif selected_role != "Select from Market Roles...":
+                    target_role = selected_role
+                
+                # 2. Employment Preference
+                job_pref = st.selectbox("💼 Employment Preference", ["Internship", "Full-time", "Part-time", "Remote / Freelance"])
+
+                # 3. Experience, Salary, and History
+                exp_level = st.selectbox("Experience Level", ["Student / Fresher", "Entry-Level (1-2 Years)", "Mid-Level (3-5 Years)", "Senior (5+ Years)"])
+                expected_salary = st.number_input("💰 Expected Annual Salary (INR)", min_value=0, step=50000)
+                work_history = st.text_input("🏢 Past Job Roles (comma separated, or N/A if fresher)")
+                
+                # 4. Education (Multi-select)
+                education = st.multiselect("🎓 Educational Qualifications", [
+                    "Primary School (10th)", "Secondary School (12th)", 
+                    "B.E. / B.Tech", "M.Tech / M.S.", "BCA / MCA", "BSc / MSc", "MBA", "Other"
+                ])
+
+                # 5. Skills & Languages
                 skills_input = st.text_input("💻 Core Languages & Frameworks (comma separated)")
                 tools_input = st.text_input("🛠️ Cloud & Infrastructure (comma separated)")
-                education = st.multiselect("🎓 Educational Qualifications", ["B.E. / B.Tech", "M.Tech / M.S.", "BCA / MCA", "Other"])
-                languages = st.multiselect("🗣️ Languages Spoken", ["English", "Hindi", "Other"])
+                certs_input = st.text_input("📜 Certifications (comma separated)")
+                languages = st.multiselect("🗣️ Languages Spoken", ["English", "Hindi", "Bengali", "Marathi", "Telugu", "Tamil", "Kannada", "Other"])
                 
                 submit = st.form_submit_button("🚀 Generate AI Strategy", use_container_width=True)
                 
                 if submit:
-                    # Save data to session state BEFORE rerunning
-                    st.session_state["profile_data"] = {
-                        "role": target_role,
-                        "experience": exp_level,
-                        "skills": skills_input,
-                        "tools": tools_input
-                    }
-                    st.session_state["user_profile_saved"] = True
-                    st.rerun()
-
-        # 3. RENDER RESULTS (Only if saved)
-        else:
-            # Check if analysis already exists, if not, fetch it
-            if "ai_analysis" not in st.session_state or st.session_state["ai_analysis"] is None:
-                with st.spinner("🚀 AI Architect is researching global market trends..."):
-                    all_skills = fdf["tech_skills_found"].dropna().explode().unique().tolist()
-                    
-                    # Fetch from Groq
-                    analysis_result = get_ai_analysis(st.session_state["profile_data"], all_skills[:100])
-                    st.session_state["ai_analysis"] = analysis_result
-            
-            # Display results from state
-            analysis = st.session_state["ai_analysis"]
-            profile = st.session_state["profile_data"]
-            
-            st.markdown(f"### 📈 Analysis for: {profile['role']}")
-            
-            col1, col2 = st.columns(2)
-            with col1:
-                st.write("#### 🛠️ Skill Gap")
-                for skill in analysis.get('skill_gap', []):
-                    st.warning(f"• {skill}")
-            
-            with col2:
-                st.write("#### 🗺️ 7-Step Roadmap")
-                for i, step in enumerate(analysis.get('comprehensive_roadmap', [])):
-                    st.markdown(f"**{i+1}.** {step}")
-            
-            # Reset Button
-            if st.button("🔄 Reset Profile"):
-                st.session_state["profile_data"] = None
-                st.session_state["ai_analysis"] = None
-                st.session_state["user_profile_saved"] = False
-                st.rerun()   
+                    if not target_role or not skills_input or not tools_input or not education or not languages:
+                        st.error("Please fill in ALL mandatory fields to proceed.")
+                    else:
+                        # 1. ANALYZE ONLY IF NOT ALREADY DONE
+                        if "ai_analysis" not in st.session_state:
+                            with st.spinner("🚀 AI Architect is researching global market trends..."):
+                                # Aggregate local database skills
+                                all_skills = fdf["tech_skills_found"].dropna().explode().unique().tolist()
+                                
+                                # Call the engine
+                                st.session_state["ai_analysis"] = get_ai_analysis(st.session_state["profile_data"], all_skills[:100])
+                        
+                        # 2. RENDER RESULTS
+                        analysis = st.session_state["ai_analysis"]
+                        profile = st.session_state["profile_data"]
+                        
+                        st.markdown(f"### 📈 Analysis for: {profile['role']}")
+                        
+                        col1, col2 = st.columns(2)
+                        with col1:
+                            st.write("#### 🛠️ Skill Gap")
+                            for skill in analysis['skill_gap']:
+                                st.warning(f"• {skill}")
+                        
+                        with col2:
+                            st.write("#### 🗺️ 7-Step Roadmap")
+                            for i, step in enumerate(analysis['comprehensive_roadmap']):
+                                st.markdown(f"**{i+1}.** {step}")
+                        
+                        # Reset Button
+                        if st.button("🔄 Reset Profile"):
+                            del st.session_state["profile_data"]
+                            if "ai_analysis" in st.session_state: del st.session_state["ai_analysis"]
+                            st.session_state["user_profile_saved"] = False
+                            st.rerun()    
 
 
 
