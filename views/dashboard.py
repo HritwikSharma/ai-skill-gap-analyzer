@@ -76,8 +76,11 @@ def render_dashboard():
     def fetch_job_data():
         try:
             conn = psycopg2.connect(
-                host=DB_HOST, user=DB_USER, database=DB_NAME,
-                password=DB_PASSWORD, port="5432"
+                host=DB_HOST,
+                user=DB_USER, 
+                database=DB_NAME,
+                password=DB_PASSWORD, 
+                port="5432"
             )
             df = pd.read_sql("""
                 SELECT job_id, title, company, location,
