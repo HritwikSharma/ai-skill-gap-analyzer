@@ -473,35 +473,89 @@ def render_dashboard():
     }}
     </script>
     """    
-   # ──────────────────────────────────────────────────────────
-    # ✅ PASTE THIS EXACT BLOCK RIGHT HERE:
     # ──────────────────────────────────────────────────────────
-    # Render the single custom filter component
-    filter_interaction = components.html(filter_html, height=76, scrolling=False)
-    
-    # Process the automatic dropdown selections
-    if filter_interaction:
-        try:
-            import json
-            params = json.loads(filter_interaction)
-            
-            # If the user selected a new value, update state and rerun
-            if (params["role"] != st.session_state.get("filter_role") or 
-                params["loc"] != st.session_state.get("filter_loc") or 
-                params["exp"] != st.session_state.get("filter_exp")):
-                
-                st.session_state["filter_role"] = params["role"]
-                st.session_state["filter_loc"] = params["loc"]
-                st.session_state["filter_exp"] = params["exp"]
-                st.session_state["listing_page"] = 1
-                st.rerun()
-        except Exception:
-            pass
+    # NATIVE FILTER DESIGN BLOCK HERE:
     # ──────────────────────────────────────────────────────────
-    
-    # ─────────────────────────────────────────────
-    #  TAB NAV (pure HTML — drives session state)
-    # ─────────────────────────────────────────────
+    # 1. Inject CSS to style native Streamlit components to match your design perfectly
+    st.markdown("""
+        <style>
+        /* Container border box simulating your original UI */
+        div[data-testid="stHorizontalBlock"]:has(div[data-testid="stSelectbox"]) {
+            background-color: #111111 !important;
+            border: 1px solid #222222 !important;
+            border-radius: 12px !important;
+            padding: 14px 20px !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 12px !important;
+        }
+        /* Custom layout adjustments for the row */
+        div[data-testid="stHorizontalBlock"]:has(div[data-testid="stSelectbox"]) > div {
+            flex: 1 !important;
+            min-width: 0 !important;
+        }
+        /* Style the 'FILTER' section label */
+        div[data-testid="stSelectbox"] > label {
+            font-family: 'Inter', sans-serif !important;
+            font-size: 0.7rem !important;
+            font-weight: 600 !important;
+            color: #555555 !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.08em !important;
+            margin-bottom: 4px !important;
+        }
+        /* Dropdown field styling */
+        div[data-testid="stSelectbox"] div[data-baseweb="select"] {
+            background-color: #1a1a1a !important;
+            border: 1px solid #2a2a2a !important;
+            border-radius: 8px !important;
+            color: #e0e0e0 !important;
+            font-size: 0.83rem !important;
+        }
+        /* Hover state border highlight */
+        div[data-testid="stSelectbox"] div[data-baseweb="select"]:hover {
+            border-color: #3b82f6 !important;
+        }
+        /* Dropdown menu items overlay background color match */
+        div[data-baseweb="popover"] ul {
+            background-color: #1a1a1a !important;
+        }
+        div[data-baseweb="popover"] li {
+            color: #e0e0e0 !important;
+        }
+        div[data-baseweb="popover"] li:hover {
+            background-color: #2a2a2a !important;
+        }
+        </style>
+    """, unsafe_allow_html=True)
+
+    # 2. Render native dropdowns wrapped inside structural layout columns
+    f_col1, f_col2, f_col3 = st.columns(3)
+
+    with f_col1:
+        st.selectbox(
+            "Filter Roles",
+            options=role_options,
+            key="filter_role",
+            on_change=lambda: st.session_state.update({"listing_page": 1})
+        )
+
+    with f_col2:
+        st.selectbox(
+            "All Locations",
+            options=loc_options,
+            key="filter_loc",
+            on_change=lambda: st.session_state.update({"listing_page": 1})
+        )
+
+    with f_col3:
+        st.selectbox(
+            "All Experience",
+            options=exp_options,
+            key="filter_exp",
+            on_change=lambda: st.session_state.update({"listing_page": 1})
+        )
+    # ──────────────────────────────────────────────────────────
     # ─────────────────────────────────────────────
     #  TAB NAV (Native Segmented Control)
     # ─────────────────────────────────────────────
