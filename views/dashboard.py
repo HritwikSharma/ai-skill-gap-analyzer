@@ -879,6 +879,43 @@ def render_dashboard():
                 # Force browser view to reload view context to the top via query param mutation
                 st.query_params["p"] = str(st.session_state["listing_page"])
                 st.rerun()
+        # ──────────────────────────────────────────────────────────
+        # ✅ BACK TO TOP BUTTON WITH A TARGET ELEMENT
+        # ──────────────────────────────────────────────────────────
+        # 1. This hidden target tells the browser exactly where "top" is
+        st.markdown('<div id="top-marker"></div>', unsafe_allow_html=True)
+
+        st.write("") # Spacer
+        
+        # 2. Render a clean button that natively points focus back up to the marker
+        st.markdown("""
+            <style>
+            .back-to-top-link {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin: 20px auto 10px;
+                width: 140px;
+                height: 38px;
+                background-color: #1a2744;
+                color: #3b82f6 !important;
+                border: 1px solid #2a3f6f;
+                border-radius: 8px;
+                font-family: 'Inter', sans-serif;
+                font-size: 0.8rem;
+                font-weight: 600;
+                text-decoration: none !important;
+                transition: background-color 0.15s ease, border-color 0.15s ease;
+            }
+            .back-to-top-link:hover {
+                background-color: #243560;
+                border-color: #3b82f6;
+                color: #67e8f9 !important;
+            }
+            </style>
+            
+            <a href="#top-marker" class="back-to-top-link" target="_self">▲ Back to Top</a>
+        """, unsafe_allow_html=True)
     
     # ══════════════════════════════════════════════
     #  TAB: MARKET OVERVIEW
