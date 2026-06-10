@@ -11,7 +11,7 @@ import html as _html
 from collections import Counter
 
 def render_dashboard():
-    st.title("TalentPulse Dashboard")
+    #st.title("TalentPulse Dashboard")
     # ─────────────────────────────────────────────
     #  DATABASE CREDENTIALS
     # ─────────────────────────────────────────────
