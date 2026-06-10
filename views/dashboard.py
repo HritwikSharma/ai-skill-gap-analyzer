@@ -270,7 +270,7 @@ def render_dashboard():
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@700&display=swap" rel="stylesheet">
     <style>
     * {{ margin:0; padding:0; box-sizing:border-box; font-family:'Inter',sans-serif; }}
-    body {{ background:#0d0d0d; padding: 0 32px 16px; }}
+    body {{ background:#0d0d0d; padding: 24px 32px 16px; }}
     .grid {{
         display: grid;
         grid-template-columns: repeat(4,1fr);
@@ -349,7 +349,7 @@ def render_dashboard():
             <div class="bar-bg"><div class="bar-fill" style="width:75%"></div></div>
         </div>
     </div>
-    """, height=140, scrolling=False)
+    """, height=164, scrolling=False)
         # ─────────────────────────────────────────────
     #  FILTER BAR (pure HTML + postMessage back to Streamlit)
     # ─────────────────────────────────────────────
