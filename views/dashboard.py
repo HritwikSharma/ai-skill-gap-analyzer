@@ -561,36 +561,43 @@ def render_dashboard():
     #  TAB NAV (Native Segmented Control)
     # ─────────────────────────────────────────────
     # Use the existing session state value as the default index
-    # ══════════════════════════════════════════════
-    # ✅ REPLACE WITH THIS CENTERING FIX:
-    # ══════════════════════════════════════════════
     tab_options = ["listings", "market", "salary", "companies", "map"]
     default_index = tab_options.index(st.session_state["active_tab"])
     
-    # Inject deep structural layout CSS to pull the outer row to the center
+    # Injected absolute layout overriding rules targeting global canvas paths
     st.markdown("""
         <style>
-        /* 1. Target the outer structural row container holding your tabs */
-        div[data-testid="stHorizontalBlock"]:has(div[data-testid="stSegmentedControl"]) {
-            justify-content: center !important; /* Pulls the entire element block into the center */
+        /* Force any block housing the segmented tabs to snap to the layout center */
+        div.element-container:has(div[data-testid="stSegmentedControl"]) {
+            display: flex !important;
+            justify-content: center !important;
             width: 100% !important;
         }
         
-        /* 2. Strip Streamlit's default full-width stretching columns framework */
+        /* Force the core block framework row to drop left floating alignment constraints */
+        div[data-testid="stHorizontalBlock"]:has(div[data-testid="stSegmentedControl"]) {
+            display: flex !important;
+            justify-content: center !important;
+            width: 100% !important;
+        }
+        
+        /* Strip default wide-stretching fluid metrics from column boxes */
         div[data-testid="stHorizontalBlock"]:has(div[data-testid="stSegmentedControl"]) > div {
             flex: 0 1 auto !important;
             min-width: unset !important;
             max-width: unset !important;
         }
 
-        /* 3. Ensure the inner segmented controls align perfectly balanced */
+        /* Enforce tight center distribution directly on internal tabs button group track */
         div[data-testid="stSegmentedControl"] {
             display: flex !important;
             justify-content: center !important;
-            width: 100% !important;
+            width: auto !important;
         }
         div[data-testid="stSegmentedControl"] > div {
+            display: flex !important;
             justify-content: center !important;
+            width: auto !important;
         }
         </style>
     """, unsafe_allow_html=True)
