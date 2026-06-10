@@ -191,10 +191,11 @@ def render_dashboard():
     if "filter_exp" not in st.session_state:
         st.session_state["filter_exp"] = "All Experience"
     
-    # ─────────────────────────────────────────────
+   # ─────────────────────────────────────────────
     #  NAV BAR (pure HTML component)
     # ─────────────────────────────────────────────
-    components.html("""
+    # Clean injection handling for the logout event listener
+    nav_interaction = st.components.v1.html("""
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@600;700&display=swap" rel="stylesheet">
     <style>
     * { margin:0; padding:0; box-sizing:border-box; }
@@ -234,6 +235,23 @@ def render_dashboard():
         margin-right: 6px;
         animation: pulse 2s infinite;
     }
+    .signout-btn {
+        background: transparent;
+        color: #aaa;
+        border: 1px solid #2a2a2a;
+        border-radius: 6px;
+        padding: 6px 12px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        font-family: 'Inter', sans-serif;
+        cursor: pointer;
+        transition: all 0.15s ease;
+    }
+    .signout-btn:hover {
+        color: #ef4444;
+        border-color: #ef4444;
+        background: rgba(239, 68, 68, 0.05);
+    }
     @keyframes pulse {
         0%,100% { opacity:1; }
         50% { opacity:0.4; }
@@ -241,11 +259,24 @@ def render_dashboard():
     </style>
     <div class="nav">
         <div class="logo">TalentPulse <span>India</span></div>
-        <div style="display:flex;align-items:center;gap:16px;">
+        <div style="display:flex;align-items:center;gap:20px;">
             <div class="tag"><span class="live-dot"></span>Live Tech Market Intelligence</div>
+            <button class="signout-btn" onclick="logout()">Sign out</button>
         </div>
     </div>
-    """, height=58, scrolling=False)    
+    <script>
+    function logout() {
+        window.parent.postMessage({
+            type: 'streamlit:setComponentValue',
+            value: 'trigger_logout'
+        }, '*');
+    }
+    </script>
+    """, height=58, scrolling=False)
+
+    # Catch the HTML click event inside Streamlit and execute the session kill
+    if nav_interaction == "trigger_logout":
+        st.logout()    
     
     # Apply filters to dataframe
     fdf = df.copy()
@@ -443,10 +474,6 @@ def render_dashboard():
     """
     
     components.html(filter_html, height=72, scrolling=False)
-    col1, col2 = st.columns([10, 1])
-    with col2:
-        if st.button("Sign out"):
-            st.logout()
     
     # ─────────────────────────────────────────────
     #  TAB NAV (pure HTML — drives session state)
