@@ -561,7 +561,7 @@ def render_dashboard():
     #  TAB NAV (Native Segmented Control)
     # ─────────────────────────────────────────────
     # Use the existing session state value as the default index
-    tab_options = ["listings", "market", "salary", "companies", "map"]
+    tab_options = ["listings", "market", "salary", "companies", "map","ai_analyzer"]
     default_index = tab_options.index(st.session_state["active_tab"])
     
     # Injected absolute layout overriding rules targeting global canvas paths
@@ -617,7 +617,8 @@ def render_dashboard():
             "market": "📊 Market Overview",
             "salary": "💰 Salary Insights",
             "companies": "🏢 Companies",
-            "map": "🗺️ Heat Map"
+            "map": "🗺️ Heat Map",
+            "ai_analyzer": "🎯 AI Skill Analyzer"
         }[x],
         label_visibility="collapsed"
     )
@@ -1025,5 +1026,67 @@ def render_dashboard():
                 ),
             )
             st.plotly_chart(fig, use_container_width=True)
-    
+    # ══════════════════════════════════════════════
+    #  TAB: AI SKILL GAP ANALYZER & ASSESSMENT
+    # ══════════════════════════════════════════════
+    elif active == "ai_analyzer":
+        section_header("🎯 AI Career Strategist & Skill Gap Analyzer")
+        
+        # Check if user profile exists in database
+        # (For now, we'll simulate a clean session state check until DB connected)
+        if "user_profile_saved" not in st.session_state:
+            st.session_state["user_profile_saved"] = False
+            
+        if not st.session_state["user_profile_saved"]:
+            st.markdown("""
+                <div class='metric-card' style='margin-bottom: 25px;'>
+                    <h3 style='color: #67e8f9; margin-top:0;'>Setup Your Career Profile</h3>
+                    <p style='color: #94a3b8; font-size: 0.9rem;'>
+                        Tell our AI engine about your target goals, core strengths, and tech stack to get live market gap metrics and customized evaluation assessments.
+                    </p>
+                </div>
+            """, unsafe_allow_html=True)
+            
+            # Form Container styled to match your premium dark UI
+            with st.form("onboarding_profile_form"):
+                target_role = st.selectbox(
+                    "What is your target role?",
+                    ["Data Scientist", "Data Analyst", "Machine Learning Engineer", "Frontend Developer", "Backend Developer", "Fullstack Engineer", "DevOps Engineer"]
+                )
+                
+                skills_input = st.text_input(
+                    "Core Programming Languages & Frameworks (Comma separated)",
+                    placeholder="e.g., Python, SQL, Git, FastAPI"
+                )
+                
+                tools_input = st.text_input(
+                    "Cloud Platforms, Tools & Databases (Comma separated)",
+                    placeholder="e.g., AWS, Docker, PostgreSQL, Tableau"
+                )
+                
+                exp_level = st.select_slider(
+                    "What is your current career experience level?",
+                    options=["Student / Fresher", "Entry-Level", "Mid-Senior", "Lead / Architect"]
+                )
+                
+                submit_profile = st.form_submit_button("🚀 Generate My AI Strategy Profile")
+                
+                if submit_profile:
+                    if not skills_input or not tools_input:
+                        st.error("Please fill in your current skills and tools to begin.")
+                    else:
+                        # Parse inputs into lists
+                        user_skills = [s.strip() for s in skills_input.split(",") if s.strip()]
+                        user_tools = [t.strip() for t in tools_input.split(",") if t.strip()]
+                        
+                        # Save execution placeholder details
+                        st.session_state["profile_data"] = {
+                            "role": target_role,
+                            "skills": user_skills,
+                            "tools": user_tools,
+                            "experience": exp_level
+                        }
+                        st.session_state["user_profile_saved"] = True
+                        st.success("Profile logged successfully! Processing real-time market data...")
+                        st.rerun()
     st.markdown('</div>', unsafe_allow_html=True)
