@@ -9,7 +9,7 @@ import re
 import re as _re
 import html as _html
 from collections import Counter
-from utils.ai_engine import get_ai_analysis
+from utils.groq_analyzer import get_ai_analysis
 
 def render_dashboard():
     #st.title("TalentPulse Dashboard")
