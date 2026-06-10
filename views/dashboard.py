@@ -1022,31 +1022,31 @@ def render_dashboard():
                 </div>
             """, unsafe_allow_html=True)
             
-            # --- Dynamic Role Extraction from Live Database State ---
-            # Extract unique titles found inside the active DataFrame, clean out nan rows, and sort alphabetically
+            # --- ✅ FIXED: Extracting STRICTLY UNIQUE sorted roles ---
+            available_roles = []
             if not fdf.empty and "title" in fdf.columns:
-                raw_roles = fdf["title"].dropna().unique().tolist()
-                available_roles = sorted([str(r).strip() for r in raw_roles if str(r).strip()])
-            else:
-                available_roles = []
+                # Use set() to strip duplicate strings instantly and capitalize properly to avoid casing variations
+                raw_unique_roles = set(str(r).strip() for r in fdf["title"].dropna() if str(r).strip())
+                available_roles = sorted(list(raw_unique_roles))
             
-            # Append generic fallbacks if your database filter is temporarily narrow
+            # Fallback unique foundational options 
             fallback_roles = ["Data Scientist", "Data Analyst", "Machine Learning Engineer", "Frontend Developer", "Backend Developer", "Fullstack Engineer", "DevOps Engineer"]
             for role in fallback_roles:
                 if role not in available_roles:
                     available_roles.append(role)
             
+            # Add a dedicated choice at the top to clear the path for manual inputs
+            available_roles.insert(0, "✨ Type my own custom role...")
+
             # Custom styled input layout grouping wrapper
             with st.container():
                 st.markdown("""
                     <style>
-                    /* Inject custom typography sizing for form segment labels */
                     div[data-testid="stVerticalBlock"] label p {
                         color: #cbd5e1 !important;
                         font-weight: 500 !important;
                         font-size: 0.9rem !important;
                     }
-                    /* Tweak Selectbox and TextInput containers to mesh with glassmorphism sheets */
                     div[data-testid="stSelectbox"] > div, div[data-testid="stTextInput"] > div {
                         background-color: #0b1329 !important;
                         border: 1px solid #1e293b !important;
@@ -1060,15 +1060,26 @@ def render_dashboard():
                     col_form_left, col_form_right = st.columns(2)
                     
                     with col_form_left:
-                        # 1. Target Role configuration (Combobox allowing search selection + manual typing option)
-                        target_role = st.selectbox(
+                        # 1. Target Role configuration option picker dropdown menu
+                        selected_role_option = st.selectbox(
                             "Target Career Objective / Role",
                             options=available_roles,
-                            index=0,
-                            help="Select your target destination role. Sourced directly from current active hiring vacancies."
+                            index=1 if len(available_roles) > 1 else 0,
+                            help="Choose from unique live roles scraped from your database or select 'Type my own custom role...' below."
                         )
                         
-                        # 2. Dropdown Experience configuration replacing the slider UI component
+                        # 2. ✅ FIXED: Direct layout conditional string text field box for entering unlisted roles
+                        custom_role_input = ""
+                        if selected_role_option == "✨ Type my own custom role...":
+                            custom_role_input = st.text_input(
+                                "Enter your custom target role:",
+                                placeholder="e.g., MLOps Engineer, Cloud Security Architect, GenAI Developer"
+                            )
+                        
+                        # Final compiled string variable assigning prioritizations
+                        final_target_role = custom_role_input.strip() if selected_role_option == "✨ Type my own custom role..." else selected_role_option
+                        
+                        # 3. Dropdown Experience level configuration replacing the slider UI component
                         exp_level = st.selectbox(
                             "Current Professional Experience Level",
                             options=[
@@ -1080,7 +1091,7 @@ def render_dashboard():
                             index=0
                         )
                         
-                        # 3. New Field: Preferred Employment Hub Location
+                        # 4. Preferred Employment Hub Location
                         preferred_city = st.text_input(
                             "Target Job Market / City Preference",
                             placeholder="e.g., Bengaluru, Hyderabad, Mumbai, Remote",
@@ -1088,21 +1099,21 @@ def render_dashboard():
                         )
 
                     with col_form_right:
-                        # 4. Technical Languages input field
+                        # 5. Technical Languages input field
                         skills_input = st.text_input(
                             "Core Programming Languages & Frameworks",
                             placeholder="e.g., Python, SQL, Git, FastAPI, React",
                             help="Separate your items explicitly using a comma."
                         )
                         
-                        # 5. Engineering Infrastructure tooling layout fields
+                        # 6. Engineering Infrastructure tooling layout fields
                         tools_input = st.text_input(
                             "Cloud Frameworks, System Infrastructures & Databases",
                             placeholder="e.g., AWS, Docker, PostgreSQL, Kubernetes, Tableau",
                             help="Separate your items explicitly using a comma."
                         )
                         
-                        # 6. New Field: Education background profile classification
+                        # 7. Education background profile classification
                         edu_background = st.selectbox(
                             "Highest Educational Qualification Track",
                             options=["B.E. / B.Tech / M.Tech (Computer Science/IT)", "Non-CS Engineering Background", "BCA / MCA / BSc IT", "Self-Taught / Bootcamp Graduate", "Other Degree Framework"],
@@ -1115,7 +1126,9 @@ def render_dashboard():
                     submit_profile = st.form_submit_button("🚀 Compile My AI Strategy Profile", use_container_width=True)
                     
                     if submit_profile:
-                        if not skills_input or not tools_input:
+                        if selected_role_option == "✨ Type my own custom role..." and not final_target_role:
+                            st.error("Please specify your custom career objective title.")
+                        elif not skills_input or not tools_input:
                             st.error("Please enter your current Core Languages and Infrastructure Tools to unlock your profile metrics matrix.")
                         else:
                             # Standard comma delimitation cleaning parser loop 
@@ -1124,7 +1137,7 @@ def render_dashboard():
                             
                             # Compile structured dictionary parameters payload onto the app session layer
                             st.session_state["profile_data"] = {
-                                "role": target_role,
+                                "role": final_target_role,
                                 "experience": exp_level,
                                 "city": preferred_city if preferred_city else "All India Market",
                                 "skills": user_skills,
@@ -1134,22 +1147,6 @@ def render_dashboard():
                             st.session_state["user_profile_saved"] = True
                             st.success("Profile parsed successfully! Running AI core strategy metrics calculation routines...")
                             st.rerun()
-                            
-        else:
-            # --- Placeholder for Phase 4 & Phase 5 Dashboard View ---
-            profile = st.session_state["profile_data"]
-            st.markdown(f"""
-                <div class='metric-card'>
-                    <h3 style='color: #3b82f6; margin-top:0;'>🎯 Active Goal Profile Loaded: {profile['role']}</h3>
-                    <p style='color: #cbd5e1; font-size: 0.90rem;'><strong>Stated Track Stack:</strong> {', '.join(profile['skills'])} | {', '.join(profile['tools'])}</p>
-                    <p style='color: #94a3b8; font-size: 0.85rem;'>Experience Target: {profile['experience']} — Location Focus: {profile['city']}</p>
-                </div>
-            """, unsafe_allow_html=True)
-            
-            if st.button("🔄 Clear Profile & Reset"):
-                del st.session_state["profile_data"]
-                st.session_state["user_profile_saved"] = False
-                st.rerun()
 
                         
     st.markdown('</div>', unsafe_allow_html=True)
