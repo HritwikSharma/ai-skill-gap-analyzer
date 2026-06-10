@@ -184,16 +184,6 @@ def render_dashboard():
 
 # ____________________    
     fdf = df.copy()
-    if st.session_state.get("filter_role") and st.session_state["filter_role"] != "All Roles":
-        fdf = fdf[fdf["title_clean"] == st.session_state["filter_role"]] # Note: Using title_clean here to match your cleaned roles
-        
-    if st.session_state.get("filter_loc") and st.session_state["filter_loc"] != "All Locations":
-        fdf = fdf[fdf["location"] == st.session_state["filter_loc"]]
-        
-    if st.session_state.get("filter_exp") and st.session_state["filter_exp"] != "All Experience":
-        fdf = fdf[fdf["experience_level"] == st.session_state["filter_exp"]] # Note: Using experience_level here to match your normalized data
-    # ──────────────────────────────────────────────────────────
-    
     # ─────────────────────────────────────────────
     #  SESSION STATE
     # ─────────────────────────────────────────────
