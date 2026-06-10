@@ -844,11 +844,15 @@ def render_dashboard():
         cols = st.columns([1] * (len(visible_pages) + 2))
         col_idx = 0
 
+        def change_page(target_page):
+            st.session_state["listing_page"] = target_page
+            # Drops a temporary script onto the DOM forcing window.parent viewport reset
+            components.html("<script>window.parent.scrollTo({top: 0, behavior: 'auto'});</script>", height=0)
+
         # Back Arrow Button
         with cols[col_idx]:
             if st.button("‹", key="pg_prev", disabled=(page_num == 1)):
-                st.session_state["listing_page"] = max(1, page_num - 1)
-                components.html("<script>window.parent.scrollTo(0,0);</script>", height=0)
+                change_page(max(1, page_num - 1))
                 st.rerun()
         col_idx += 1
 
@@ -860,14 +864,14 @@ def render_dashboard():
                     key=f"pg_{p}", 
                     type="primary" if p == page_num else "secondary"
                 ):
-                    st.session_state["listing_page"] = p
+                    change_page(p)
                     st.rerun()
             col_idx += 1
 
         # Forward Arrow Button
         with cols[col_idx]:
             if st.button("›", key="pg_next", disabled=(page_num == total_pages)):
-                st.session_state["listing_page"] = min(total_pages, page_num + 1)
+                change_page(min(total_pages, page_num + 1))
                 st.rerun()
     
     # ══════════════════════════════════════════════
