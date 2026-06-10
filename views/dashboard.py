@@ -626,7 +626,7 @@ def render_dashboard():
         bar.appendChild(el);
     }});
     </script>
-    """, height=58, key="tab_nav")
+    """, height=58)
 
     if tab_interaction and tab_interaction != st.session_state["active_tab"]:
         st.session_state["active_tab"] = tab_interaction
