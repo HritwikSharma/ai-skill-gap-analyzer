@@ -848,6 +848,7 @@ def render_dashboard():
         with cols[col_idx]:
             if st.button("‹", key="pg_prev", disabled=(page_num == 1)):
                 st.session_state["listing_page"] = max(1, page_num - 1)
+                components.html("<script>window.parent.scrollTo(0,0);</script>", height=0)
                 st.rerun()
         col_idx += 1
 
