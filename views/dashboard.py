@@ -473,7 +473,21 @@ def render_dashboard():
     </script>
     """
     
-    components.html(filter_html, height=72, scrolling=False)
+    # Assign the component output to a variable
+    filter_interaction = components.html(filter_html, height=72, scrolling=False)
+    
+    # Process data when the user clicks 'Apply'
+    if filter_interaction:
+        try:
+            params = json.loads(filter_interaction)
+            if "role" in params and "loc" in params and "exp" in params:
+                st.session_state["filter_role"] = params["role"]
+                st.session_state["filter_loc"] = params["loc"]
+                st.session_state["filter_exp"] = params["exp"]
+                st.session_state["listing_page"] = 1
+                st.rerun()
+        except Exception:
+            pass
     
     # ─────────────────────────────────────────────
     #  TAB NAV (pure HTML — drives session state)
