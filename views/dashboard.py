@@ -1016,7 +1016,7 @@ def render_dashboard():
                 <div class='metric-card' style='margin-bottom: 25px;'>
                     <h3 style='color: #67e8f9; margin-top:0;'>Setup Your Career Profile</h3>
                     <p style='color: #94a3b8; font-size: 0.9rem;'>
-                        All fields are mandatory. Please complete your profile to unlock AI strategy metrics.
+                        All fields are mandatory. Complete your profile to unlock your AI strategy.
                     </p>
                 </div>
             """, unsafe_allow_html=True)
@@ -1032,41 +1032,36 @@ def render_dashboard():
                     target_role = st.text_input("Enter your custom role:")
                 elif selected_role != "Select from Market Roles...":
                     target_role = selected_role
+                
+                # 2. Employment Preference
+                job_pref = st.selectbox("💼 Employment Preference", ["Internship", "Full-time", "Part-time", "Remote / Freelance"])
 
-                # 2. Experience & Salary
-                exp_level = st.selectbox("💼 Professional Experience Level", [
-                    "Student / Fresher", "Entry-Level (1-2 Years)", 
-                    "Mid-Level (3-5 Years)", "Senior / Lead (5+ Years)"
-                ])
+                # 3. Experience, Salary, and History
+                exp_level = st.selectbox("Experience Level", ["Student / Fresher", "Entry-Level (1-2 Years)", "Mid-Level (3-5 Years)", "Senior (5+ Years)"])
                 expected_salary = st.number_input("💰 Expected Annual Salary (INR)", min_value=0, step=50000)
-
-                # 3. Work History
-                work_history = st.text_input("🏢 Companies Worked At (comma separated, or N/A)", placeholder="e.g., Google, Amazon, N/A")
-
-                # 4. Education (Multiple Selection)
-                education = st.multiselect("🎓 Educational Background", [
-                    "B.E. / B.Tech", "M.Tech / M.S.", "BCA / MCA", 
-                    "BSc / MSc", "MBA", "Diploma", "Other"
+                work_history = st.text_input("🏢 Past Job Roles (comma separated, or N/A if fresher)")
+                
+                # 4. Education (Multi-select)
+                education = st.multiselect("🎓 Educational Qualifications", [
+                    "Primary School (10th)", "Secondary School (12th)", 
+                    "B.E. / B.Tech", "M.Tech / M.S.", "BCA / MCA", "BSc / MSc", "MBA", "Other"
                 ])
 
-                # 5. Typed Fields
+                # 5. Skills & Languages
                 skills_input = st.text_input("💻 Core Languages & Frameworks (comma separated)")
                 tools_input = st.text_input("🛠️ Cloud & Infrastructure (comma separated)")
                 certs_input = st.text_input("📜 Certifications (comma separated)")
-                
-                # 6. Language Expertise
-                lang_input = st.text_input("🗣️ Languages Spoken", placeholder="e.g., English, Hindi")
-                lang_expertise = st.select_slider("Language Expertise Level", options=["Basic", "Conversational", "Fluent", "Native"])
+                languages = st.multiselect("🗣️ Languages Spoken", ["English", "Hindi", "Bengali", "Marathi", "Telugu", "Tamil", "Kannada", "Other"])
                 
                 submit = st.form_submit_button("🚀 Generate AI Strategy", use_container_width=True)
                 
                 if submit:
-                    # Mandatory validation check
-                    if not target_role or not skills_input or not tools_input or not work_history or not education:
+                    if not target_role or not skills_input or not tools_input or not education or not languages:
                         st.error("Please fill in ALL mandatory fields to proceed.")
                     else:
                         st.session_state["profile_data"] = {
                             "role": target_role,
+                            "job_pref": job_pref,
                             "experience": exp_level,
                             "salary": expected_salary,
                             "work_history": [w.strip() for w in work_history.split(",")],
@@ -1074,16 +1069,10 @@ def render_dashboard():
                             "skills": [s.strip() for s in skills_input.split(",")],
                             "tools": [t.strip() for t in tools_input.split(",")],
                             "certs": [c.strip() for c in certs_input.split(",")],
-                            "languages": {"lang": lang_input, "level": lang_expertise}
+                            "languages": languages
                         }
                         st.session_state["user_profile_saved"] = True
-                        st.rerun()
-        else:
-            # Dashboard View logic here...
-            st.success(f"Profile Active for: {st.session_state['profile_data']['role']}")
-            if st.button("🔄 Reset Profile"):
-                st.session_state["user_profile_saved"] = False
-                st.rerun()    
+                        st.rerun()    
     st.markdown('</div>', unsafe_allow_html=True)
 
 
