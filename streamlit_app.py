@@ -1,46 +1,35 @@
 import streamlit as st
-from httpx_oauth.clients.google import GoogleOAuth2
-import asyncio
+import json
+import os
 
 st.set_page_config(layout="wide", initial_sidebar_state="collapsed")
 
-# Read your existing credentials directly from Streamlit secrets
-CLIENT_ID = st.secrets["auth"]["client_id"]
-CLIENT_SECRET = st.secrets["auth"]["client_secret"]
-REDIRECT_URI = st.secrets["auth"]["redirect_uri"]
+DB_FILE = "users.json"
 
-client = GoogleOAuth2(CLIENT_ID, CLIENT_SECRET)
+# Helper function to read the user accounts database
+def load_users():
+    if not os.path.exists(DB_FILE):
+        return {}
+    try:
+        with open(DB_FILE, "r") as f:
+            return json.load(f)
+    except:
+        return {}
 
+# Initialize session state variables
 if "authenticated" not in st.session_state:
     st.session_state["authenticated"] = False
+if "user_info" not in st.session_state:
+    st.session_state["user_info"] = None
+if "active_tab" not in st.session_state:
+    st.session_state["active_tab"] = "listings"
 
-# Handle incoming redirects after clicking "Sign in"
-query_params = st.query_params
-if "code" in query_params and not st.session_state["authenticated"]:
-    try:
-        code = query_params["code"]
-        token = asyncio.run(client.get_access_token(code, REDIRECT_URI))
-        user_id, user_email = asyncio.run(client.get_id_email(token["access_token"]))
-        
-        st.session_state["authenticated"] = True
-        st.session_state["user_info"] = {"email": user_email}
-        st.query_params.clear()
-        st.rerun()
-    except Exception as e:
-        st.error(f"Authentication failed: {e}")
-
-# Page routing firewall
+# --- FIREWALL GUARD ROUTING ---
 if not st.session_state["authenticated"]:
-    # Generate the Google Link
-    async def get_url():
-        return await client.get_authorization_url(REDIRECT_URI, scope=["profile", "email"])
-    google_login_url = asyncio.run(get_url())
-    
-    # Pass the link directly into your custom login page layout
     from views.login import render_login
-    render_login(google_login_url)  # This matches the function definition exactly!
-    st.stop()
+    render_login()
+    st.stop() # Stops execution so unauthenticated users cannot see the dashboard
 
-# Load dashboard on successful validation
+# --- DASHBOARD RENDERING (Only runs if authenticated is True) ---
 from views.dashboard import render_dashboard
 render_dashboard()
