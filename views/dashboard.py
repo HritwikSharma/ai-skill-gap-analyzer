@@ -600,6 +600,7 @@ def render_dashboard():
             align-items: center !important;
             width: auto !important;
             margin: 0 auto !important;
+            margin-left: 50px !important;
         }
         div[data-testid="stSegmentedControl"] > div {
             display: flex !important;
@@ -607,6 +608,7 @@ def render_dashboard():
             align-items: center !important;
             width: auto !important;
             margin: 0 auto !important;
+            margin-left: 50px !important;
         }
         </style>
     """, unsafe_allow_html=True)
