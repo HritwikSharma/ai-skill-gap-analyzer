@@ -2,6 +2,7 @@ import streamlit as st
 import psycopg2
 from psycopg2.extras import RealDictCursor
 
+
 def get_db_connection():
     return psycopg2.connect(
         host=st.secrets["database"]["host"],
@@ -11,168 +12,266 @@ def get_db_connection():
         password=st.secrets["database"]["password"]
     )
 
+
 def render_login():
-    # --- MODERN PREMIUM UI CSS ---
     st.markdown("""
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
-    
-    /* Global Background Fixes */
-    html, body, .stApp, [data-testid="stAppViewContainer"], [data-testid="stMain"] {
-        background-color: #0f0f0f !important;
-        font-family: 'Inter', sans-serif !important;
+    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600&display=swap');
+
+    /* ── Base reset ── */
+    html, body, .stApp,
+    [data-testid="stAppViewContainer"],
+    [data-testid="stMain"],
+    [data-testid="stMainBlockContainer"] {
+        background-color: #0d0d14 !important;
+        font-family: 'Space Grotesk', sans-serif !important;
     }
     #MainMenu, footer, header { visibility: hidden; }
-    
-    /* Layout Column Padding */
+    [data-testid="stVerticalBlock"] { gap: 0 !important; }
+
+    /* ── Column gutters ── */
     div[data-testid="stColumn"] {
-        background-color: #0f0f0f;
-        padding: 30px;
-    }
-    
-    /* Header Typography */
-    .title-text {
-        color: #ffffff;
-        font-size: 26px;
-        font-weight: 600;
-        text-align: center;
-        letter-spacing: -0.03em;
-        margin-bottom: 4px;
-    }
-    .subtitle-text {
-        color: rgba(255, 255, 255, 0.4);
-        font-size: 13px;
-        text-align: center;
-        margin-bottom: 32px;
-    }
-    
-    /* Feature List Styling */
-    .feature-box {
-        background: #141414;
-        border: 1px solid #1e1e1e;
-        border-radius: 8px;
-        padding: 14px 16px;
-        margin-bottom: 24px;
-    }
-    .feature-item {
-        color: #bbb;
-        font-size: 12.5px;
-        margin: 6px 0;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-    .feature-spark {
-        color: #4d9fff;
-        font-weight: bold;
-    }
-    
-    /* MAGIC TRICK: Turn st.radio into Premium Underlined Tabs */
-    div[data-testid="stRadio"] > label {
-        display: none !important; /* Hide default radio label */
-    }
-    div[data-testid="stRadio"] > div {
-        flex-direction: row !important;
-        justify-content: center !important;
-        border-bottom: 1px solid #1e1e1e !important;
-        gap: 0px !important;
-        margin-bottom: 24px;
-    }
-    div[data-testid="stRadio"] label[data-testid="stWidgetLabel"] {
-        display: none !important;
-    }
-    div[data-testid="stRadio"] [data-testid="stMarkdownContainer"] p {
-        font-size: 14px !important;
-        font-weight: 500 !important;
-    }
-    /* Hide the ugly circular radio buttons */
-    div[data-testid="stRadio"] input[type="radio"] {
-        display: none !important;
-    }
-    /* Style the clickable text items */
-    div[data-testid="stRadio"] div[data-viewport="true"] label {
-        flex: 1;
-        padding: 12px 0px !important;
-        background: transparent !important;
-        border: none !important;
-        border-bottom: 2px solid transparent !important;
-        color: #555555 !important;
-        text-align: center;
-        cursor: pointer;
-        transition: color 0.2s ease, border-color 0.2s ease;
-        margin: 0 !important;
-    }
-    /* Dynamic active tab tracking highlight line */
-    div[data-testid="stRadio"] div[data-viewport="true"] label:has(input:checked) {
-        color: #4d9fff !important;
-        border-bottom: 2px solid #4d9fff !important;
-    }
-    div[data-testid="stRadio"] div[data-viewport="true"] label:hover {
-        color: #888;
+        background-color: #0d0d14;
+        padding: 0 24px;
     }
 
-    /* Premium Notification Alerts Override */
-    div[data-testid="stNotification"] {
-        background-color: #141414 !important;
-        border: 1px solid #1e1e1e !important;
+    /* ── Brand header ── */
+    .tp-logo {
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 20px;
+        font-weight: 600;
+        color: #ffffff;
+        letter-spacing: -0.02em;
+        text-align: center;
+        margin-bottom: 4px;
+    }
+    .tp-logo span { color: #7c6ef5; }
+    .tp-tagline {
+        font-size: 12px;
+        color: #6b6b80;
+        text-align: center;
+        margin-bottom: 36px;
+        letter-spacing: 0.02em;
+    }
+
+    /* ── Tab row (radio disguised) ── */
+    div[data-testid="stRadio"] > label { display: none !important; }
+
+    div[data-testid="stRadio"] > div {
+        flex-direction: row !important;
+        background: #16161f !important;
+        border-radius: 10px !important;
+        padding: 4px !important;
+        gap: 4px !important;
+        margin-bottom: 28px !important;
+        border: none !important;
+    }
+
+    /* hide the actual radio circle */
+    div[data-testid="stRadio"] input[type="radio"] { display: none !important; }
+
+    /* each option pill */
+    div[data-testid="stRadio"] div[data-viewport="true"] label {
+        flex: 1 !important;
+        padding: 8px 0 !important;
+        background: transparent !important;
+        border: none !important;
+        border-radius: 7px !important;
+        color: #6b6b80 !important;
+        font-family: 'Space Grotesk', sans-serif !important;
+        font-size: 13px !important;
+        font-weight: 500 !important;
+        text-align: center !important;
+        cursor: pointer !important;
+        transition: background 0.2s ease, color 0.2s ease !important;
+        margin: 0 !important;
+    }
+
+    /* active pill */
+    div[data-testid="stRadio"] div[data-viewport="true"] label:has(input:checked) {
+        background: #1e1e2d !important;
+        color: #ffffff !important;
+    }
+
+    div[data-testid="stRadio"] div[data-viewport="true"] label:hover {
+        color: #aaaabb !important;
+    }
+
+    /* ── Feature hint box ── */
+    .tp-hints {
+        background: #16161f;
+        border: 1px solid #1e1e2d;
+        border-radius: 10px;
+        padding: 12px 16px;
+        margin-bottom: 20px;
+    }
+    .tp-hint {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        font-size: 12.5px;
+        color: #6b6b80;
+        padding: 4px 0;
+    }
+    .tp-hint-dot {
+        width: 5px;
+        height: 5px;
+        background: #7c6ef5;
+        border-radius: 50%;
+        flex-shrink: 0;
+    }
+
+    /* ── Text inputs ── */
+    div[data-testid="stTextInput"] label {
+        font-family: 'Space Grotesk', sans-serif !important;
+        font-size: 11.5px !important;
+        font-weight: 500 !important;
+        color: #6b6b80 !important;
+        letter-spacing: 0.06em !important;
+        text-transform: uppercase !important;
+        margin-bottom: 4px !important;
+    }
+
+    div[data-testid="stTextInput"] input {
+        background: #16161f !important;
+        border: 1px solid #252535 !important;
+        border-radius: 8px !important;
+        color: #ffffff !important;
+        font-family: 'Space Grotesk', sans-serif !important;
+        font-size: 14px !important;
+        padding: 10px 14px !important;
+        transition: border-color 0.2s ease, background 0.2s ease !important;
+    }
+
+    div[data-testid="stTextInput"] input::placeholder {
+        color: #3a3a50 !important;
+        font-size: 13px !important;
+    }
+
+    div[data-testid="stTextInput"] input:hover {
+        border-color: #333348 !important;
+    }
+
+    div[data-testid="stTextInput"] input:focus {
+        border-color: #7c6ef5 !important;
+        background: #111120 !important;
+        box-shadow: 0 0 0 3px rgba(124, 110, 245, 0.12) !important;
+    }
+
+    /* ── Primary button ── */
+    div[data-testid="stButton"] > button {
+        background: #7c6ef5 !important;
+        color: #ffffff !important;
+        border: none !important;
+        border-radius: 8px !important;
+        font-family: 'Space Grotesk', sans-serif !important;
+        font-size: 13.5px !important;
+        font-weight: 600 !important;
+        letter-spacing: 0.01em !important;
+        padding: 10px 0 !important;
+        transition: background 0.2s ease, transform 0.15s ease !important;
+        width: 100% !important;
+    }
+
+    div[data-testid="stButton"] > button:hover {
+        background: #8f83f7 !important;
+        transform: translateY(-1px) !important;
+    }
+
+    div[data-testid="stButton"] > button:active {
+        background: #6a5de0 !important;
+        transform: scale(0.985) !important;
+    }
+
+    /* ── Alerts ── */
+    div[data-testid="stNotification"],
+    div[data-testid="stAlert"] {
+        background: #16161f !important;
+        border: 1px solid #252535 !important;
         border-radius: 8px !important;
     }
-    div[data-testid="stNotification"] [data-testid="stMarkdownContainer"] p {
-        color: #ffffff !important;
+    div[data-testid="stNotification"] p,
+    div[data-testid="stAlert"] p {
+        color: #aaaabb !important;
+        font-family: 'Space Grotesk', sans-serif !important;
         font-size: 13px !important;
+    }
+
+    /* success alert accent */
+    div[data-testid="stAlert"][data-baseweb="notification"] {
+        border-left: 3px solid #7c6ef5 !important;
+    }
+
+    /* ── Toast ── */
+    div[data-testid="stToast"] {
+        background: #1e1e2d !important;
+        border: 1px solid #252535 !important;
+        border-radius: 8px !important;
+        color: #ffffff !important;
+        font-family: 'Space Grotesk', sans-serif !important;
     }
     </style>
     """, unsafe_allow_html=True)
 
-    # --- CENTERED COLUMN LAYOUT ---
-    left_margin, center_card, right_margin = st.columns([1, 1.1, 1])
+    # ── Layout ──
+    _, center, _ = st.columns([1, 1.1, 1])
 
-    with center_card:
-        # Branding
-        st.markdown('<div class="title-text">TalentPulse</div>', unsafe_allow_html=True)
-        st.markdown('<div class="subtitle-text">India Tech Market Intelligence</div>', unsafe_allow_html=True)
+    with center:
+        # Brand
+        st.markdown(
+            '<div class="tp-logo">Talent<span>Pulse</span></div>',
+            unsafe_allow_html=True
+        )
+        st.markdown(
+            '<div class="tp-tagline">India Tech Market Intelligence</div>',
+            unsafe_allow_html=True
+        )
 
-        # Tab Selector (Disguised Radio)
+        # Pill tab switcher
         mode = st.radio(
-            "AccessMode", 
-            ["Sign In", "Create Account"], 
+            "mode",
+            ["Sign In", "Create Account"],
+            horizontal=True,
             label_visibility="collapsed"
         )
-        
-        # Smooth context switching sub-text & features
+
+        # Contextual hints
         if mode == "Sign In":
             st.markdown("""
-            <div class="feature-box">
-                <div class="feature-item"><span class="feature-spark">✦</span> Live job market analytics across India</div>
-                <div class="feature-item"><span class="feature-spark">✦</span> Salary insights & hiring trend data</div>
+            <div class="tp-hints">
+                <div class="tp-hint"><span class="tp-hint-dot"></span>Live job market analytics across India</div>
+                <div class="tp-hint"><span class="tp-hint-dot"></span>Salary insights &amp; hiring trend data</div>
             </div>
             """, unsafe_allow_html=True)
         else:
             st.markdown("""
-            <div class="feature-box">
-                <div class="feature-item"><span class="feature-spark">✦</span> Gain comprehensive platform dashboard entry</div>
-                <div class="feature-item"><span class="feature-spark">✦</span> Skill gap analysis tools powered by AI</div>
+            <div class="tp-hints">
+                <div class="tp-hint"><span class="tp-hint-dot"></span>Comprehensive platform dashboard access</div>
+                <div class="tp-hint"><span class="tp-hint-dot"></span>Skill gap analysis tools powered by AI</div>
             </div>
             """, unsafe_allow_html=True)
 
-        # Input Forms
+        # Inputs
         email = st.text_input("Email Address", placeholder="name@company.com").strip().lower()
         password = st.text_input("Password", type="password", placeholder="••••••••")
 
-        st.markdown("<br>", unsafe_allow_html=True)
+        st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
 
-        # Action Handling
+        # Actions
         if mode == "Sign In":
-            if st.button("Sign In to Dashboard", use_container_width=True):
+            if st.button("Sign in →", use_container_width=True):
                 if not email or not password:
-                    st.error("Please fill out all fields.")
+                    st.error("Please fill in all fields.")
                 else:
                     try:
                         with get_db_connection() as conn:
                             with conn.cursor(cursor_factory=RealDictCursor) as cur:
-                                cur.execute("SELECT password FROM app_users WHERE email = %s;", (email,))
+                                cur.execute(
+                                    "SELECT password FROM app_users WHERE email = %s;",
+                                    (email,)
+                                )
                                 user_record = cur.fetchone()
-                        
+
                         if not user_record:
                             st.error("No account found with this email.")
                         elif user_record["password"] != password:
@@ -180,29 +279,35 @@ def render_login():
                         else:
                             st.session_state["authenticated"] = True
                             st.session_state["user_info"] = {"email": email}
-                            st.toast("🔒 Access verified! Loading...")
+                            st.toast("Access verified — loading dashboard...")
                             st.rerun()
                     except Exception as e:
                         st.error(f"Database error: {e}")
 
-        elif mode == "Create Account":
-            if st.button("Register Free Account", use_container_width=True):
+        else:
+            if st.button("Create free account →", use_container_width=True):
                 if not email or not password:
-                    st.error("Please fill out all fields.")
+                    st.error("Please fill in all fields.")
                 elif "@" not in email or "." not in email:
                     st.error("Please enter a valid email address.")
                 elif len(password) < 4:
-                    st.error("Password must be at least 4 characters long.")
+                    st.error("Password must be at least 4 characters.")
                 else:
                     try:
                         with get_db_connection() as conn:
                             with conn.cursor(cursor_factory=RealDictCursor) as cur:
-                                cur.execute("SELECT email FROM app_users WHERE email = %s;", (email,))
+                                cur.execute(
+                                    "SELECT email FROM app_users WHERE email = %s;",
+                                    (email,)
+                                )
                                 if cur.fetchone():
-                                    st.error("This email address is already registered.")
+                                    st.error("This email is already registered.")
                                 else:
-                                    cur.execute("INSERT INTO app_users (email, password) VALUES (%s, %s);", (email, password))
+                                    cur.execute(
+                                        "INSERT INTO app_users (email, password) VALUES (%s, %s);",
+                                        (email, password)
+                                    )
                                     conn.commit()
-                                    st.success("✨ Account created successfully! Toggle to Sign In above to enter.")
+                                    st.success("Account created — switch to Sign In above to continue.")
                     except Exception as e:
-                        st.error(f"Database registration failed: {e}")
+                        st.error(f"Registration failed: {e}")
