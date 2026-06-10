@@ -1006,28 +1006,30 @@ def render_dashboard():
             fig = px.scatter_mapbox(
                 map_df, lat="lat", lon="lon",
                 size="openings", color="openings",
-                # Deep High-Contrast Colors (Vibrant Crimson to Emerald Green) so it pops on a white layout
-                color_continuous_scale=[[0,"#e11d48"],[0.5,"#2563eb"],[1,"#10b981"]],
+                
+                # FIX: Clean, non-neon professional blue gradient scale
+                color_continuous_scale=[
+                    [0.0, "#94a3b8"],  # Low: Soft Slate Grey
+                    [0.3, "#3b82f6"],  # Med-Low: Professional Blue
+                    [0.7, "#1d4ed8"],  # Med-High: Deep Royal Blue
+                    [1.0, "#1e3a8a"]   # High: Midnight Navy
+                ],
+                
                 size_max=40, zoom=4.1, 
                 center={"lat": 21.5937, "lon": 78.9629}, 
-                
-                # FIX 1: Clean, high-resolution light base map with pre-rendered city names natively included
-                mapbox_style="carto-positron", 
-                
+                mapbox_style="carto-positron", # Keeps the white map with city names active
                 hover_name="city",
                 hover_data={"openings":True,"lat":False,"lon":False},
                 labels={"openings":"Open Positions"},
             )
             
             fig.update_layout(
-                # FIX 2: Swaps engine to a white-base template so text elements don't get washed out
-                template="plotly_white",
+                template="plotly_white", # Adapts fonts and layout parameters to look crisp on a light canvas
                 paper_bgcolor="rgba(0,0,0,0)",
                 margin={"r":0,"t":0,"l":0,"b":0}, height=580,
                 coloraxis_colorbar=dict(
                     title="Listings", thickness=14, len=0.6,
-                    # Dark grey text so scale numbers are fully readable
-                    tickfont=dict(size=11, family="Inter,sans-serif", color="#333"),
+                    tickfont=dict(size=11, family="Inter,sans-serif", color="#333"), # Dark gray text for visibility
                     title_font=dict(color="#333"),
                 ),
             )
