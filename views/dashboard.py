@@ -1003,12 +1003,11 @@ def render_dashboard():
             )
             st.plotly_chart(fig, use_container_width=True)
     # ══════════════════════════════════════════════
-    #  TAB: AI SKILL GAP ANALYZER & ASSESSMENT
+    #  TAB: AI SKILL GAP ANALYZER (LONG FORMAT)
     # ══════════════════════════════════════════════
     elif active == "ai_analyzer":
         section_header("🎯 AI Career Strategist & Skill Gap Analyzer")
         
-        # Initialize Profile State tracking
         if "user_profile_saved" not in st.session_state:
             st.session_state["user_profile_saved"] = False
             
@@ -1016,162 +1015,61 @@ def render_dashboard():
             st.markdown("""
                 <div class='metric-card' style='margin-bottom: 25px;'>
                     <h3 style='color: #67e8f9; margin-top:0;'>Setup Your Career Profile</h3>
-                    <p style='color: #94a3b8; font-size: 0.9rem; margin-bottom: 0;'>
-                        Complete your career brief below. Our Groq-powered AI matching engine will cross-reference your stack against live Indian tech sector vacancy requirements to compile target skill deltas and generate an interactive tech stack simulation interview.
+                    <p style='color: #94a3b8; font-size: 0.9rem;'>
+                        Complete your profile below to receive AI-driven market gap analysis.
                     </p>
                 </div>
             """, unsafe_allow_html=True)
             
-            # --- Extract Unique Sorted Roles from Database ---
-            available_roles = []
-            if not fdf.empty and "title" in fdf.columns:
-                raw_unique_roles = set(str(r).strip() for r in fdf["title"].dropna() if str(r).strip())
-                available_roles = sorted(list(raw_unique_roles))
-            
-            # Fallback unique foundational options 
-            fallback_roles = ["Data Scientist", "Data Analyst", "Machine Learning Engineer", "Frontend Developer", "Backend Developer", "Fullstack Engineer", "DevOps Engineer"]
-            for role in fallback_roles:
-                if role not in available_roles:
-                    available_roles.append(role)
+            # --- Unique Role Extraction ---
+            available_roles = sorted(list(set(str(r).strip() for r in fdf["title"].dropna() if str(r).strip())))
+            options = ["Select from Market Roles..."] + available_roles + ["✨ Add Custom Role..."]
 
-            # Custom styled input layout grouping wrapper
             with st.container():
-                st.markdown("""
-                    <style>
-                    div[data-testid="stVerticalBlock"] label p {
-                        color: #cbd5e1 !important;
-                        font-weight: 500 !important;
-                        font-size: 0.9rem !important;
-                    }
-                    div[data-testid="stSelectbox"] > div, div[data-testid="stTextInput"] > div {
-                        background-color: #0b1329 !important;
-                        border: 1px solid #1e293b !important;
-                    }
-                    </style>
-                """, unsafe_allow_html=True)
-                
-                # Form Initialization
-                with st.form("onboarding_profile_form", clear_on_submit=False):
+                with st.form("onboarding_profile_form"):
+                    # 1. Target Role Logic
+                    selected_role = st.selectbox("🎯 Target Career Objective", options=options)
                     
-                    col_form_left, col_form_right = st.columns(2)
-                    
-                    with col_form_left:
-                        # 1. Profile Mode Selection
-                        role_mode = st.radio(
-                            "How would you like to specify your Target Role?",
-                            options=["Choose from live market jobs", "Type a custom target role"],
-                            horizontal=True
-                        )
-                        
-                        final_target_role = ""
-                        
-                        if role_mode == "Choose from live market jobs":
-                            selected_role_option = st.selectbox(
-                                "Select Target Role",
-                                options=available_roles,
-                                index=0,
-                                help="Choose from unique live roles scraped from your database."
-                            )
-                            final_target_role = selected_role_option
-                        else:
-                            custom_role_input = st.text_input(
-                                "Type your custom target role",
-                                placeholder="e.g., MLOps Engineer, Cloud Architect, GenAI Specialist",
-                                help="Type any custom career objective title here without interruption."
-                            )
-                            final_target_role = custom_role_input
-                        
-                        # 2. Dropdown Experience level configuration
-                        exp_level = st.selectbox(
-                            "Current Professional Experience Level",
-                            options=[
-                                "Student / Fresher (0 Experience)", 
-                                "Junior / Entry-Level (1-2 Years)", 
-                                "Mid-Level Professional (3-5 Years)", 
-                                "Senior / Lead Architect (5+ Years)"
-                            ],
-                            index=0
-                        )
-                        
-                        # 3. Preferred Employment Hub Location
-                        preferred_city = st.text_input(
-                            "Target Job Market / City Preference",
-                            placeholder="e.g., Bengaluru, Hyderabad, Mumbai, Remote",
-                            help="Helps the AI match geographic tracking deltas for skill packages unique to specific tech hubs."
-                        )
+                    target_role = ""
+                    if selected_role == "✨ Add Custom Role...":
+                        target_role = st.text_input("Enter your custom role:")
+                    elif selected_role != "Select from Market Roles...":
+                        target_role = selected_role
 
-                    with col_form_right:
-                        # 4. Technical Languages input field
-                        skills_input = st.text_input(
-                            "Core Programming Languages & Frameworks",
-                            placeholder="e.g., Python, SQL, Git, FastAPI, React",
-                            help="Separate your items explicitly using a comma."
-                        )
-                        
-                        # 5. Engineering Infrastructure tooling layout fields
-                        tools_input = st.text_input(
-                            "Cloud Frameworks, System Infrastructures & Databases",
-                            placeholder="e.g., AWS, Docker, PostgreSQL, Kubernetes, Tableau",
-                            help="Separate your items explicitly using a comma."
-                        )
-                        
-                        # 6. Education background profile classification
-                        edu_background = st.selectbox(
-                            "Highest Educational Qualification Track",
-                            options=[
-                                "B.E. / B.Tech / M.Tech (Computer Science/IT)", 
-                                "Non-CS Engineering Background", 
-                                "BCA / MCA / BSc IT", 
-                                "Self-Taught / Bootcamp Graduate", 
-                                "Other Degree Framework"
-                            ],
-                            index=0
-                        )
+                    # 2. Dropdown Experience
+                    exp_level = st.selectbox("💼 Professional Experience Level", [
+                        "Student / Fresher", "Entry-Level (1-2 Years)", 
+                        "Mid-Level (3-5 Years)", "Senior / Lead (5+ Years)"
+                    ])
                     
-                    st.write("") # Structural Spacer line
+                    # 3. Typed Fields (Long Vertical Stack)
+                    skills_input = st.text_input("💻 Core Languages & Frameworks (comma separated)", placeholder="e.g., Python, SQL, React")
+                    tools_input = st.text_input("🛠️ Cloud & Infrastructure (comma separated)", placeholder="e.g., AWS, Docker, PostgreSQL")
+                    preferred_city = st.text_input("📍 Preferred Job Location", placeholder="e.g., Bengaluru")
+                    education = st.text_input("🎓 Educational Background", placeholder="e.g., B.Tech in Computer Science")
                     
-                    # Centered action form controller trigger matching corporate branding colors
-                    submit_profile = st.form_submit_button("🚀 Compile My AI Strategy Profile", use_container_width=True)
+                    submit = st.form_submit_button("🚀 Generate AI Strategy", use_container_width=True)
                     
-                    if submit_profile:
-                        if role_mode == "Type a custom target role" and not final_target_role.strip():
-                            st.error("Please specify your custom career objective title.")
-                        elif not skills_input.strip() or not tools_input.strip():
-                            st.error("Please enter your current Core Languages and Infrastructure Tools to unlock your profile metrics matrix.")
-                        else:
-                            # Standard comma delimitation cleaning parser loop 
-                            user_skills = [s.strip() for s in skills_input.split(",") if s.strip()]
-                            user_tools = [t.strip() for t in tools_input.split(",") if t.strip()]
-                            
-                            # Compile structured dictionary parameters payload onto the app session layer
+                    if submit:
+                        if target_role and skills_input and tools_input:
                             st.session_state["profile_data"] = {
-                                "role": final_target_role.strip(),
+                                "role": target_role,
+                                "skills": [s.strip() for s in skills_input.split(",")],
+                                "tools": [t.strip() for t in tools_input.split(",")],
                                 "experience": exp_level,
-                                "city": preferred_city.strip() if preferred_city.strip() else "All India Market",
-                                "skills": user_skills,
-                                "tools": user_tools,
-                                "education": edu_background
+                                "city": preferred_city,
+                                "education": education
                             }
                             st.session_state["user_profile_saved"] = True
-                            st.success("Profile parsed successfully! Running AI core strategy metrics calculation routines...")
                             st.rerun()
-                            
+                        else:
+                            st.error("Please fill in the role, skills, and tools fields.")
         else:
-            # --- Placeholder for Phase 4 & Phase 5 Dashboard View ---
-            profile = st.session_state["profile_data"]
-            st.markdown(f"""
-                <div class='metric-card'>
-                    <h3 style='color: #3b82f6; margin-top:0;'>🎯 Active Goal Profile Loaded: {profile['role']}</h3>
-                    <p style='color: #cbd5e1; font-size: 0.90rem;'><strong>Stated Track Stack:</strong> {', '.join(profile['skills'])} | {', '.join(profile['tools'])}</p>
-                    <p style='color: #94a3b8; font-size: 0.85rem;'>Experience Target: {profile['experience']} — Location Focus: {profile['city']}</p>
-                </div>
-            """, unsafe_allow_html=True)
-            
-            if st.button("🔄 Clear Profile & Reset"):
-                del st.session_state["profile_data"]
+            # Dashboard View
+            st.success(f"Profile Active: {st.session_state['profile_data']['role']}")
+            if st.button("🔄 Reset Profile"):
                 st.session_state["user_profile_saved"] = False
-                st.rerun()
-    
+                st.rerun()    
     st.markdown('</div>', unsafe_allow_html=True)
 
 
