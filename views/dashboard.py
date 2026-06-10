@@ -755,7 +755,7 @@ def render_dashboard():
                 border: 1px solid #2a3f6f;
             }
             .apply:hover { background: #243560; }
-            </style>
+            </style><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onload="window.parent.scrollTo(0,0);" style="display:none;"/>
         """, unsafe_allow_html=True)
 
         # Loop and mount elements onto the main Streamlit layout canvas container
