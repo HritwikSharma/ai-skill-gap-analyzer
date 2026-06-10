@@ -1065,7 +1065,7 @@ def render_dashboard():
                 # 4. Education (Multi-select)
                 education = st.multiselect("🎓 Educational Qualifications", [
                     "Primary School (10th)", "Secondary School (12th)", 
-                    "B.E. / B.Tech", "M.Tech / M.S.", "BCA / MCA", "BSc / MSc", "MBA", "Other"
+                    "B.E. / B.Tech", "M.Tech / M.S.", "BCA", "MCA", "BSc / MSc", "MBA", "Other"
                 ])
 
                 # 5. Skills & Languages
@@ -1080,39 +1080,66 @@ def render_dashboard():
                     if not target_role or not skills_input or not tools_input or not education or not languages:
                         st.error("Please fill in ALL mandatory fields to proceed.")
                     else:
-                        # 1. ANALYZE ONLY IF NOT ALREADY DONE
-                        if "ai_analysis" not in st.session_state:
-                            with st.spinner("🚀 AI Architect is researching global market trends..."):
-                                # Aggregate local database skills
-                                all_skills = fdf["tech_skills_found"].dropna().explode().unique().tolist()
-                                
-                                # Call the engine
-                                st.session_state["ai_analysis"] = get_ai_analysis(st.session_state["profile_data"], all_skills[:100])
+                        # 💡 FIX: Compile and save form data into session state BEFORE calling Groq
+                        st.session_state["profile_data"] = {
+                            "role": target_role,
+                            "employment_preference": job_pref,
+                            "experience_level": exp_level,
+                            "salary_target": expected_salary,
+                            "work_history": [w.strip() for w in work_history.split(",") if w.strip()],
+                            "education": education,
+                            "skills": [s.strip() for s in skills_input.split(",") if s.strip()],
+                            "tools_and_infra": [t.strip() for t in tools_input.split(",") if t.strip()],
+                            "certifications": [c.strip() for c in certs_input.split(",") if c.strip()],
+                            "languages": languages
+                        }
                         
-                        # 2. RENDER RESULTS
-                        analysis = st.session_state["ai_analysis"]
-                        profile = st.session_state["profile_data"]
-                        
-                        st.markdown(f"### 📈 Analysis for: {profile['role']}")
-                        
-                        col1, col2 = st.columns(2)
-                        with col1:
-                            st.write("#### 🛠️ Skill Gap")
-                            for skill in analysis['skill_gap']:
-                                st.warning(f"• {skill}")
-                        
-                        with col2:
-                            st.write("#### 🗺️ 7-Step Roadmap")
-                            for i, step in enumerate(analysis['comprehensive_roadmap']):
-                                st.markdown(f"**{i+1}.** {step}")
-                        
-                        # Reset Button
-                        if st.button("🔄 Reset Profile"):
-                            del st.session_state["profile_data"]
-                            if "ai_analysis" in st.session_state: del st.session_state["ai_analysis"]
-                            st.session_state["user_profile_saved"] = False
-                            st.rerun()    
+                        # Mark profile as active/saved
+                        st.session_state["user_profile_saved"] = True
+                        st.rerun()
 
+        # ─── RENDERING LAYER ───
+        # This handles rendering once the session state data has been successfully created
+        if st.session_state["user_profile_saved"]:
+            if "ai_analysis" not in st.session_state:
+                with st.spinner("🚀 AI Architect is researching global market trends..."):
+                    try:
+                        # Aggregate local database skills safely
+                        if "tech_skills_found" in fdf.columns:
+                            all_skills = fdf["tech_skills_found"].dropna().explode().unique().tolist()
+                        else:
+                            all_skills = []
+                        
+                        # Securely process analysis using the newly saved state parameters
+                        st.session_state["ai_analysis"] = get_ai_analysis(st.session_state["profile_data"], all_skills[:100])
+                    except Exception as e:
+                        st.error(f"Groq Processing Failure: {e}")
+                        st.session_state["user_profile_saved"] = False
+                        st.stop()
+            
+            # Render results
+            analysis = st.session_state["ai_analysis"]
+            profile = st.session_state["profile_data"]
+            
+            st.markdown(f"### 📈 Analysis for: {profile['role']}")
+            
+            col1, col2 = st.columns(2)
+            with col1:
+                st.write("#### 🛠️ Skill Gap")
+                for skill in analysis.get('skill_gap', []):
+                    st.warning(f"• {skill}")
+            
+            with col2:
+                st.write("#### 🗺️ 7-Step Roadmap")
+                for i, step in enumerate(analysis.get('comprehensive_roadmap', [])):
+                    st.markdown(f"**{i+1}.** {step}")
+            
+            # Reset Button
+            if st.button("🔄 Reset Profile"):
+                if "profile_data" in st.session_state: del st.session_state["profile_data"]
+                if "ai_analysis" in st.session_state: del st.session_state["ai_analysis"]
+                st.session_state["user_profile_saved"] = False
+                st.rerun()
 
 
 
