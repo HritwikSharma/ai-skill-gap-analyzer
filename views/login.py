@@ -1,8 +1,8 @@
 import streamlit as st
-import streamlit.components.v1 as components
 import psycopg2
 from psycopg2.extras import RealDictCursor
 
+# Direct secure connection setup to your AWS RDS instance
 def get_db_connection():
     return psycopg2.connect(
         host=st.secrets["database"]["host"],
@@ -13,176 +13,104 @@ def get_db_connection():
     )
 
 def render_login():
-    # --- 1. CORE VISUAL APP WRAPPER STYLING ---
+    # --- 1. CLEAN CUSTOM CSS STYLING OVERLAY ---
+    # This forces the dark theme and keeps every single element locked in the center
     st.markdown("""
     <style>
-    html, body, .stApp, [data-testid="stAppViewContainer"],
-    [data-testid="stMain"], .block-container {
-        background: #0f0f0f !important;
-        padding: 0 !important;
-        margin: 0 !important;
+    html, body, .stApp, [data-testid="stAppViewContainer"], [data-testid="stMain"] {
+        background-color: #0f0f0f !important;
     }
     #MainMenu, footer, header { visibility: hidden; }
-    .block-container { padding: 0 !important; max-width: 100% !important; }
     
-    .stMainBlockContainer,
-    [data-testid="stVerticalBlockBorderWrapper"],
-    [data-testid="stVerticalBlock"] {
-        display: flex !important;
-        flex-direction: column !important;
-        align-items: center !important;
-        justify-content: center !important;
+    /* Lock the center width layout column cleanly */
+    div[data-testid="stColumn"] {
+        background-color: #0f0f0f;
+        padding: 24px;
+        border-radius: 12px;
+    }
+    
+    /* Header branding style text overrides */
+    .title-text {
+        font-family: 'Inter', sans-serif;
+        color: #ffffff;
+        font-size: 28px;
+        font-weight: 600;
+        text-align: center;
+        margin-bottom: 2px;
+        letter-spacing: -0.03em;
+    }
+    .subtitle-text {
+        font-family: 'Inter', sans-serif;
+        color: rgba(255, 255, 255, 0.4);
+        font-size: 13px;
+        text-align: center;
+        margin-bottom: 20px;
     }
     </style>
     """, unsafe_allow_html=True)
 
-    # --- 2. INTERCEPT DATA SUBMISSIONS FROM NATIVE FORM GET REQUESTS ---
-    params = st.query_params
-    if "action_email" in params and "action_pass" in params and "action_mode" in params:
-        email = params["action_email"].strip().lower()
-        password = params["action_pass"]
-        mode = params["action_mode"]
-        
-        st.query_params.clear()
+    # --- 2. PERFECT CENTERED CARD COLUMN LAYOUT ---
+    # Creates three columns across the screen and puts the form inside the exact center one
+    left_margin, center_card, right_margin = st.columns([1, 1.2, 1])
 
-        if mode == "signin":
-            try:
-                with get_db_connection() as conn:
-                    with conn.cursor(cursor_factory=RealDictCursor) as cur:
-                        cur.execute("SELECT password FROM app_users WHERE email = %s;", (email,))
-                        user_record = cur.fetchone()
-                
-                if not user_record:
-                    st.error("No account found with this email address.")
-                elif user_record["password"] != password:
-                    st.error("Incorrect password. Please try again.")
+    with center_card:
+        # Header Labels
+        st.markdown('<div class="title-text">TalentPulse</div>', unsafe_allow_html=True)
+        st.markdown('<div class="subtitle-text">India Tech Market Intelligence</div>', unsafe_allow_html=True)
+
+        # Standard, reliable switching tabs
+        mode = st.radio("Toggle Access", ["Sign In", "Create Account"], label_visibility="collapsed", horizontal=True)
+        
+        st.markdown("<br>", unsafe_allow_html=True)
+
+        # Pure form entry input vector fields
+        email = st.text_input("Email Address", placeholder="name@company.com").strip().lower()
+        password = st.text_input("Password", type="password", placeholder="••••••••")
+
+        st.markdown("<br>", unsafe_allow_html=True)
+
+        # Execution actions
+        if mode == "Sign In":
+            if st.button("Sign In to Dashboard", use_container_width=True):
+                if not email or not password:
+                    st.error("Please fill out all fields.")
                 else:
-                    st.session_state["authenticated"] = True
-                    st.session_state["user_info"] = {"email": email}
-                    st.rerun()
-            except Exception as e:
-                st.error(f"Database verification failed: {e}")
+                    try:
+                        with get_db_connection() as conn:
+                            with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                                cur.execute("SELECT password FROM app_users WHERE email = %s;", (email,))
+                                user_record = cur.fetchone()
+                        
+                        if not user_record:
+                            st.error("No account found with this email.")
+                        elif user_record["password"] != password:
+                            st.error("Incorrect password. Please try again.")
+                        else:
+                            st.session_state["authenticated"] = True
+                            st.session_state["user_info"] = {"email": email}
+                            st.success("Access verified!")
+                            st.rerun()
+                    except Exception as e:
+                        st.error(f"Database connection error: {e}")
 
-        elif mode == "create":
-            if "@" not in email or "." not in email:
-                st.error("Please enter a valid email address.")
-            elif len(password) < 4:
-                st.error("Password must be at least 4 characters long.")
-            else:
-                try:
-                    with get_db_connection() as conn:
-                        with conn.cursor(cursor_factory=RealDictCursor) as cur:
-                            cur.execute("SELECT email FROM app_users WHERE email = %s;", (email,))
-                            if cur.fetchone():
-                                st.error("This email address is already registered.")
-                            else:
-                                cur.execute("INSERT INTO app_users (email, password) VALUES (%s, %s);", (email, password))
-                                conn.commit()
-                                st.success("Account created successfully! Please sign in.")
-                except Exception as e:
-                    st.error(f"Database write failed: {e}")
-
-    # --- 3. PURE FORM HTML / CSS INTERFACE CONTAINER ---
-    # Standard HTML action form routing that cleanly targets the parent window layer directly
-    login_html_card = f"""
-    <!DOCTYPE html>
-    <html>
-    <head>
-    <meta charset="UTF-8">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    <style>
-      * { margin: 0; padding: 0; box-sizing: border-box; }
-      body {{
-        font-family: 'Inter', sans-serif;
-        background: #0f0f0f;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        height: 100vh;
-        overflow: hidden;
-      }}
-      .card {{ width: 380px; border-radius: 12px; border: 1px solid #1e1e1e; background: #0f0f0f; overflow: hidden; padding-bottom: 8px; }}
-      .card-header {{ padding: 32px 24px 16px; text-align: center; }}
-      .card-header h1 {{ font-size: 24px; font-weight: 600; color: #fff; letter-spacing: -0.03em; }}
-      .card-header p {{ font-size: 13px; color: rgba(255,255,255,0.4); margin-top: 6px; }}
-      .tabs {{ display: flex; border-bottom: 1px solid #1e1e1e; }}
-      .tab {{ flex: 1; padding: 14px; text-align: center; font-size: 13px; color: #555; cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.15s; user-select: none; }}
-      .tab.active {{ color: #4d9fff; border-bottom: 2px solid #4d9fff; font-weight: 500; }}
-      
-      .form-body {{ padding: 24px 24px 16px; }}
-      .features {{ background: #141414; border-radius: 8px; padding: 12px 14px; margin-bottom: 20px; border: 1px solid #1e1e1e; }}
-      .feature-item {{ display: flex; align-items: center; gap: 10px; font-size: 12px; color: #bbb; padding: 4px 0; }}
-      .feature-item .check {{ color: #4d9fff; font-size: 14px; }}
-      
-      .input-group {{ margin-bottom: 16px; }}
-      .input-group label {{ display: block; font-size: 12px; color: #888; margin-bottom: 6px; font-weight: 500; text-align: left; }}
-      .input-group input {{ width: 100%; background: #141414; border: 1px solid #1e1e1e; border-radius: 6px; padding: 11px 12px; color: #fff; font-size: 14px; font-family: inherit; transition: border-color 0.15s; }}
-      .input-group input:focus {{ outline: none; border-color: #4d9fff; }}
-      
-      .submit-btn {{ width: 100%; background: #ffffff; color: #000000; border: none; border-radius: 6px; padding: 12px; font-size: 14px; font-weight: 500; cursor: pointer; transition: background 0.15s; margin-top: 8px; font-family: inherit; }}
-      .submit-btn:hover {{ background: #e5e5e5; }}
-      
-      .footer-note {{ font-size: 11px; color: #444; text-align: center; margin-top: 20px; display: flex; align-items: center; justify-content: center; gap: 5px; }}
-    </style>
-    </head>
-    <body>
-    <div class="card">
-      <div class="card-header">
-        <h1>TalentPulse</h1>
-        <p>India Tech Market Intelligence</p>
-      </div>
-      <div class="tabs">
-        <div class="tab active" id="tab-signin" onclick="setMode('signin')">Sign In</div>
-        <div class="tab" id="tab-create" onclick="setMode('create')">Create Account</div>
-      </div>
-      
-      <form id="authForm" method="GET" action="" target="_parent" class="form-body">
-        <input type="hidden" id="action_mode" name="action_mode" value="signin">
-        
-        <div class="features">
-          <div class="feature-item"><span class="check">✦</span> Live job market analytics across India</div>
-          <div class="feature-item"><span class="check">✦</span> Salary insights &amp; hiring trend data</div>
-        </div>
-        
-        <div class="input-group">
-          <label>Email Address</label>
-          <input type="email" name="action_email" id="email" placeholder="name@company.com" autocomplete="off" required>
-        </div>
-        <div class="input-group">
-          <label>Password</label>
-          <input type="password" name="action_pass" id="password" placeholder="••••••••" required>
-        </div>
-        
-        <button type="submit" class="submit-btn" id="action-btn">Sign In to Dashboard</button>
-        
-        <div class="footer-note">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-          </svg>
-          Secure connection verified
-        </div>
-      </form>
-    </div>
-
-    <script>
-    function setMode(mode) {{
-      document.getElementById('action_mode').value = mode;
-      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-      document.getElementById('tab-' + mode).classList.add('active');
-      
-      const btn = document.getElementById('action-btn');
-      if(mode === 'signin') {{
-        btn.innerText = 'Sign In to Dashboard';
-      }} else {{
-        btn.innerText = 'Register Free Account';
-      }}
-    }}
-
-    // Dynamic address parser to catch stream configuration urls inside parent frames
-    document.getElementById('authForm').action = window.parent.location.origin + window.parent.location.pathname;
-    </script>
-    </body>
-    </html>
-    """
-
-    components.html(login_html_card, height=520, scrolling=False)
+        elif mode == "Create Account":
+            if st.button("Register Free Account", use_container_width=True):
+                if not email or not password:
+                    st.error("Please fill out all fields.")
+                elif "@" not in email or "." not in email:
+                    st.error("Please enter a valid email address.")
+                elif len(password) < 4:
+                    st.error("Password must be at least 4 characters long.")
+                else:
+                    try:
+                        with get_db_connection() as conn:
+                            with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                                cur.execute("SELECT email FROM app_users WHERE email = %s;", (email,))
+                                if cur.fetchone():
+                                    st.error("This email address is already registered.")
+                                else:
+                                    cur.execute("INSERT INTO app_users (email, password) VALUES (%s, %s);", (email, password))
+                                    conn.commit()
+                                    st.success("Account created successfully! Toggle to Sign In to enter.")
+                    except Exception as e:
+                        st.error(f"Database registration failed: {e}")
