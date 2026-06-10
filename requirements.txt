@@ -9,3 +9,4 @@ httpx
 httpx-oauth
 gunicorn
 flask
+groq
