@@ -752,30 +752,77 @@ def render_dashboard():
             </div>
             """, unsafe_allow_html=True)
         # ──────────────────────────────────────────────────────────
-    
-        # Pagination (keep as Streamlit buttons — they're functional and hidden-styled above)
-        MAX_VISIBLE = 9
+        # ══════════════════════════════════════════════
+        # PAGINATION BLOCK HERE:
+        # ══════════════════════════════════════════════
+        st.write("") # Spacer
+
+        # 1. Inject custom CSS to pull native Streamlit buttons together tightly in the center
+        st.markdown("""
+            <style>
+            /* Targets the horizontal row holding our pagination buttons */
+            div[data-testid="stHorizontalBlock"]:has(button[key^="pg_"]) {
+                justify-content: center !important; /* Forces buttons tightly to the center */
+                gap: 6px !important;               /* Controls row item spacing */
+                width: 100% !important;
+            }
+            /* Overrides full stretching behavior of native columns */
+            div[data-testid="stHorizontalBlock"]:has(button[key^="pg_"]) > div {
+                flex: 0 1 auto !important;
+                min-width: unset !important;
+                max-width: unset !important;
+            }
+            /* Clean up pagination sizes to look compact */
+            div[data-testid="stHorizontalBlock"] button {
+                border-radius: 8px !important;
+                min-width: 38px !important;
+                height: 38px !important;
+                padding: 0 4px !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+            }
+            </style>
+        """, unsafe_allow_html=True)
+
+        # 2. Build our smart page numbers range array
+        MAX_VISIBLE = 7
         half = MAX_VISIBLE // 2
         start_p = max(1, page_num - half)
         end_p   = min(total_pages, start_p + MAX_VISIBLE - 1)
         start_p = max(1, end_p - MAX_VISIBLE + 1)
-    
-        btn_cols = st.columns(min(total_pages, MAX_VISIBLE) + 2)
-        col_idx  = 0
-        with btn_cols[col_idx]:
-            if st.button("‹", disabled=(page_num == 1)):
+
+        visible_pages = []
+        for p in range(start_p, end_p + 1):
+            visible_pages.append(p)
+
+        # Create compact layout containers matching the count of items to render
+        # We add 2 extra columns to hold our back (‹) and forward (›) arrow controls
+        cols = st.columns([1] * (len(visible_pages) + 2))
+        col_idx = 0
+
+        # Back Arrow Button
+        with cols[col_idx]:
+            if st.button("‹", key="pg_prev", disabled=(page_num == 1)):
                 st.session_state["listing_page"] = max(1, page_num - 1)
                 st.rerun()
         col_idx += 1
-        for p in range(start_p, end_p + 1):
-            with btn_cols[col_idx]:
-                if st.button(f"**{p}**" if p == page_num else str(p),
-                             key=f"pg_{p}", type="primary" if p == page_num else "secondary"):
+
+        # Numerical Buttons Loop
+        for p in visible_pages:
+            with cols[col_idx]:
+                if st.button(
+                    str(p), 
+                    key=f"pg_{p}", 
+                    type="primary" if p == page_num else "secondary"
+                ):
                     st.session_state["listing_page"] = p
                     st.rerun()
             col_idx += 1
-        with btn_cols[col_idx]:
-            if st.button("›", disabled=(page_num == total_pages)):
+
+        # Forward Arrow Button
+        with cols[col_idx]:
+            if st.button("›", key="pg_next", disabled=(page_num == total_pages)):
                 st.session_state["listing_page"] = min(total_pages, page_num + 1)
                 st.rerun()
     
