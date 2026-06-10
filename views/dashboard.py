@@ -245,102 +245,7 @@ def render_dashboard():
             <div class="tag"><span class="live-dot"></span>Live Tech Market Intelligence</div>
         </div>
     </div>
-    """, height=58, scrolling=False)
-    
-    # ─────────────────────────────────────────────
-    #  FILTER BAR (pure HTML + postMessage back to Streamlit)
-    # ─────────────────────────────────────────────
-    role_options = ["All Roles"] + sorted(df["title_clean"].dropna().unique().tolist())
-    loc_options  = ["All Locations"] + sorted(df["location"].dropna().unique().tolist())
-    exp_options  = ["All Experience", "Internship", "<1 Year", "1-5 Years", ">5 Years"]
-    
-    # Build HTML option lists
-    def opts_html(options, selected):
-        return "".join(
-            f'<option value="{_html.escape(o)}" {"selected" if o == selected else ""}>{_html.escape(o)}</option>'
-            for o in options
-        )
-    
-    filter_html = f"""
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    <style>
-    * {{ margin:0; padding:0; box-sizing:border-box; font-family:'Inter',sans-serif; margin-bottom:10px}}
-    body {{ background:#0d0d0d; padding: 12px 32px; }}
-    .filter-bar {{
-        display: flex;
-        gap: 12px;
-        align-items: center;
-        background: #111;
-        border: 1px solid #222;
-        border-radius: 12px;
-        padding: 14px 20px;
-    }}
-    .filter-label {{
-        font-size: 0.7rem;
-        font-weight: 600;
-        color: #555;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-        white-space: nowrap;
-    }}
-    select {{
-        flex: 1;
-        background: #1a1a1a;
-        border: 1px solid #2a2a2a;
-        border-radius: 8px;
-        color: #e0e0e0;
-        font-size: 0.83rem;
-        font-family: 'Inter', sans-serif;
-        padding: 8px 12px;
-        outline: none;
-        cursor: pointer;
-        transition: border-color 0.15s;
-        appearance: none;
-        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
-        background-repeat: no-repeat;
-        background-position: right 10px center;
-        padding-right: 30px;
-    }}
-    select:hover, select:focus {{ border-color: #3b82f6; }}
-    select option {{ background: #1a1a1a; }}
-    .apply-btn {{
-        background: #3b82f6;
-        color: #fff;
-        border: none;
-        border-radius: 8px;
-        padding: 8px 20px;
-        font-size: 0.83rem;
-        font-weight: 600;
-        cursor: pointer;
-        white-space: nowrap;
-        transition: background 0.15s, transform 0.1s;
-        font-family: 'Inter', sans-serif;
-    }}
-    .apply-btn:hover {{ background: #2563eb; }}
-    .apply-btn:active {{ transform: scale(0.97); }}
-    </style>
-    <div class="filter-bar">
-        <span class="filter-label">Filter</span>
-        <select id="role">{opts_html(role_options, st.session_state["filter_role"])}</select>
-        <select id="loc">{opts_html(loc_options, st.session_state["filter_loc"])}</select>
-        <select id="exp">{opts_html(exp_options, st.session_state["filter_exp"])}</select>
-        <button class="apply-btn" onclick="applyFilters()">Apply</button>
-    </div>
-    <script>
-    function applyFilters() {{
-        const role = document.getElementById('role').value;
-        const loc  = document.getElementById('loc').value;
-        const exp  = document.getElementById('exp').value;
-        window.parent.postMessage({{
-            type: 'streamlit:setComponentValue',
-            value: JSON.stringify({{ role, loc, exp }})
-        }}, '*');
-    }}
-    </script>
-    """
-    
-    components.html(filter_html, height=72, scrolling=False)
-    
+    """, height=58, scrolling=False)    
     
     # Apply filters to dataframe
     fdf = df.copy()
@@ -445,6 +350,99 @@ def render_dashboard():
         </div>
     </div>
     """, height=140, scrolling=False)
+        # ─────────────────────────────────────────────
+    #  FILTER BAR (pure HTML + postMessage back to Streamlit)
+    # ─────────────────────────────────────────────
+    role_options = ["All Roles"] + sorted(df["title_clean"].dropna().unique().tolist())
+    loc_options  = ["All Locations"] + sorted(df["location"].dropna().unique().tolist())
+    exp_options  = ["All Experience", "Internship", "<1 Year", "1-5 Years", ">5 Years"]
+    
+    # Build HTML option lists
+    def opts_html(options, selected):
+        return "".join(
+            f'<option value="{_html.escape(o)}" {"selected" if o == selected else ""}>{_html.escape(o)}</option>'
+            for o in options
+        )
+    
+    filter_html = f"""
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+    * {{ margin:0; padding:0; box-sizing:border-box; font-family:'Inter',sans-serif; margin-bottom:10px}}
+    body {{ background:#0d0d0d; padding: 12px 32px; }}
+    .filter-bar {{
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        background: #111;
+        border: 1px solid #222;
+        border-radius: 12px;
+        padding: 14px 20px;
+    }}
+    .filter-label {{
+        font-size: 0.7rem;
+        font-weight: 600;
+        color: #555;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        white-space: nowrap;
+    }}
+    select {{
+        flex: 1;
+        background: #1a1a1a;
+        border: 1px solid #2a2a2a;
+        border-radius: 8px;
+        color: #e0e0e0;
+        font-size: 0.83rem;
+        font-family: 'Inter', sans-serif;
+        padding: 8px 12px;
+        outline: none;
+        cursor: pointer;
+        transition: border-color 0.15s;
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 10px center;
+        padding-right: 30px;
+    }}
+    select:hover, select:focus {{ border-color: #3b82f6; }}
+    select option {{ background: #1a1a1a; }}
+    .apply-btn {{
+        background: #3b82f6;
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        padding: 8px 20px;
+        font-size: 0.83rem;
+        font-weight: 600;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: background 0.15s, transform 0.1s;
+        font-family: 'Inter', sans-serif;
+    }}
+    .apply-btn:hover {{ background: #2563eb; }}
+    .apply-btn:active {{ transform: scale(0.97); }}
+    </style>
+    <div class="filter-bar">
+        <span class="filter-label">Filter</span>
+        <select id="role">{opts_html(role_options, st.session_state["filter_role"])}</select>
+        <select id="loc">{opts_html(loc_options, st.session_state["filter_loc"])}</select>
+        <select id="exp">{opts_html(exp_options, st.session_state["filter_exp"])}</select>
+        <button class="apply-btn" onclick="applyFilters()">Apply</button>
+    </div>
+    <script>
+    function applyFilters() {{
+        const role = document.getElementById('role').value;
+        const loc  = document.getElementById('loc').value;
+        const exp  = document.getElementById('exp').value;
+        window.parent.postMessage({{
+            type: 'streamlit:setComponentValue',
+            value: JSON.stringify({{ role, loc, exp }})
+        }}, '*');
+    }}
+    </script>
+    """
+    
+    components.html(filter_html, height=72, scrolling=False)
     col1, col2 = st.columns([10, 1])
     with col2:
         if st.button("Sign out"):
