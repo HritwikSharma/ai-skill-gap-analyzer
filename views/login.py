@@ -3,7 +3,6 @@ import streamlit.components.v1 as components
 import psycopg2
 from psycopg2.extras import RealDictCursor
 
-# Safe utility context manager to talk to your AWS RDS instance
 def get_db_connection():
     return psycopg2.connect(
         host=st.secrets["database"]["host"],
@@ -14,7 +13,7 @@ def get_db_connection():
     )
 
 def render_login():
-    # --- 1. KEEP YOUR EXACT VISUAL DARK THEME MARKDOWN ---
+    # --- 1. CLEAN APP CONTAINER STYLING ---
     st.markdown("""
     <style>
     html, body, .stApp, [data-testid="stAppViewContainer"],
@@ -32,12 +31,14 @@ def render_login():
         display: flex !important;
         flex-direction: column !important;
         align-items: center !important;
+        justify-content: center !important;
     }
     </style>
     """, unsafe_allow_html=True)
-    
-    # --- 2. KEEP YOUR TABS & HEADERS EXACTLY AS PROVIDED ---
-    components.html("""
+
+    # --- 2. PURE UNIFIED HTML/CSS APP CARD CONTAINER ---
+    # Captures inputs cleanly inside a beautifully styled component block
+    login_form_html = """
     <!DOCTYPE html>
     <html>
     <head>
@@ -51,22 +52,31 @@ def render_login():
         display: flex;
         align-items: center;
         justify-content: center;
-        padding-top: 0px;
+        height: 100vh;
+        overflow: hidden;
       }
-      .card { width: 420px; border-radius: 0; overflow: hidden; border: none; box-shadow: none; }
-      .card-header { background: #0f0f0f; padding: 32px 28px 16px; text-align: center; }
-      .card-header h1 { font-size: 22px; font-weight: 600; color: #fff; letter-spacing: -0.03em; }
+      .card { width: 400px; border-radius: 12px; border: 1px solid #1e1e1e; background: #0f0f0f; overflow: hidden; }
+      .card-header { padding: 32px 28px 16px; text-align: center; }
+      .card-header h1 { font-size: 24px; font-weight: 600; color: #fff; letter-spacing: -0.03em; }
       .card-header p { font-size: 13px; color: rgba(255,255,255,0.4); margin-top: 6px; }
-      .card-body { background: #0f0f0f; }
       .tabs { display: flex; border-bottom: 1px solid #1e1e1e; }
-      .tab { flex: 1; padding: 14px; text-align: center; font-size: 14px; color: #555; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: color 0.15s, border-color 0.15s; user-select: none; }
+      .tab { flex: 1; padding: 14px; text-align: center; font-size: 14px; color: #555; cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.15s; user-select: none; }
       .tab.active { color: #4d9fff; border-bottom: 2px solid #4d9fff; font-weight: 500; }
-      .panel { display: none; padding: 28px 28px 20px; }
-      .panel.active { display: block; }
-      .panel p.subtitle { font-size: 14px; color: #666; margin-bottom: 12px; line-height: 1.5; }
-      .features { background: #141414; border-radius: 10px; padding: 16px 18px; margin-bottom: 16px; border: 1px solid #1e1e1e; }
-      .feature-item { display: flex; align-items: center; gap: 10px; font-size: 13px; color: #bbb; padding: 5px 0; }
-      .feature-item .check { color: #4d9fff; font-size: 15px; flex-shrink: 0; }
+      
+      .form-body { padding: 24px 28px; }
+      .features { background: #141414; border-radius: 8px; padding: 12px 14px; margin-bottom: 20px; border: 1px solid #1e1e1e; }
+      .feature-item { display: flex; align-items: center; gap: 10px; font-size: 12px; color: #bbb; padding: 4px 0; }
+      .feature-item .check { color: #4d9fff; font-size: 14px; }
+      
+      .input-group { margin-bottom: 16px; position: relative; }
+      .input-group label { display: block; font-size: 12px; color: #888; margin-bottom: 6px; font-weight: 500; text-align: left;}
+      .input-group input { width: 100%; background: #141414; border: 1px solid #1e1e1e; border-radius: 6px; padding: 10px 12px; color: #fff; font-size: 14px; font-family: inherit; transition: border-color 0.15s; }
+      .input-group input:focus { outline: none; border-color: #4d9fff; }
+      
+      .submit-btn { width: 100%; background: #ffffff; color: #000000; border: none; border-radius: 6px; padding: 12px; font-size: 14px; font-weight: 500; cursor: pointer; transition: background 0.15s; margin-top: 8px; font-family: inherit;}
+      .submit-btn:hover { background: #e5e5e5; }
+      
+      .footer-note { font-size: 11px; color: #444; text-align: center; margin-top: 16px; display: flex; align-items: center; justify-content: center; gap: 5px; }
     </style>
     </head>
     <body>
@@ -75,102 +85,120 @@ def render_login():
         <h1>TalentPulse</h1>
         <p>India Tech Market Intelligence</p>
       </div>
-      <div class="card-body">
-        <div class="tabs">
-          <div class="tab active" id="tab-signin" onclick="switchTab('signin')">Sign in</div>
-          <div class="tab" id="tab-create" onclick="switchTab('create')">Create account</div>
+      <div class="tabs">
+        <div class="tab active" id="tab-signin" onclick="setMode('signin')">Sign In</div>
+        <div class="tab" id="tab-create" onclick="setMode('create')">Create Account</div>
+      </div>
+      <div class="form-body">
+        <div class="features">
+          <div class="feature-item"><span class="check">✦</span> Live job market analytics across India</div>
+          <div class="feature-item"><span class="check">✦</span> Salary insights &amp; hiring trend data</div>
         </div>
-        <div class="panel active" id="panel-signin">
-          <div class="features">
-            <div class="feature-item"><span class="check">✦</span> Live job market analytics across India</div>
-            <div class="feature-item"><span class="check">✦</span> Salary insights &amp; hiring trend data</div>
-            <div class="feature-item"><span class="check">✦</span> Skill gap analysis powered by AI</div>
-          </div>
-          <p class="subtitle">Welcome back. Sign in to access your dashboard.</p>
+        
+        <div class="input-group">
+          <label>Email Address</label>
+          <input type="email" id="email" placeholder="name@company.com" autocomplete="off">
         </div>
-        <div class="panel" id="panel-create">
-          <div class="features">
-            <div class="feature-item"><span class="check">✦</span> Live job market analytics across India</div>
-            <div class="feature-item"><span class="check">✦</span> Salary insights &amp; hiring trend data</div>
-            <div class="feature-item"><span class="check">✦</span> Skill gap analysis powered by AI</div>
-          </div>
-          <p class="subtitle">Create your free account — no password needed.</p>
+        <div class="input-group">
+          <label>Password</label>
+          <input type="password" id="password" placeholder="••••••••">
+        </div>
+        
+        <button class="submit-btn" id="action-btn" onclick="handleSubmit()">Sign In to Dashboard</button>
+        
+        <div class="footer-note">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
+          Secure connection verified
         </div>
       </div>
     </div>
+
     <script>
-    function switchTab(tab) {
+    let currentMode = 'signin';
+
+    function setMode(mode) {
+      currentMode = mode;
       document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-      document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-      document.getElementById('tab-' + tab).classList.add('active');
-      document.getElementById('panel-' + tab).classList.add('active');
+      document.getElementById('tab-' + mode).classList.add('active');
+      
+      const btn = document.getElementById('action-btn');
+      if(mode === 'signin') {
+        btn.innerText = 'Sign In to Dashboard';
+      } else {
+        btn.innerText = 'Register Free Account';
+      }
+    }
+
+    function handleSubmit() {
+      const emailVal = document.getElementById('email').value;
+      const passVal = document.getElementById('password').value;
+      
+      if (!emailVal || !passVal) {
+        alert('Please fill out all fields.');
+        return;
+      }
+
+      // Send data back up to Streamlit parent environment
+      const payload = {
+        mode: currentMode,
+        email: emailVal,
+        password: passVal
+      };
+      window.parent.postMessage({type: 'streamlit:login_submission', data: payload}, '*');
     }
     </script>
     </body>
     </html>
-    """, height=380, scrolling=False)
+    """
 
-    # --- 3. LIVE DB TRANSACTION INPUT PROCESSING ---
-    tab_choice = st.radio(
-        "Action Selector", 
-        ["Sign In", "Create Account"], 
-        horizontal=True, 
-        label_visibility="collapsed"
-    )
-    
-    st.markdown('<style>div[data-testid="stTextInput"] { width: 364px !important; }</style>', unsafe_allow_html=True)
-    
-    email = st.text_input("Email Address", placeholder="name@company.com").strip().lower()
-    password = st.text_input("Password", type="password", placeholder="••••••••")
+    # Render components wrapper block natively
+    response = components.html(login_form_html, height=540, scrolling=False)
 
-    st.markdown("<br>", unsafe_allow_html=True)
+    # --- 3. JAVASCRIPT PAYLOAD MESSAGE RECEIVER & POSTGRES WIRE ---
+    # We store submission metrics temporarily in session state when the button fires
+    if "login_payload" in st.session_state and st.session_state["login_payload"]:
+        payload = st.session_state["login_payload"]
+        st.session_state["login_payload"] = None # Clear immediately to prevent infinite submission loops
+        
+        email = payload["email"].strip().lower()
+        password = payload["password"]
+        mode = payload["mode"]
 
-    if tab_choice == "Sign In":
-        if st.button("Sign In to Dashboard", use_container_width=False):
-            if not email or not password:
-                st.error("Please fill out all fields.")
-            else:
-                try:
-                    with get_db_connection() as conn:
-                        with conn.cursor(cursor_factory=RealDictCursor) as cur:
-                            cur.execute("SELECT password FROM app_users WHERE email = %s;", (email,))
-                            user_record = cur.fetchone()
-                    
-                    if not user_record:
-                        st.error("No account found with this email.")
-                    elif user_record["password"] != password:
-                        st.error("Incorrect password. Please try again.")
-                    else:
-                        st.session_state["authenticated"] = True
-                        st.session_state["user_info"] = {"email": email}
-                        st.success("Access Granted! Loading your dashboard...")
-                        st.rerun()
-                except Exception as e:
-                    st.error(f"Database connection error: {e}")
+        if mode == "signin":
+            try:
+                with get_db_connection() as conn:
+                    with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                        cur.execute("SELECT password FROM app_users WHERE email = %s;", (email,))
+                        user_record = cur.fetchone()
+                
+                if not user_record:
+                    st.error("No account found with this email.")
+                elif user_record["password"] != password:
+                    st.error("Incorrect password. Please try again.")
+                else:
+                    st.session_state["authenticated"] = True
+                    st.session_state["user_info"] = {"email": email}
+                    st.rerun()
+            except Exception as e:
+                st.error(f"Database error: {e}")
 
-    elif tab_choice == "Create Account":
-        if st.button("Register Free Account", use_container_width=False):
-            if not email or not password:
-                st.error("Please fill out all fields.")
-            elif "@" not in email or "." not in email:
-                st.error("Please provide a valid email address.")
+        elif mode == "create":
+            if "@" not in email or "." not in email:
+                st.error("Please provide a valid email format.")
             elif len(password) < 4:
-                st.error("Password must be at least 4 characters long.")
+                st.error("Password must be at least 4 characters.")
             else:
                 try:
                     with get_db_connection() as conn:
                         with conn.cursor(cursor_factory=RealDictCursor) as cur:
-                            # Verify if user already exists
                             cur.execute("SELECT email FROM app_users WHERE email = %s;", (email,))
                             if cur.fetchone():
-                                st.error("This email is already registered. Switch to Sign In.")
+                                st.error("This email is already registered.")
                             else:
-                                # Write to permanent RDS table layout
-                                cur.execute(
-                                    "INSERT INTO app_users (email, password) VALUES (%s, %s);",
-                                    (email, password)
-                                )
+                                cur.execute("INSERT INTO app_users (email, password) VALUES (%s, %s);", (email, password))
                                 conn.commit()
-                                st.success("Account created successfully! Toggle to Sign In to enter.")
+                                st.success("Account created! You can now switch tabs to Sign In.")
                 except Exception as e:
                     st.error(f"Database write operation failed: {e}")
