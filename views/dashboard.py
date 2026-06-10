@@ -879,43 +879,24 @@ def render_dashboard():
                 # Force browser view to reload view context to the top via query param mutation
                 st.query_params["p"] = str(st.session_state["listing_page"])
                 st.rerun()
-        st.write("") # Spacer Layout Row
+        st.write("") # Clear formatting spacing
 
-        # We construct an interactive layout box that handles native browser scroll execution
-        with st.form(key="scroll_top_form", clear_on_submit=True):
-            # Injected styling to strip out Streamlit's default heavy form borders and padding boxes
-            st.markdown("""
-                <style>
-                div[data-testid="stForm"] {
-                    border: none !important;
-                    background: transparent !important;
-                    padding: 0 !important;
-                    margin: 0 !important;
+        # Use an independent execution block to target the outer root canvas
+        if st.button("▲ Back to Top", key="app_scroll_top_trigger", use_container_width=True):
+            components.html(
+                """
+                <script>
+                // This targets the main top window frame directly above the Streamlit iframe sandbox
+                const rootMainApp = window.parent.document.querySelector('.main') || window.parent.document.querySelector('[data-testid="stAppViewContainer"]');
+                if (rootMainApp) {
+                    rootMainApp.scrollTo({top: 0, behavior: 'auto'});
+                } else {
+                    window.parent.scrollTo({top: 0, behavior: 'auto'});
                 }
-                .back-to-top-btn {
-                    display: flex !important;
-                    align-items: center !important;
-                    justify-content: center !important;
-                    margin: 16px auto 0 !important;
-                    width: 140px !important;
-                    height: 38px !important;
-                    background-color: #1a2744 !important;
-                    color: #3b82f6 !important;
-                    border: 1px solid #2a3f6f !important;
-                    border-radius: 8px !important;
-                    font-family: 'Inter', sans-serif !important;
-                    font-size: 0.8rem !important;
-                    font-weight: 600 !important;
-                    cursor: pointer !important;
-                    transition: background-color 0.15s ease, border-color 0.15s ease !important;
-                }
-                .back-to-top-btn:hover {
-                    background-color: #243560 !important;
-                    border-color: #3b82f6 !important;
-                    color: #67e8f9 !important;
-                }
-                </style>
-            """, unsafe_allow_html=True)
+                </script>
+                """,
+                height=0
+            )
             
             # Use native submit action to refresh form visibility metrics 
             submit_scroll = st.form_submit_button(label="▲ Back to Top")
