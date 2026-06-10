@@ -1,26 +1,20 @@
 import streamlit as st
-import json
-import os
+import streamlit.components.v1 as components
+import psycopg2
+from psycopg2.extras import RealDictCursor
 
-DB_FILE = "users.json"
+# Safe utility context manager to talk to your AWS RDS instance
+def get_db_connection():
+    return psycopg2.connect(
+        host=st.secrets["database"]["host"],
+        port=st.secrets["database"]["port"],
+        database=st.secrets["database"]["database"],
+        user=st.secrets["database"]["user"],
+        password=st.secrets["database"]["password"]
+    )
 
-# Helper functions to handle the local JSON credential database
-def load_users():
-    if not os.path.exists(DB_FILE):
-        return {}
-    try:
-        with open(DB_FILE, "r") as f:
-            return json.load(f)
-    except:
-        return {}
-
-def save_users(users_dict):
-    with open(DB_FILE, "w") as f:
-        json.dump(users_dict, f, indent=4)
-
-def render_login(): # Notice: No parameters inside parentheses!
-    
-    # --- KEEPING YOUR EXACT DARK GRAPHIC CSS STYLING ---
+def render_login():
+    # --- 1. KEEP YOUR EXACT VISUAL DARK THEME MARKDOWN ---
     st.markdown("""
     <style>
     html, body, .stApp, [data-testid="stAppViewContainer"],
@@ -42,8 +36,8 @@ def render_login(): # Notice: No parameters inside parentheses!
     </style>
     """, unsafe_allow_html=True)
     
-    # --- KEEPING YOUR INTERACTIVE UI HEADER AND TABS EXACTLY AS PREVIOUSLY PROVIDED ---
-    st.components.v1.html("""
+    # --- 2. KEEP YOUR TABS & HEADERS EXACTLY AS PROVIDED ---
+    components.html("""
     <!DOCTYPE html>
     <html>
     <head>
@@ -73,7 +67,6 @@ def render_login(): # Notice: No parameters inside parentheses!
       .features { background: #141414; border-radius: 10px; padding: 16px 18px; margin-bottom: 16px; border: 1px solid #1e1e1e; }
       .feature-item { display: flex; align-items: center; gap: 10px; font-size: 13px; color: #bbb; padding: 5px 0; }
       .feature-item .check { color: #4d9fff; font-size: 15px; flex-shrink: 0; }
-      .footer-note { font-size: 11px; color: #333; text-align: center; padding: 4px 28px 16px; display: flex; align-items: center; justify-content: center; gap: 5px; }
     </style>
     </head>
     <body>
@@ -117,10 +110,7 @@ def render_login(): # Notice: No parameters inside parentheses!
     </html>
     """, height=380, scrolling=False)
 
-    # --- NEW LOCAL FORM PROCESSING LAYOUT ---
-    users = load_users()
-    
-    # Render clean actions right under the card
+    # --- 3. LIVE DB TRANSACTION INPUT PROCESSING ---
     tab_choice = st.radio(
         "Action Selector", 
         ["Sign In", "Create Account"], 
@@ -128,10 +118,9 @@ def render_login(): # Notice: No parameters inside parentheses!
         label_visibility="collapsed"
     )
     
-    # Match the widths precisely to your UI panel wrapper
     st.markdown('<style>div[data-testid="stTextInput"] { width: 364px !important; }</style>', unsafe_allow_html=True)
     
-    email = st.text_input("Email Address", placeholder="name@company.com")
+    email = st.text_input("Email Address", placeholder="name@company.com").strip().lower()
     password = st.text_input("Password", type="password", placeholder="••••••••")
 
     st.markdown("<br>", unsafe_allow_html=True)
@@ -140,15 +129,24 @@ def render_login(): # Notice: No parameters inside parentheses!
         if st.button("Sign In to Dashboard", use_container_width=False):
             if not email or not password:
                 st.error("Please fill out all fields.")
-            elif email not in users:
-                st.error("No account found with this email.")
-            elif users[email] != password:
-                st.error("Incorrect password. Please try again.")
             else:
-                st.session_state["authenticated"] = True
-                st.session_state["user_info"] = {"email": email}
-                st.success("Access Granted! Loading your dashboard...")
-                st.rerun()
+                try:
+                    with get_db_connection() as conn:
+                        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                            cur.execute("SELECT password FROM app_users WHERE email = %s;", (email,))
+                            user_record = cur.fetchone()
+                    
+                    if not user_record:
+                        st.error("No account found with this email.")
+                    elif user_record["password"] != password:
+                        st.error("Incorrect password. Please try again.")
+                    else:
+                        st.session_state["authenticated"] = True
+                        st.session_state["user_info"] = {"email": email}
+                        st.success("Access Granted! Loading your dashboard...")
+                        st.rerun()
+                except Exception as e:
+                    st.error(f"Database connection error: {e}")
 
     elif tab_choice == "Create Account":
         if st.button("Register Free Account", use_container_width=False):
@@ -158,9 +156,21 @@ def render_login(): # Notice: No parameters inside parentheses!
                 st.error("Please provide a valid email address.")
             elif len(password) < 4:
                 st.error("Password must be at least 4 characters long.")
-            elif email in users:
-                st.error("This email is already registered. Switch to Sign In.")
             else:
-                users[email] = password
-                save_users(users)
-                st.success("Account created successfully! Toggle to Sign In to enter.")
+                try:
+                    with get_db_connection() as conn:
+                        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                            # Verify if user already exists
+                            cur.execute("SELECT email FROM app_users WHERE email = %s;", (email,))
+                            if cur.fetchone():
+                                st.error("This email is already registered. Switch to Sign In.")
+                            else:
+                                # Write to permanent RDS table layout
+                                cur.execute(
+                                    "INSERT INTO app_users (email, password) VALUES (%s, %s);",
+                                    (email, password)
+                                )
+                                conn.commit()
+                                st.success("Account created successfully! Toggle to Sign In to enter.")
+                except Exception as e:
+                    st.error(f"Database write operation failed: {e}")
