@@ -211,84 +211,60 @@ def render_dashboard():
     #  NAV BAR (pure HTML component)
     # ─────────────────────────────────────────────
     # Clean injection handling for the logout event listener
-    nav_interaction = st.components.v1.html("""
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@600;700&display=swap" rel="stylesheet">
+    # ─────────────────────────────────────────────
+    #  TAB NAV BAR (SYNCED WITH AI VIEWPORT CONTROLLER)
+    # ─────────────────────────────────────────────
+    nav_interaction = components.html(f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
     <style>
-    * { margin:0; padding:0; box-sizing:border-box; }
-    body { background:#0d0d0d; }
-    .nav {
-        width: 100%;
-        background: #111;
-        border-bottom: 1px solid #222;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 0 32px;
-        height: 56px;
-        position: sticky;
-        top: 0;
-    }
-    .logo {
-        font-family: 'Sora', sans-serif;
-        font-size: 1.2rem;
-        font-weight: 700;
-        color: #3b82f6;
-        letter-spacing: -0.03em;
-    }
-    .logo span { color: #e0e0e0; font-weight: 400; }
-    .tag {
-        font-size: 0.7rem;
-        font-weight: 600;
-        color: #555;
-        letter-spacing: 0.1em;
-        text-transform: uppercase;
-    }
-    .live-dot {
-        display: inline-block;
-        width: 7px; height: 7px;
-        border-radius: 50%;
-        background: #10b981;
-        margin-right: 6px;
-        animation: pulse 2s infinite;
-    }
-    .signout-btn {
-        background: transparent;
-        color: #aaa;
-        border: 1px solid #2a2a2a;
-        border-radius: 6px;
-        padding: 6px 12px;
-        font-size: 0.75rem;
-        font-weight: 500;
-        font-family: 'Inter', sans-serif;
-        cursor: pointer;
-        transition: all 0.15s ease;
-    }
-    .signout-btn:hover {
-        color: #ef4444;
-        border-color: #ef4444;
-        background: rgba(239, 68, 68, 0.05);
-    }
-    @keyframes pulse {
-        0%,100% { opacity:1; }
-        50% { opacity:0.4; }
-    }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+        body {{ margin: 0; padding: 0; background-color: transparent; font-family: 'Inter', sans-serif; }}
+        .nav-container {{
+            display: flex; gap: 4px; background-color: #0b0f19;
+            padding: 4px; border-radius: 10px; border: 1px solid #1e293b;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.4); width: fit-content; margin: 0 auto;
+        }}
+        .nav-item {{
+            padding: 8px 16px; color: #94a3b8; border-radius: 7px;
+            font-size: 0.85rem; font-weight: 500; cursor: pointer;
+            transition: all 0.2s ease; user-select: none; text-decoration: none;
+        }}
+        .nav-item:hover {{ color: #ffffff; background-color: rgba(255,255,255,0.03); }}
+        .nav-item.active {{
+            color: #3b82f6; background-color: #1e293b;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.05); font-weight: 600;
+        }}
     </style>
-    <div class="nav">
-        <div class="logo">TalentPulse <span>India</span></div>
-        <div style="display:flex;align-items:center;gap:20px;">
-            <div class="tag"><span class="live-dot"></span>Live Tech Market Intelligence</div>
-            <button class="signout-btn" onclick="logout()">Sign out</button>
-        </div>
-    </div>
+    </head>
+    <body>
+    <div class="nav-container" id="navbar"></div>
     <script>
-    function logout() {
-        window.parent.postMessage({
-            type: 'streamlit:setComponentValue',
-            value: 'trigger_logout'
-        }, '*');
-    }
+        const links = [
+            {{ id: 'listings', text: '📋 Job Listings' }},
+            {{ id: 'market', text: '📊 Market Overview' }},
+            {{ id: 'salary', text: '💰 Salary Insights' }},
+            {{ id: 'companies', text: '🏢 Companies' }},
+            {{ id: 'map', text: '🗺️ Heat Map' }},
+            {{ id: 'ai_analyzer', text: '🎯 AI Analyzer' }} // ✅ FIXED: Link registered in HTML frame
+        ];
+        const activeTab = "{st.session_state["active_tab"]}";
+        const container = document.getElementById('navbar');
+        
+        links.forEach(link => {{
+            const div = document.createElement('div');
+            div.className = 'nav-item' + (link.id === activeTab ? ' active' : '');
+            div.innerText = link.text;
+            div.onclick = () => {{
+                window.parent.postMessage({{ type: 'streamlit:tab_change', value: link.id }}, '*');
+            }};
+            container.appendChild(div);
+        }});
     </script>
-    """, height=58, scrolling=False)
+    </body>
+    </html>
+    """, height=58)
 
     # Catch the HTML click event inside Streamlit and execute the session kill
     if nav_interaction == "trigger_logout":
