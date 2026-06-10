@@ -2,7 +2,6 @@ import streamlit as st
 import psycopg2
 from psycopg2.extras import RealDictCursor
 
-# Direct secure connection setup to your AWS RDS instance
 def get_db_connection():
     return psycopg2.connect(
         host=st.secrets["database"]["host"],
@@ -13,63 +12,156 @@ def get_db_connection():
     )
 
 def render_login():
-    # --- 1. CLEAN CUSTOM CSS STYLING OVERLAY ---
-    # This forces the dark theme and keeps every single element locked in the center
+    # --- MODERN PREMIUM UI CSS ---
     st.markdown("""
     <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+    
+    /* Global Background Fixes */
     html, body, .stApp, [data-testid="stAppViewContainer"], [data-testid="stMain"] {
         background-color: #0f0f0f !important;
+        font-family: 'Inter', sans-serif !important;
     }
     #MainMenu, footer, header { visibility: hidden; }
     
-    /* Lock the center width layout column cleanly */
+    /* Layout Column Padding */
     div[data-testid="stColumn"] {
         background-color: #0f0f0f;
-        padding: 24px;
-        border-radius: 12px;
+        padding: 30px;
     }
     
-    /* Header branding style text overrides */
+    /* Header Typography */
     .title-text {
-        font-family: 'Inter', sans-serif;
         color: #ffffff;
-        font-size: 28px;
+        font-size: 26px;
         font-weight: 600;
         text-align: center;
-        margin-bottom: 2px;
         letter-spacing: -0.03em;
+        margin-bottom: 4px;
     }
     .subtitle-text {
-        font-family: 'Inter', sans-serif;
         color: rgba(255, 255, 255, 0.4);
         font-size: 13px;
         text-align: center;
-        margin-bottom: 20px;
+        margin-bottom: 32px;
+    }
+    
+    /* Feature List Styling */
+    .feature-box {
+        background: #141414;
+        border: 1px solid #1e1e1e;
+        border-radius: 8px;
+        padding: 14px 16px;
+        margin-bottom: 24px;
+    }
+    .feature-item {
+        color: #bbb;
+        font-size: 12.5px;
+        margin: 6px 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .feature-spark {
+        color: #4d9fff;
+        font-weight: bold;
+    }
+    
+    /* MAGIC TRICK: Turn st.radio into Premium Underlined Tabs */
+    div[data-testid="stRadio"] > label {
+        display: none !important; /* Hide default radio label */
+    }
+    div[data-testid="stRadio"] > div {
+        flex-direction: row !important;
+        justify-content: center !important;
+        border-bottom: 1px solid #1e1e1e !important;
+        gap: 0px !important;
+        margin-bottom: 24px;
+    }
+    div[data-testid="stRadio"] label[data-testid="stWidgetLabel"] {
+        display: none !important;
+    }
+    div[data-testid="stRadio"] [data-testid="stMarkdownContainer"] p {
+        font-size: 14px !important;
+        font-weight: 500 !important;
+    }
+    /* Hide the ugly circular radio buttons */
+    div[data-testid="stRadio"] input[type="radio"] {
+        display: none !important;
+    }
+    /* Style the clickable text items */
+    div[data-testid="stRadio"] div[data-viewport="true"] label {
+        flex: 1;
+        padding: 12px 0px !important;
+        background: transparent !important;
+        border: none !important;
+        border-bottom: 2px solid transparent !important;
+        color: #555555 !important;
+        text-align: center;
+        cursor: pointer;
+        transition: color 0.2s ease, border-color 0.2s ease;
+        margin: 0 !important;
+    }
+    /* Dynamic active tab tracking highlight line */
+    div[data-testid="stRadio"] div[data-viewport="true"] label:has(input:checked) {
+        color: #4d9fff !important;
+        border-bottom: 2px solid #4d9fff !important;
+    }
+    div[data-testid="stRadio"] div[data-viewport="true"] label:hover {
+        color: #888;
+    }
+
+    /* Premium Notification Alerts Override */
+    div[data-testid="stNotification"] {
+        background-color: #141414 !important;
+        border: 1px solid #1e1e1e !important;
+        border-radius: 8px !important;
+    }
+    div[data-testid="stNotification"] [data-testid="stMarkdownContainer"] p {
+        color: #ffffff !important;
+        font-size: 13px !important;
     }
     </style>
     """, unsafe_allow_html=True)
 
-    # --- 2. PERFECT CENTERED CARD COLUMN LAYOUT ---
-    # Creates three columns across the screen and puts the form inside the exact center one
-    left_margin, center_card, right_margin = st.columns([1, 1.2, 1])
+    # --- CENTERED COLUMN LAYOUT ---
+    left_margin, center_card, right_margin = st.columns([1, 1.1, 1])
 
     with center_card:
-        # Header Labels
+        # Branding
         st.markdown('<div class="title-text">TalentPulse</div>', unsafe_allow_html=True)
         st.markdown('<div class="subtitle-text">India Tech Market Intelligence</div>', unsafe_allow_html=True)
 
-        # Standard, reliable switching tabs
-        mode = st.radio("Toggle Access", ["Sign In", "Create Account"], label_visibility="collapsed", horizontal=True)
+        # Tab Selector (Disguised Radio)
+        mode = st.radio(
+            "AccessMode", 
+            ["Sign In", "Create Account"], 
+            label_visibility="collapsed"
+        )
         
-        st.markdown("<br>", unsafe_allow_html=True)
+        # Smooth context switching sub-text & features
+        if mode == "Sign In":
+            st.markdown("""
+            <div class="feature-box">
+                <div class="feature-item"><span class="feature-spark">✦</span> Live job market analytics across India</div>
+                <div class="feature-item"><span class="feature-spark">✦</span> Salary insights & hiring trend data</div>
+            </div>
+            """, unsafe_allow_html=True)
+        else:
+            st.markdown("""
+            <div class="feature-box">
+                <div class="feature-item"><span class="feature-spark">✦</span> Gain comprehensive platform dashboard entry</div>
+                <div class="feature-item"><span class="feature-spark">✦</span> Skill gap analysis tools powered by AI</div>
+            </div>
+            """, unsafe_allow_html=True)
 
-        # Pure form entry input vector fields
+        # Input Forms
         email = st.text_input("Email Address", placeholder="name@company.com").strip().lower()
         password = st.text_input("Password", type="password", placeholder="••••••••")
 
         st.markdown("<br>", unsafe_allow_html=True)
 
-        # Execution actions
+        # Action Handling
         if mode == "Sign In":
             if st.button("Sign In to Dashboard", use_container_width=True):
                 if not email or not password:
@@ -88,10 +180,10 @@ def render_login():
                         else:
                             st.session_state["authenticated"] = True
                             st.session_state["user_info"] = {"email": email}
-                            st.success("Access verified!")
+                            st.toast("🔒 Access verified! Loading...")
                             st.rerun()
                     except Exception as e:
-                        st.error(f"Database connection error: {e}")
+                        st.error(f"Database error: {e}")
 
         elif mode == "Create Account":
             if st.button("Register Free Account", use_container_width=True):
@@ -111,6 +203,6 @@ def render_login():
                                 else:
                                     cur.execute("INSERT INTO app_users (email, password) VALUES (%s, %s);", (email, password))
                                     conn.commit()
-                                    st.success("Account created successfully! Toggle to Sign In to enter.")
+                                    st.success("✨ Account created successfully! Toggle to Sign In above to enter.")
                     except Exception as e:
                         st.error(f"Database registration failed: {e}")
