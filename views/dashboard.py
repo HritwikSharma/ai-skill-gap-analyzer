@@ -9,6 +9,7 @@ import re
 import re as _re
 import html as _html
 from collections import Counter
+from utils.ai_engine import get_ai_analysis
 
 def render_dashboard():
     #st.title("TalentPulse Dashboard")
@@ -1003,7 +1004,7 @@ def render_dashboard():
             )
             st.plotly_chart(fig, use_container_width=True)
     # ══════════════════════════════════════════════
-    #  TAB: AI SKILL GAP ANALYZER (LONG FORMAT)
+    #  TAB: AI SKILL GAP ANALYZER
     # ══════════════════════════════════════════════
     elif active == "ai_analyzer":
         section_header("🎯 AI Career Strategist & Skill Gap Analyzer")
@@ -1059,20 +1060,38 @@ def render_dashboard():
                     if not target_role or not skills_input or not tools_input or not education or not languages:
                         st.error("Please fill in ALL mandatory fields to proceed.")
                     else:
-                        st.session_state["profile_data"] = {
-                            "role": target_role,
-                            "job_pref": job_pref,
-                            "experience": exp_level,
-                            "salary": expected_salary,
-                            "work_history": [w.strip() for w in work_history.split(",")],
-                            "education": education,
-                            "skills": [s.strip() for s in skills_input.split(",")],
-                            "tools": [t.strip() for t in tools_input.split(",")],
-                            "certs": [c.strip() for c in certs_input.split(",")],
-                            "languages": languages
-                        }
-                        st.session_state["user_profile_saved"] = True
-                        st.rerun()    
+                        # 1. ANALYZE ONLY IF NOT ALREADY DONE
+                        if "ai_analysis" not in st.session_state:
+                            with st.spinner("🚀 AI Architect is researching global market trends..."):
+                                # Aggregate local database skills
+                                all_skills = fdf["tech_skills_found"].dropna().explode().unique().tolist()
+                                
+                                # Call the engine
+                                st.session_state["ai_analysis"] = get_ai_analysis(st.session_state["profile_data"], all_skills[:100])
+                        
+                        # 2. RENDER RESULTS
+                        analysis = st.session_state["ai_analysis"]
+                        profile = st.session_state["profile_data"]
+                        
+                        st.markdown(f"### 📈 Analysis for: {profile['role']}")
+                        
+                        col1, col2 = st.columns(2)
+                        with col1:
+                            st.write("#### 🛠️ Skill Gap")
+                            for skill in analysis['skill_gap']:
+                                st.warning(f"• {skill}")
+                        
+                        with col2:
+                            st.write("#### 🗺️ 7-Step Roadmap")
+                            for i, step in enumerate(analysis['comprehensive_roadmap']):
+                                st.markdown(f"**{i+1}.** {step}")
+                        
+                        # Reset Button
+                        if st.button("🔄 Reset Profile"):
+                            del st.session_state["profile_data"]
+                            if "ai_analysis" in st.session_state: del st.session_state["ai_analysis"]
+                            st.session_state["user_profile_saved"] = False
+                            st.rerun()    
     st.markdown('</div>', unsafe_allow_html=True)
 
 
