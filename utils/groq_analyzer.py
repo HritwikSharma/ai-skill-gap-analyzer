@@ -2,7 +2,7 @@ import json
 from groq import Groq
 
 def get_ai_analysis(profile, local_market_skills):
-    client = Groq(api_key="YOUR_GROQ_API_KEY")
+    client = Groq(api_key="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")
     
     # We pass both: what we know (local) and the task to expand (global)
     prompt = f"""
