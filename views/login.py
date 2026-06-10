@@ -33,7 +33,7 @@ def render_login():
     }
     #MainMenu, footer, header { visibility: hidden; }
     [data-testid="stVerticalBlock"] > div { gap: 0 !important; }
-    div[data-testid="stColumn"] { background: #0d0d14 !important; padding: 0 2px !important; }
+    div[data-testid="stColumn"] { background: #0d0d14 !important; padding: 0 !important !important; }
     [data-testid="stMainBlockContainer"] { padding-top: 60px !important; }
 
     /* inputs */
@@ -144,14 +144,11 @@ def render_login():
             India Tech Market Intelligence
         </div>
 
-        <!-- Tab tray background -->
-        <div style="background:#16161f;border-radius:10px;padding:4px;margin-bottom:6px;display:flex;gap:4px;" id="tab-tray">
-        </div>
-        """, unsafe_allow_html=True)
 
         # Tab tray — two columns inside a styled wrapper
-        st.markdown('<div style="background:#16161f;border-radius:10px;padding:4px;display:flex;gap:0;">', unsafe_allow_html=True)
-        tab_l, tab_r = st.columns([1, 1], gap="small")
+        st.markdown('<div style="background:#16161f;border-radius:10px;padding:4px;margin-bottom:0;">', unsafe_allow_html=True)
+        st.markdown('</div>', unsafe_allow_html=True)
+        tab_l, tab_r = st.columns([1, 1], gap="xsmall")
 
         with tab_l:
             cls = "tab-active" if mode == "signin" else "tab-col"
