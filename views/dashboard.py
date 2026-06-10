@@ -393,7 +393,7 @@ def render_dashboard():
         </div>
     </div>
     """, height=164, scrolling=False)
-        # ─────────────────────────────────────────────
+    # ─────────────────────────────────────────────
     #  FILTER BAR (pure HTML + postMessage back to Streamlit)
     # ─────────────────────────────────────────────
     role_options = ["All Roles"] + sorted(df["title_clean"].dropna().unique().tolist())
