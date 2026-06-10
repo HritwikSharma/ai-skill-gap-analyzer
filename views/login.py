@@ -15,19 +15,11 @@ def get_db_connection():
 
 def render_login():
 
-    # ── Tab switching via query params (no st.button needed for tabs) ──
     if "login_mode" not in st.session_state:
         st.session_state["login_mode"] = "signin"
 
-    params = st.query_params
-    if "tab" in params:
-        st.session_state["login_mode"] = params["tab"]
-        st.query_params.clear()
-        st.rerun()
-
     mode = st.session_state["login_mode"]
 
-    # ── ALL CSS ── 
     st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&display=swap');
@@ -40,11 +32,18 @@ def render_login():
         font-family: 'Space Grotesk', sans-serif !important;
     }
     #MainMenu, footer, header { visibility: hidden; }
-
-    /* Remove all default streamlit spacing */
     [data-testid="stVerticalBlock"] > div { gap: 0 !important; }
     div[data-testid="stColumn"] { background: #0d0d14 !important; padding: 0 !important; }
     [data-testid="stMainBlockContainer"] { padding-top: 60px !important; }
+
+    /* Hide the real radio completely but keep it in DOM so Streamlit can read it */
+    div[data-testid="stRadio"] {
+        position: absolute !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+        height: 0 !important;
+        overflow: hidden !important;
+    }
 
     /* inputs */
     div[data-testid="stTextInput"] { margin-bottom: 0 !important; }
@@ -101,78 +100,106 @@ def render_login():
         background: #1e1e2d !important; border-radius: 8px !important;
         font-family: 'Space Grotesk', sans-serif !important; color: #fff !important;
     }
+
+    /* custom HTML styles */
+    .tp-logo {
+        font-family: 'Space Grotesk', sans-serif; font-size: 32px; font-weight: 600;
+        color: #fff; text-align: center; letter-spacing: -0.03em; margin-bottom: 6px;
+    }
+    .tp-logo span { color: #7c6ef5; }
+    .tp-sub {
+        font-family: 'Space Grotesk', sans-serif; font-size: 15px; color: #555570;
+        text-align: center; letter-spacing: 0.01em; margin-bottom: 32px;
+    }
+    .tp-tabs {
+        display: flex; background: #16161f; border-radius: 10px;
+        padding: 4px; gap: 4px; margin-bottom: 6px;
+    }
+    .tp-tab {
+        flex: 1; padding: 10px 0; border-radius: 7px; border: none;
+        font-family: 'Space Grotesk', sans-serif; font-size: 13.5px; font-weight: 500;
+        text-align: center; cursor: pointer; transition: background 0.2s, color 0.2s;
+    }
+    .tp-tab-on  { background: #1e1e2d; color: #ffffff; }
+    .tp-tab-off { background: transparent; color: #555570; }
+    .tp-tab-off:hover { color: #9090aa; }
+    .tp-sep { height: 1px; background: #1a1a28; margin-bottom: 18px; }
+    .tp-hints {
+        background: #16161f; border: 1px solid #1e1e2d; border-radius: 10px;
+        padding: 14px 18px; margin-bottom: 20px;
+    }
+    .tp-hint {
+        display: flex; align-items: center; gap: 10px;
+        font-family: 'Space Grotesk', sans-serif; font-size: 13px;
+        color: #555570; padding: 4px 0;
+    }
+    .tp-dot {
+        width: 5px; height: 5px; min-width: 5px;
+        background: #7c6ef5; border-radius: 50%; display: inline-block;
+    }
     </style>
     """, unsafe_allow_html=True)
 
-    # ── Centered layout ──
     _, col, _ = st.columns([1, 1.1, 1])
 
     with col:
-        # ── Brand + tabs + hints all in one HTML block inside the centered column ──
-        signin_cls  = "tp-tab-on"  if mode == "signin"   else "tp-tab-off"
-        reg_cls     = "tp-tab-on"  if mode == "register" else "tp-tab-off"
+        signin_cls = "tp-tab tp-tab-on"  if mode == "signin"   else "tp-tab tp-tab-off"
+        reg_cls    = "tp-tab tp-tab-on"  if mode == "register" else "tp-tab tp-tab-off"
 
-        hints = """
+        hints_signin = """
             <div class="tp-hint"><span class="tp-dot"></span>Live job market analytics across India</div>
-            <div class="tp-hint"><span class="tp-dot"></span>Salary insights &amp; hiring trend data</div>
-        """ if mode == "signin" else """
-            <div class="tp-hint"><span class="tp-dot"></span>Comprehensive platform dashboard access</div>
-            <div class="tp-hint"><span class="tp-dot"></span>Skill gap analysis tools powered by AI</div>
+            <div class="tp-hint"><span class="tp-dot"></span>Real-time salary benchmarks by role &amp; city</div>
+            <div class="tp-hint"><span class="tp-dot"></span>Hiring trends across 50+ tech companies</div>
+            <div class="tp-hint"><span class="tp-dot"></span>Skill demand shifts updated weekly</div>
         """
+        hints_register = """
+            <div class="tp-hint"><span class="tp-dot"></span>Full dashboard access from day one</div>
+            <div class="tp-hint"><span class="tp-dot"></span>AI-powered skill gap analysis</div>
+            <div class="tp-hint"><span class="tp-dot"></span>Personalised market reports for your role</div>
+            <div class="tp-hint"><span class="tp-dot"></span>Free forever — no credit card needed</div>
+        """
+        hints = hints_signin if mode == "signin" else hints_register
 
+        # Render brand, custom tabs, hints
         st.markdown(f"""
-        <style>
-        .tp-logo {{
-            font-family:'Space Grotesk',sans-serif; font-size:22px; font-weight:600;
-            color:#fff; text-align:center; letter-spacing:-0.02em; margin-bottom:4px;
-        }}
-        .tp-logo span {{ color:#7c6ef5; }}
-        .tp-sub {{
-            font-family:'Space Grotesk',sans-serif; font-size:12px; color:#555570;
-            text-align:center; letter-spacing:0.03em; margin-bottom:28px;
-        }}
-        .tp-tabs {{
-            display:flex; background:#16161f; border-radius:10px;
-            padding:4px; gap:4px; margin-bottom:6px;
-        }}
-        .tp-tab-on, .tp-tab-off {{
-            flex:1; padding:9px 0; border-radius:7px; border:none;
-            font-family:'Space Grotesk',sans-serif; font-size:13px; font-weight:500;
-            text-align:center; cursor:pointer; text-decoration:none; display:block;
-            transition:background 0.2s,color 0.2s;
-        }}
-        .tp-tab-on  {{ background:#1e1e2d; color:#ffffff; }}
-        .tp-tab-off {{ background:transparent; color:#555570; }}
-        .tp-tab-off:hover {{ color:#9090aa; text-decoration:none; }}
-        .tp-sep {{ height:1px; background:#1a1a28; margin-bottom:18px; }}
-        .tp-hints {{
-            background:#16161f; border:1px solid #1e1e2d; border-radius:10px;
-            padding:12px 16px; margin-bottom:18px;
-        }}
-        .tp-hint {{
-            display:flex; align-items:center; gap:9px;
-            font-family:'Space Grotesk',sans-serif; font-size:12.5px;
-            color:#555570; padding:3px 0;
-        }}
-        .tp-dot {{
-            width:5px; height:5px; min-width:5px;
-            background:#7c6ef5; border-radius:50%; display:inline-block;
-        }}
-        </style>
-
         <div class="tp-logo">Talent<span>Pulse</span></div>
         <div class="tp-sub">India Tech Market Intelligence</div>
 
         <div class="tp-tabs">
-            <a href="?tab=signin"   class="{signin_cls}">Sign In</a>
-            <a href="?tab=register" class="{reg_cls}">Create Account</a>
+            <button class="{signin_cls}"  onclick="switchTab('signin')">Sign In</button>
+            <button class="{reg_cls}"     onclick="switchTab('register')">Create Account</button>
         </div>
         <div class="tp-sep"></div>
-
         <div class="tp-hints">{hints}</div>
+
+        <script>
+        function switchTab(tab) {{
+            // Find the hidden Streamlit radio inputs and click the right one
+            const labels = window.parent.document.querySelectorAll('[data-testid="stRadio"] label');
+            labels.forEach(label => {{
+                const txt = label.innerText.trim().toLowerCase();
+                if (tab === 'signin'   && txt === 'sign in')       label.click();
+                if (tab === 'register' && txt === 'create account') label.click();
+            }});
+        }}
+        </script>
         """, unsafe_allow_html=True)
 
-        # ── Streamlit inputs & button ──
+        # Hidden radio — Streamlit drives the actual state
+        mode_choice = st.radio(
+            "mode",
+            ["Sign In", "Create Account"],
+            index=0 if mode == "signin" else 1,
+            label_visibility="collapsed",
+            horizontal=True,
+            key="tp_radio"
+        )
+        # Sync back to session state if radio changed
+        new_mode = "signin" if mode_choice == "Sign In" else "register"
+        if new_mode != mode:
+            st.session_state["login_mode"] = new_mode
+            st.rerun()
+
         email    = st.text_input("Email Address", placeholder="name@company.com", key="tp_email").strip().lower()
         password = st.text_input("Password", type="password", placeholder="••••••••", key="tp_pw")
 
