@@ -264,7 +264,7 @@ def render_dashboard():
     filter_html = f"""
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
-    * {{ margin:0; padding:0; box-sizing:border-box; font-family:'Inter',sans-serif; }}
+    * {{ margin:0; padding:0; box-sizing:border-box; font-family:'Inter',sans-serif; margin-bottom:10px}}
     body {{ background:#0d0d0d; padding: 12px 32px; }}
     .filter-bar {{
         display: flex;
