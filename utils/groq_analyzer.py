@@ -23,7 +23,7 @@ def get_ai_analysis(profile, local_market_skills):
     # ─── UPDATED TO ACTIVE MODEL STRING ───
     completion = client.chat.completions.create(
         messages=[{"role": "user", "content": prompt}],
-        model="llama-3.3-70b-specdec",  # High-performance, low-latency 70B successor
+        model="llama-3.3-70b-versatile",  # High-performance, low-latency 70B successor
         response_format={"type": "json_object"}
     )
     return json.loads(completion.choices[0].message.content)
