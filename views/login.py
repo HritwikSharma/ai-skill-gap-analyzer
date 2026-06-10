@@ -151,7 +151,7 @@ def render_login():
 
         # Tab tray — two columns inside a styled wrapper
         st.markdown('<div style="background:#16161f;border-radius:10px;padding:4px;display:flex;gap:0;">', unsafe_allow_html=True)
-        tab_l, tab_r = st.columns([1, 1], gap="small")
+        tab_l, tab_r = st.columns([1, 1], gap="xsmall")
 
         with tab_l:
             cls = "tab-active" if mode == "signin" else "tab-col"
