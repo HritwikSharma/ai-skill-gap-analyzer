@@ -561,22 +561,40 @@ def render_dashboard():
     #  TAB NAV (Native Segmented Control)
     # ─────────────────────────────────────────────
     # Use the existing session state value as the default index
+    # ══════════════════════════════════════════════
+    # ✅ REPLACE WITH THIS CENTERING FIX:
+    # ══════════════════════════════════════════════
     tab_options = ["listings", "market", "salary", "companies", "map"]
     default_index = tab_options.index(st.session_state["active_tab"])
+    
+    # Inject deep structural layout CSS to pull the outer row to the center
     st.markdown("""
         <style>
-        /* Target the native Streamlit segmented control container alignment */
-        div[data-testid="stSegmentedControl"] {
-            display: flex !important;
-            justify-content: center !important; /* Centers the tab controls row */
+        /* 1. Target the outer structural row container holding your tabs */
+        div[data-testid="stHorizontalBlock"]:has(div[data-testid="stSegmentedControl"]) {
+            justify-content: center !important; /* Pulls the entire element block into the center */
             width: 100% !important;
         }
-        /* Keep the inner buttons looking tightly balanced inside their track */
+        
+        /* 2. Strip Streamlit's default full-width stretching columns framework */
+        div[data-testid="stHorizontalBlock"]:has(div[data-testid="stSegmentedControl"]) > div {
+            flex: 0 1 auto !important;
+            min-width: unset !important;
+            max-width: unset !important;
+        }
+
+        /* 3. Ensure the inner segmented controls align perfectly balanced */
+        div[data-testid="stSegmentedControl"] {
+            display: flex !important;
+            justify-content: center !important;
+            width: 100% !important;
+        }
         div[data-testid="stSegmentedControl"] > div {
             justify-content: center !important;
         }
         </style>
     """, unsafe_allow_html=True)
+    
     # Render the native, fully-functional selector
     selected_tab = st.segmented_control(
         "Navigation",
