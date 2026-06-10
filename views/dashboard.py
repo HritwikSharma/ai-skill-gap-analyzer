@@ -561,69 +561,77 @@ def render_dashboard():
     #  TAB NAV (Native Segmented Control)
     # ─────────────────────────────────────────────
     # Use the existing session state value as the default index
-    tab_interaction = components.html(f"""
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    # ─────────────────────────────────────────────
+    #  TAB NAV (Styled Native Segmented Control) - FIXED
+    # ─────────────────────────────────────────────
+    # Custom CSS to style the native segmented control to match your dark theme design
+    st.markdown("""
     <style>
-    * {{ margin:0; padding:0; box-sizing:border-box; }}
-    body {{ background:#0d0d0d; display:flex; justify-content:center; padding: 10px 0; }}
-    .tab-bar {{
-        display: flex;
-        gap: 4px;
-        background: #111;
-        border: 1px solid #222;
-        border-radius: 10px;
-        padding: 4px;
-        width: fit-content;
-    }}
-    .tab-item {{
-        padding: 8px 16px;
-        color: #94a3b8;
-        border-radius: 7px;
-        font-size: 0.85rem;
-        font-weight: 500;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        user-select: none;
-        white-space: nowrap;
-    }}
-    .tab-item:hover {{ color: #ffffff; background: rgba(255,255,255,0.03); }}
-    .tab-item.active {{
-        color: #3b82f6;
-        background: #1e293b;
-        box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
-        font-weight: 600;
-    }}
+    /* Target the container of the segmented control */
+    div[data-testid="stSegmentedControl"] {
+        display: flex !important;
+        justify-content: center !important;
+        background-color: #111111 !important;
+        border: 1px solid #222222 !important;
+        border-radius: 12px !important;
+        padding: 4px !important;
+        gap: 4px !important;
+        max-width: fit-content !important;
+        margin: 10px auto 20px auto !important;
+    }
+    /* Style unselected tabs */
+    div[data-testid="stSegmentedControl"] button {
+        background: transparent !important;
+        border: none !important;
+        color: #888888 !important;
+        padding: 8px 16px !important;
+        font-size: 0.85rem !important;
+        font-weight: 500 !important;
+        font-family: 'Inter', sans-serif !important;
+        border-radius: 8px !important;
+        transition: all 0.15s ease !important;
+    }
+    /* Hover tab states */
+    div[data-testid="stSegmentedControl"] button:hover {
+        color: #e0e0e0 !important;
+        background: rgba(255,255,255,0.02) !important;
+    }
+    /* Active selected tab state styling */
+    div[data-testid="stSegmentedControl"] button[aria-checked="true"] {
+        color: #3b82f6 !important;
+        background: #1a1a1a !important;
+        font-weight: 600 !important;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.4) !important;
+    }
     </style>
-    <div class="tab-bar" id="tabbar"></div>
-    <script>
-    const tabs = [
-        {{ id: 'listings',    text: '📋 Job Listings' }},
-        {{ id: 'market',      text: '📊 Market Overview' }},
-        {{ id: 'salary',      text: '💰 Salary Insights' }},
-        {{ id: 'companies',   text: '🏢 Companies' }},
-        {{ id: 'map',         text: '🗺️ Heat Map' }},
-        {{ id: 'ai_analyzer', text: '🎯 AI Skill Analyzer' }},
-    ];
-    const activeTab = "{st.session_state['active_tab']}";
-    const bar = document.getElementById('tabbar');
-    tabs.forEach(tab => {{
-        const el = document.createElement('div');
-        el.className = 'tab-item' + (tab.id === activeTab ? ' active' : '');
-        el.innerText = tab.text;
-        el.onclick = () => {{
-            window.parent.postMessage({{ type: 'streamlit:setComponentValue', value: tab.id }}, '*');
-        }};
-        bar.appendChild(el);
-    }});
-    </script>
-    """, height=58)
+    """, unsafe_allow_html=True)
 
-    if tab_interaction and tab_interaction != st.session_state["active_tab"]:
-        st.session_state["active_tab"] = tab_interaction
-        st.rerun()
+    # 1. Internal clean text keys that match your subsequent if/elif condition statements
+    tab_options = ["listings", "market", "salary", "companies", "map", "ai_analyzer"]
 
-    active = st.session_state["active_tab"]
-    
+    # 2. Display labels mapped to each clean string option key
+    tab_labels = {
+        "listings": "📋 Job Listings",
+        "market": "📊 Market Overview",
+        "salary": "💰 Salary Insights",
+        "companies": "🏢 Companies",
+        "map": "🗺️ Heat Map",
+        "ai_analyzer": "🎯 AI Skill Analyzer"
+    }
+
+    # 3. Render native segmented control using keys internally and showing labels on screen
+    active = st.segmented_control(
+        "Navigation",
+        options=tab_options,
+        default="listings",
+        format_func=lambda x: tab_labels[x],
+        label_visibility="collapsed",
+        selection_mode="single"
+    )
+
+    # 4. Fallback handler: if a user clicks an already active tab to clear selection, default back to listings
+    if not active:
+        active = "listings"    
     # ─────────────────────────────────────────────
     #  CONTENT AREA WRAPPER (shared padding)
     # ─────────────────────────────────────────────
