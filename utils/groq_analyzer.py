@@ -2,9 +2,9 @@ import json
 from groq import Groq
 
 def get_ai_analysis(profile, local_market_skills):
+    # Highly recommended: Move this hardcoded string to st.secrets["groq"]["api_key"] later!
     client = Groq(api_key="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")
     
-    # We pass both: what we know (local) and the task to expand (global)
     prompt = f"""
     You are a Global Technical Market Researcher. 
     1. User Profile: {json.dumps(profile)}
@@ -20,9 +20,10 @@ def get_ai_analysis(profile, local_market_skills):
         "skill_inventory": {{"skill_name": "difficulty_level"}}.
     """
     
+    # ─── UPDATED TO ACTIVE MODEL STRING ───
     completion = client.chat.completions.create(
         messages=[{"role": "user", "content": prompt}],
-        model="llama3-70b-8192",
+        model="llama-3.3-70b-specdec",  # High-performance, low-latency 70B successor
         response_format={"type": "json_object"}
     )
     return json.loads(completion.choices[0].message.content)
