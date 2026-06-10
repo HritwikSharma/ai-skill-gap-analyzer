@@ -1022,10 +1022,9 @@ def render_dashboard():
                 </div>
             """, unsafe_allow_html=True)
             
-            # --- ✅ FIXED: Extracting STRICTLY UNIQUE sorted roles ---
+            # --- Extract Unique Sorted Roles from Database ---
             available_roles = []
             if not fdf.empty and "title" in fdf.columns:
-                # Use set() to strip duplicate strings instantly and capitalize properly to avoid casing variations
                 raw_unique_roles = set(str(r).strip() for r in fdf["title"].dropna() if str(r).strip())
                 available_roles = sorted(list(raw_unique_roles))
             
@@ -1034,9 +1033,6 @@ def render_dashboard():
             for role in fallback_roles:
                 if role not in available_roles:
                     available_roles.append(role)
-            
-            # Add a dedicated choice at the top to clear the path for manual inputs
-            available_roles.insert(0, "✨ Type my own custom role...")
 
             # Custom styled input layout grouping wrapper
             with st.container():
@@ -1060,26 +1056,32 @@ def render_dashboard():
                     col_form_left, col_form_right = st.columns(2)
                     
                     with col_form_left:
-                        # 1. Target Role configuration option picker dropdown menu
-                        selected_role_option = st.selectbox(
-                            "Target Career Objective / Role",
-                            options=available_roles,
-                            index=1 if len(available_roles) > 1 else 0,
-                            help="Choose from unique live roles scraped from your database or select 'Type my own custom role...' below."
+                        # 1. Profile Mode Selection (Separates Dropdown vs Manual Entry cleanly to avoid resetting)
+                        role_mode = st.radio(
+                            "How would you like to specify your Target Role?",
+                            options=["Choose from live market jobs", "Type a custom target role"],
+                            horizontal=True
                         )
                         
-                        # 2. ✅ FIXED: Direct layout conditional string text field box for entering unlisted roles
-                        custom_role_input = ""
-                        if selected_role_option == "✨ Type my own custom role...":
-                            custom_role_input = st.text_input(
-                                "Enter your custom target role:",
-                                placeholder="e.g., MLOps Engineer, Cloud Security Architect, GenAI Developer"
+                        final_target_role = ""
+                        
+                        if role_mode == "Choose from live market jobs":
+                            selected_role_option = st.selectbox(
+                                "Select Target Role",
+                                options=available_roles,
+                                index=0,
+                                help="Choose from unique live roles scraped from your database."
                             )
+                            final_target_role = selected_role_option
+                        else:
+                            custom_role_input = st.text_input(
+                                "Type your custom target role",
+                                placeholder="e.g., MLOps Engineer, Cloud Architect, GenAI Specialist",
+                                help="Type any custom career objective title here without interruption."
+                            )
+                            final_target_role = custom_role_input
                         
-                        # Final compiled string variable assigning prioritizations
-                        final_target_role = custom_role_input.strip() if selected_role_option == "✨ Type my own custom role..." else selected_role_option
-                        
-                        # 3. Dropdown Experience level configuration replacing the slider UI component
+                        # 2. Dropdown Experience level configuration
                         exp_level = st.selectbox(
                             "Current Professional Experience Level",
                             options=[
@@ -1091,7 +1093,7 @@ def render_dashboard():
                             index=0
                         )
                         
-                        # 4. Preferred Employment Hub Location
+                        # 3. Preferred Employment Hub Location
                         preferred_city = st.text_input(
                             "Target Job Market / City Preference",
                             placeholder="e.g., Bengaluru, Hyderabad, Mumbai, Remote",
@@ -1099,31 +1101,6 @@ def render_dashboard():
                         )
 
                     with col_form_right:
-                        # 5. Technical Languages input field
-                        skills_input = st.text_input(
-                            "Core Programming Languages & Frameworks",
-                            placeholder="e.g., Python, SQL, Git, FastAPI, React",
-                            help="Separate your items explicitly using a comma."
-                        )
-                        
-                        # 6. Engineering Infrastructure tooling layout fields
-                        tools_input = st.text_input(
-                            "Cloud Frameworks, System Infrastructures & Databases",
-                            placeholder="e.g., AWS, Docker, PostgreSQL, Kubernetes, Tableau",
-                            help="Separate your items explicitly using a comma."
-                        )
-                        
-                        # 7. Education background profile classification
-                        edu_background = st.selectbox(
-                            "Highest Educational Qualification Track",
-                            options=["B.E. / B.Tech / M.Tech (Computer Science/IT)", "Non-CS Engineering Background", "BCA / MCA / BSc IT", "Self-Taught / Bootcamp Graduate", "Other Degree Framework"],
-                            index=0
-                        )
-                    
-                    st.write("") # Structural Spacer line
-                    
-                    # Centered action form controller trigger matching corporate branding colors
-                    submit_profile = st.form_submit_button("🚀 Compile My AI Strategy Profile", use_container_width=True)
                     
                     if submit_profile:
                         if selected_role_option == "✨ Type my own custom role..." and not final_target_role:
