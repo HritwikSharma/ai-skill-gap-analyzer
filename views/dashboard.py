@@ -633,7 +633,89 @@ def render_dashboard():
         )
     
         # Build all job cards as one HTML block
-        cards_html = []
+        # ──────────────────────────────────────────────────────────
+        # NATIVE CARD RENDERING BLOCK HERE:
+        # ──────────────────────────────────────────────────────────
+        # Inject CSS rules to style our native layout stream cards
+        st.markdown("""
+            <style>
+            .native-job-card {
+                background: #111111;
+                border: 1px solid transparent;
+                border-radius: 12px;
+                padding: 18px 20px;
+                margin-bottom: 12px;
+                width: 100%;
+                box-sizing: border-box;
+                transition: border-color 0.15s ease;
+            }
+            .native-job-card:hover {
+                border-color: #2a4a7f;
+            }
+            .job-title {
+                font-size: 1rem;
+                font-weight: 600;
+                color: #3b82f6;
+                margin-bottom: 3px;
+            }
+            .job-title a {
+                color: #3b82f6;
+                text-decoration: none;
+            }
+            .job-title a:hover {
+                text-decoration: underline;
+            }
+            .company {
+                font-size: 0.88rem;
+                font-weight: 500;
+                color: #e0e0e0;
+                margin-bottom: 3px;
+            }
+            .meta {
+                font-size: 0.78rem;
+                color: #555;
+                margin-bottom: 10px;
+            }
+            .pills {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 6px;
+                margin-bottom: 12px;
+            }
+            .skill {
+                background: #1a2744;
+                color: #3b82f6;
+                font-size: 0.68rem;
+                font-weight: 600;
+                padding: 3px 9px;
+                border-radius: 20px;
+                letter-spacing: 0.02em;
+            }
+            .badge {
+                font-size: 0.68rem;
+                font-weight: 600;
+                padding: 3px 9px;
+                border-radius: 20px;
+            }
+            .badge.green { background:#0d2e1e; color:#10b981; }
+            .badge.amber { background:#2d1e0d; color:#f59e0b; }
+            .apply {
+                display: inline-block;
+                background: #1a2744;
+                color: #3b82f6;
+                font-size: 0.78rem;
+                font-weight: 600;
+                padding: 6px 16px;
+                border-radius: 8px;
+                text-decoration: none;
+                transition: background 0.15s;
+                border: 1px solid #2a3f6f;
+            }
+            .apply:hover { background: #243560; }
+            </style>
+        """, unsafe_allow_html=True)
+
+        # Loop and mount elements onto the main Streamlit layout canvas container
         for _, row in page_df.iterrows():
             title   = _html.escape(str(row.get("title") or "Untitled"))
             company = _html.escape(str(row.get("company") or "Unknown Company"))
@@ -643,113 +725,33 @@ def render_dashboard():
             exp     = str(row.get("experience_level") or "")
             posted  = str(row.get("posted_date") or "")[:10]
             raw_url = str(row.get("job_url") or "")
+          
             _m      = _re.search(r'https?://[^\s"\'<>]+', raw_url)
             safe_url = _html.escape(_m.group(0), quote=True) if _m else ""
-    
-            skills_html = "".join(
-                f'<span class="skill">{_html.escape(str(s))}</span>'
-                for s in (skills[:6] if isinstance(skills, list) else [])
-            )
+
+            skills_html = "".join(f'<span class="skill">{_html.escape(str(s))}</span>' for s in (skills[:6] if isinstance(skills, list) else []))
             meta_parts = [loc, posted] if (posted and posted != "None") else [loc]
             meta_html  = " · ".join(f for f in meta_parts if f)
-    
+
             badges = ""
             if sal and sal not in ("Not disclosed","Not Specified","None","nan"):
                 badges += f'<span class="badge green">{_html.escape(sal)}</span>'
             if exp and exp not in ("Not specified","None","nan"):
                 badges += f'<span class="badge amber">{_html.escape(exp)}</span>'
-    
+
             apply_btn = f'<a class="apply" href="{safe_url}" target="_blank">View & Apply ↗</a>' if safe_url else ""
-            title_linked = f'<a href="{safe_url}" target="_blank" style="color:#3b82f6;text-decoration:none;">{title}</a>' if safe_url else title
-    
-            cards_html.append(f"""
-            <div class="card">
+            title_linked = f'<a href="{safe_url}" target="_blank">{title}</a>' if safe_url else title
+
+            st.markdown(f"""
+            <div class="native-job-card">
                 <div class="job-title">{title_linked}</div>
                 <div class="company">{company}</div>
                 <div class="meta">{meta_html}</div>
                 <div class="pills">{badges}{skills_html}</div>
                 {apply_btn}
             </div>
-            """)
-    
-        full_cards = "\n".join(cards_html)
-    
-        components.html(f"""
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    <style>
-    * {{ margin:0; padding:0; box-sizing:border-box; font-family:'Inter',sans-serif; }}
-    body {{ background:#0d0d0d; overflow-x: hidden; padding-right: 4px;}}
-    .card {{
-        background: #111;
-        border: 1px solid transparent;
-        border-radius: 12px;
-        padding: 18px 20px;
-        margin-bottom: 10px;
-        transition: border-color 0.15s, transform 0.15s;
-        width: 100% !important;
-        box-sizing:border-box !important;
-        transition: border-color 0.15s ease;
-    }}
-    .card:hover {{
-        border-color: #2a4a7f;
-    }}
-    .job-title {{
-        font-size: 1rem;
-        font-weight: 600;
-        color: #3b82f6;
-        margin-bottom: 3px;
-    }}
-    .job-title a:hover {{ text-decoration: underline !important; }}
-    .company {{
-        font-size: 0.88rem;
-        font-weight: 500;
-        color: #e0e0e0;
-        margin-bottom: 3px;
-    }}
-    .meta {{
-        font-size: 0.78rem;
-        color: #555;
-        margin-bottom: 10px;
-    }}
-    .pills {{
-        display: flex;
-        flex-wrap: wrap;
-        gap: 6px;
-        margin-bottom: 12px;
-    }}
-    .skill {{
-        background: #1a2744;
-        color: #3b82f6;
-        font-size: 0.68rem;
-        font-weight: 600;
-        padding: 3px 9px;
-        border-radius: 20px;
-        letter-spacing: 0.02em;
-    }}
-    .badge {{
-        font-size: 0.68rem;
-        font-weight: 600;
-        padding: 3px 9px;
-        border-radius: 20px;
-    }}
-    .badge.green {{ background:#0d2e1e; color:#10b981; }}
-    .badge.amber {{ background:#2d1e0d; color:#f59e0b; }}
-    .apply {{
-        display: inline-block;
-        background: #1a2744;
-        color: #3b82f6;
-        font-size: 0.78rem;
-        font-weight: 600;
-        padding: 6px 16px;
-        border-radius: 8px;
-        text-decoration: none;
-        transition: background 0.15s;
-        border: 1px solid #2a3f6f;
-    }}
-    .apply:hover {{ background: #243560; text-decoration: none; }}
-    </style>
-    {full_cards}
-    """, height=min(len(page_df) * 160, 3200), scrolling=True)
+            """, unsafe_allow_html=True)
+        # ──────────────────────────────────────────────────────────
     
         # Pagination (keep as Streamlit buttons — they're functional and hidden-styled above)
         MAX_VISIBLE = 9
