@@ -33,7 +33,7 @@ def render_login():
     }
     #MainMenu, footer, header { visibility: hidden; }
     [data-testid="stVerticalBlock"] > div { gap: 0 !important; }
-    div[data-testid="stColumn"] { background: #0d0d14 !important; padding: 0 2px !important; }
+    div[data-testid="stColumn"] { background: #0d0d14 !important; padding: 0 !important !important; }
     [data-testid="stMainBlockContainer"] { padding-top: 60px !important; }
 
     /* inputs */
