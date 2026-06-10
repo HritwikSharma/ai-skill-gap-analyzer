@@ -145,7 +145,7 @@ def render_login():
         </div>
 
         <!-- Tab tray background -->
-        <div style="background:#16161f;border-radius:10px;padding:4px;margin-bottom:6px;display:flex;gap:4px;" id="tab-tray">
+        <div style="background:#16161f;border-radius:10px;padding:4px;margin-bottom:2px;display:flex;gap:4px;" id="tab-tray">
         </div>
         """, unsafe_allow_html=True)
 
