@@ -596,18 +596,12 @@ def render_dashboard():
         /* 4. Center-align internal tracking rows inside the segmented control component */
         div[data-testid="stSegmentedControl"] {
             display: flex !important;
-            justify-content: center !important;
-            align-items: center !important;
             width: auto !important;
-            margin: 0 auto !important;
             margin-left: 50px !important;
         }
         div[data-testid="stSegmentedControl"] > div {
             display: flex !important;
-            justify-content: center !important;
-            align-items: center !important;
             width: auto !important;
-            margin: 0 auto !important;
             margin-left: 50px !important;
         }
         </style>
