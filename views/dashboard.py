@@ -215,57 +215,90 @@ def render_dashboard():
     # ─────────────────────────────────────────────
     #  TAB NAV BAR (SYNCED WITH AI VIEWPORT CONTROLLER)
     # ─────────────────────────────────────────────
-    nav_interaction = components.html(f"""
-    <!DOCTYPE html>
-    <html>
-    <head>
+    # ─────────────────────────────────────────────
+    #  TOP NAV BAR — TalentPulse + Sign Out
+    # ─────────────────────────────────────────────
+    nav_interaction = components.html("""
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@600;700&display=swap" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
-        body {{ margin: 0; padding: 0; background-color: transparent; font-family: 'Inter', sans-serif; }}
-        .nav-container {{
-            display: flex; gap: 4px; background-color: #0b0f19;
-            padding: 4px; border-radius: 10px; border: 1px solid #1e293b;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.4); width: fit-content; margin: 0 auto;
-        }}
-        .nav-item {{
-            padding: 8px 16px; color: #94a3b8; border-radius: 7px;
-            font-size: 0.85rem; font-weight: 500; cursor: pointer;
-            transition: all 0.2s ease; user-select: none; text-decoration: none;
-        }}
-        .nav-item:hover {{ color: #ffffff; background-color: rgba(255,255,255,0.03); }}
-        .nav-item.active {{
-            color: #3b82f6; background-color: #1e293b;
-            box-shadow: inset 0 1px 0 rgba(255,255,255,0.05); font-weight: 600;
-        }}
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { background:#0d0d0d; }
+    .nav {
+        width: 100%;
+        background: #111;
+        border-bottom: 1px solid #222;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 32px;
+        height: 56px;
+        position: sticky;
+        top: 0;
+    }
+    .logo {
+        font-family: 'Sora', sans-serif;
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: #3b82f6;
+        letter-spacing: -0.03em;
+    }
+    .logo span { color: #e0e0e0; font-weight: 400; }
+    .tag {
+        font-size: 0.7rem;
+        font-weight: 600;
+        color: #555;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+    }
+    .live-dot {
+        display: inline-block;
+        width: 7px; height: 7px;
+        border-radius: 50%;
+        background: #10b981;
+        margin-right: 6px;
+        animation: pulse 2s infinite;
+    }
+    .signout-btn {
+        background: transparent;
+        color: #aaa;
+        border: 1px solid #2a2a2a;
+        border-radius: 6px;
+        padding: 6px 12px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        font-family: 'Inter', sans-serif;
+        cursor: pointer;
+        transition: all 0.15s ease;
+    }
+    .signout-btn:hover {
+        color: #ef4444;
+        border-color: #ef4444;
+        background: rgba(239, 68, 68, 0.05);
+    }
+    @keyframes pulse {
+        0%,100% { opacity:1; }
+        50% { opacity:0.4; }
+    }
     </style>
-    </head>
-    <body>
-    <div class="nav-container" id="navbar"></div>
+    <div class="nav">
+        <div class="logo">TalentPulse <span>India</span></div>
+        <div style="display:flex;align-items:center;gap:20px;">
+            <div class="tag"><span class="live-dot"></span>Live Tech Market Intelligence</div>
+            <button class="signout-btn" onclick="logout()">Sign out</button>
+        </div>
+    </div>
     <script>
-        const links = [
-            {{ id: 'listings', text: '📋 Job Listings' }},
-            {{ id: 'market', text: '📊 Market Overview' }},
-            {{ id: 'salary', text: '💰 Salary Insights' }},
-            {{ id: 'companies', text: '🏢 Companies' }},
-            {{ id: 'map', text: '🗺️ Heat Map' }},
-            {{ id: 'ai_analyzer', text: '🎯 AI Analyzer' }} // ✅ FIXED: Link registered in HTML frame
-        ];
-        const activeTab = "{st.session_state["active_tab"]}";
-        const container = document.getElementById('navbar');
-        
-        links.forEach(link => {{
-            const div = document.createElement('div');
-            div.className = 'nav-item' + (link.id === activeTab ? ' active' : '');
-            div.innerText = link.text;
-            div.onclick = () => {{
-                window.parent.postMessage({{ type: 'streamlit:tab_change', value: link.id }}, '*');
-            }};
-            container.appendChild(div);
-        }});
+    function logout() {
+        window.parent.postMessage({
+            type: 'streamlit:setComponentValue',
+            value: 'trigger_logout'
+        }, '*');
+    }
     </script>
-    </body>
-    </html>
-    """, height=58)
+    """, height=58, scrolling=False)
+
+    if nav_interaction == "trigger_logout":
+        st.logout()
 
     # Catch the HTML click event inside Streamlit and execute the session kill
     if nav_interaction == "trigger_logout":
@@ -538,74 +571,67 @@ def render_dashboard():
     #  TAB NAV (Native Segmented Control)
     # ─────────────────────────────────────────────
     # Use the existing session state value as the default index
-    tab_options = ["listings", "market", "salary", "companies", "map","ai_analyzer"]
-    default_index = tab_options.index(st.session_state["active_tab"])
-    
-    # Injected absolute layout overriding rules targeting global canvas paths
-    st.markdown("""
-        <style>
-        /* 1. Target the outermost container element for the segmented control */
-        div.element-container:has(div[data-testid="stSegmentedControl"]) {
-            display: grid !important;
-            justify-content: center !important;
-            align-items: center !important;
-            width: 100% !important;
-            margin: 10px auto !important; /* Forces vertical spacing and absolute center */
-        }
-        
-        /* 2. Target the block container to stop it from sticking left */
-        div[data-testid="stHorizontalBlock"]:has(div[data-testid="stSegmentedControl"]) {
-            display: grid !important;
-            justify-content: center !important;
-            width: 100% !important;
-            margin: 0 auto !important;
-        }
-        
-        /* 3. Collapse width constraints so it wraps cleanly around button sizes */
-        div[data-testid="stHorizontalBlock"]:has(div[data-testid="stSegmentedControl"]) > div {
-            flex: 0 1 auto !important;
-            min-width: unset !important;
-            max-width: unset !important;
-            width: auto !important;
-            margin: 0 auto !important;
-        }
+    tab_interaction = components.html(f"""
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+    * {{ margin:0; padding:0; box-sizing:border-box; }}
+    body {{ background:#0d0d0d; display:flex; justify-content:center; padding: 10px 0; }}
+    .tab-bar {{
+        display: flex;
+        gap: 4px;
+        background: #111;
+        border: 1px solid #222;
+        border-radius: 10px;
+        padding: 4px;
+        width: fit-content;
+    }}
+    .tab-item {{
+        padding: 8px 16px;
+        color: #94a3b8;
+        border-radius: 7px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        user-select: none;
+        white-space: nowrap;
+    }}
+    .tab-item:hover {{ color: #ffffff; background: rgba(255,255,255,0.03); }}
+    .tab-item.active {{
+        color: #3b82f6;
+        background: #1e293b;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
+        font-weight: 600;
+    }}
+    </style>
+    <div class="tab-bar" id="tabbar"></div>
+    <script>
+    const tabs = [
+        {{ id: 'listings',    text: '📋 Job Listings' }},
+        {{ id: 'market',      text: '📊 Market Overview' }},
+        {{ id: 'salary',      text: '💰 Salary Insights' }},
+        {{ id: 'companies',   text: '🏢 Companies' }},
+        {{ id: 'map',         text: '🗺️ Heat Map' }},
+        {{ id: 'ai_analyzer', text: '🎯 AI Skill Analyzer' }},
+    ];
+    const activeTab = "{st.session_state['active_tab']}";
+    const bar = document.getElementById('tabbar');
+    tabs.forEach(tab => {{
+        const el = document.createElement('div');
+        el.className = 'tab-item' + (tab.id === activeTab ? ' active' : '');
+        el.innerText = tab.text;
+        el.onclick = () => {{
+            window.parent.postMessage({{ type: 'streamlit:setComponentValue', value: tab.id }}, '*');
+        }};
+        bar.appendChild(el);
+    }});
+    </script>
+    """, height=58, key="tab_nav")
 
-        /* 4. Center-align internal tracking rows inside the segmented control component */
-        div[data-testid="stSegmentedControl"] {
-            display: flex !important;
-            width: auto !important;
-            margin-left: 50px !important;
-        }
-        div[data-testid="stSegmentedControl"] > div {
-            display: flex !important;
-            width: auto !important;
-            margin-left: 50px !important;
-        }
-        </style>
-    """, unsafe_allow_html=True)
-    
-    # Render the native, fully-functional selector
-    selected_tab = st.segmented_control(
-        "Navigation",
-        options=tab_options,
-        default=st.session_state["active_tab"],
-        format_func=lambda x: {
-            "listings": "📋 Job Listings",
-            "market": "📊 Market Overview",
-            "salary": "💰 Salary Insights",
-            "companies": "🏢 Companies",
-            "map": "🗺️ Heat Map",
-            "ai_analyzer": "🎯 AI Skill Analyzer"
-        }[x],
-        label_visibility="collapsed"
-    )
-    
-    # React instantly to user interaction without breaking the layout
-    if selected_tab and selected_tab != st.session_state["active_tab"]:
-        st.session_state["active_tab"] = selected_tab
+    if tab_interaction and tab_interaction != st.session_state["active_tab"]:
+        st.session_state["active_tab"] = tab_interaction
         st.rerun()
-    
-    # Re-assign the active pointer variable used by the downstream IF/ELIF statements
+
     active = st.session_state["active_tab"]
     
     # ─────────────────────────────────────────────
