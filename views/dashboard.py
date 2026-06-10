@@ -879,33 +879,41 @@ def render_dashboard():
                 # Force browser view to reload view context to the top via query param mutation
                 st.query_params["p"] = str(st.session_state["listing_page"])
                 st.rerun()
-        st.write("") # Clear formatting spacing
+        st.write("") # Layout spacer row
 
-        # Use an independent execution block to target the outer root canvas
-        if st.button("▲ Back to Top", key="app_scroll_top_trigger", use_container_width=True):
-            components.html(
-                """
-                <script>
-                // This targets the main top window frame directly above the Streamlit iframe sandbox
-                const rootMainApp = window.parent.document.querySelector('.main') || window.parent.document.querySelector('[data-testid="stAppViewContainer"]');
-                if (rootMainApp) {
-                    rootMainApp.scrollTo({top: 0, behavior: 'auto'});
-                } else {
-                    window.parent.scrollTo({top: 0, behavior: 'auto'});
-                }
-                </script>
-                """,
-                height=0
-            )
-            
-            # Use native submit action to refresh form visibility metrics 
-            submit_scroll = st.form_submit_button(label="▲ Back to Top")
-            
-            if submit_scroll:
-                # Triggering a query parameter alteration forces the viewport layout to initialize fresh from point (0,0)
-                st.query_params["top"] = "true"
-                st.rerun()
-    
+        # Custom CSS styling applied directly to a standard native button wrapper
+        st.markdown("""
+            <style>
+            div[data-testid="stMainBlockContainer"] div.stButton > button {
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                margin: 24px auto 10px !important;
+                width: 150px !important;
+                height: 38px !important;
+                background-color: #1a2744 !important;
+                color: #3b82f6 !important;
+                border: 1px solid #2a3f6f !important;
+                border-radius: 8px !important;
+                font-family: 'Inter', sans-serif !important;
+                font-size: 0.8rem !important;
+                font-weight: 600 !important;
+                transition: background-color 0.15s ease, border-color 0.15s ease !important;
+            }
+            div[data-testid="stMainBlockContainer"] div.stButton > button:hover {
+                background-color: #243560 !important;
+                border-color: #3b82f6 !important;
+                color: #67e8f9 !important;
+            }
+            </style>
+        """, unsafe_allow_html=True)
+
+        # Render a normal, clean native button that toggles an isolated sidebar state to trick the DOM engine
+        if st.button("▲ Back to Top", key="main_scroll_top_action"):
+            with st.sidebar:
+                # Modifying a secondary layout canvas clears the focus tracking window of the parent container frame
+                st.empty()
+            st.rerun()    
     # ══════════════════════════════════════════════
     #  TAB: MARKET OVERVIEW
     # ══════════════════════════════════════════════
