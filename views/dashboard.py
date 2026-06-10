@@ -239,46 +239,6 @@ def render_dashboard():
         }}
     </style>
     </head>
-    <body>
-    <div class="nav-container" id="navbar"></div>
-    <script>
-        const links = [
-            {{ id: 'listings', text: '📋 Job Listings' }},
-            {{ id: 'market', text: '📊 Market Overview' }},
-            {{ id: 'salary', text: '💰 Salary Insights' }},
-            {{ id: 'companies', text: '🏢 Companies' }},
-            {{ id: 'map', text: '🗺️ Heat Map' }},
-            {{ id: 'ai_analyzer', text: '🎯 AI Analyzer' }} // ✅ FIXED: Link registered in HTML frame
-        ];
-        const activeTab = "{st.session_state["active_tab"]}";
-        const container = document.getElementById('navbar');
-        
-        links.forEach(link => {{
-            const div = document.createElement('div');
-            div.className = 'nav-item' + (link.id === activeTab ? ' active' : '');
-            div.innerText = link.text;
-            div.onclick = () => {{
-                window.parent.postMessage({{ type: 'streamlit:tab_change', value: link.id }}, '*');
-            }};
-            container.appendChild(div);
-        }});
-    </script>
-    </body>
-    </html>
-    """, height=58)
-
-    # Catch the HTML click event inside Streamlit and execute the session kill
-    if nav_interaction == "trigger_logout":
-        st.logout()    
-    
-    # Apply filters to dataframe
-    fdf = df.copy()
-    if st.session_state["filter_role"] != "All Roles":
-        fdf = fdf[fdf["title_clean"] == st.session_state["filter_role"]]
-    if st.session_state["filter_loc"] != "All Locations":
-        fdf = fdf[fdf["location"] == st.session_state["filter_loc"]]
-    if st.session_state["filter_exp"] != "All Experience":
-        fdf = fdf[fdf["experience_level"] == st.session_state["filter_exp"]]
     
     # ─────────────────────────────────────────────
     #  KPI CARDS (pure HTML)
@@ -374,7 +334,7 @@ def render_dashboard():
         </div>
     </div>
     """, height=164, scrolling=False)
-        # ─────────────────────────────────────────────
+    # ─────────────────────────────────────────────
     #  FILTER BAR (pure HTML + postMessage back to Streamlit)
     # ─────────────────────────────────────────────
     role_options = ["All Roles"] + sorted(df["title_clean"].dropna().unique().tolist())
