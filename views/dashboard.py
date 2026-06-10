@@ -179,6 +179,18 @@ def render_dashboard():
     df = extract_metadata_fields(df_raw.copy())
     df["experience_level"] = df["experience_level"].apply(normalise_exp)
     df["title_clean"] = df["title"].apply(clean_title)
+
+# ____________________    
+    fdf = df.copy()
+    if st.session_state.get("filter_role") and st.session_state["filter_role"] != "All Roles":
+        fdf = fdf[fdf["title_clean"] == st.session_state["filter_role"]] # Note: Using title_clean here to match your cleaned roles
+        
+    if st.session_state.get("filter_loc") and st.session_state["filter_loc"] != "All Locations":
+        fdf = fdf[fdf["location"] == st.session_state["filter_loc"]]
+        
+    if st.session_state.get("filter_exp") and st.session_state["filter_exp"] != "All Experience":
+        fdf = fdf[fdf["experience_level"] == st.session_state["filter_exp"]] # Note: Using experience_level here to match your normalized data
+    # ──────────────────────────────────────────────────────────
     
     # ─────────────────────────────────────────────
     #  SESSION STATE
@@ -461,20 +473,23 @@ def render_dashboard():
     }}
     </script>
     """    
-    # 1. Render the HTML component on the page and capture state transmissions
-    filter_interaction = components.html(filter_html, height=72, scrolling=False)
+   # ──────────────────────────────────────────────────────────
+    # ✅ PASTE THIS EXACT BLOCK RIGHT HERE:
+    # ──────────────────────────────────────────────────────────
+    # Render the single custom filter component
+    filter_interaction = components.html(filter_html, height=76, scrolling=False)
     
-    # 2. Check if an automatic drop-down change event came back
+    # Process the automatic dropdown selections
     if filter_interaction:
         try:
+            import json
             params = json.loads(filter_interaction)
             
-            # Verify if the new value is actually different from current session state
-            if (params["role"] != st.session_state["filter_role"] or 
-                params["loc"] != st.session_state["filter_loc"] or 
-                params["exp"] != st.session_state["filter_exp"]):
+            # If the user selected a new value, update state and rerun
+            if (params["role"] != st.session_state.get("filter_role") or 
+                params["loc"] != st.session_state.get("filter_loc") or 
+                params["exp"] != st.session_state.get("filter_exp")):
                 
-                # Update settings and page index back to 1
                 st.session_state["filter_role"] = params["role"]
                 st.session_state["filter_loc"] = params["loc"]
                 st.session_state["filter_exp"] = params["exp"]
@@ -482,8 +497,7 @@ def render_dashboard():
                 st.rerun()
         except Exception:
             pass
-            
-    components.html(filter_html, height=72, scrolling=False)
+    # ──────────────────────────────────────────────────────────
     
     # ─────────────────────────────────────────────
     #  TAB NAV (pure HTML — drives session state)
