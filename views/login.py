@@ -148,7 +148,7 @@ def render_login():
         """, unsafe_allow_html=True)
 
         # Tab tray — two columns inside a styled wrapper
-        st.markdown('<div style="background:#16161f;border-radius:10px;padding:4px;display:flex;gap:0;">', unsafe_allow_html=True)
+        st.markdown('<div style="background:transparent;padding:0;display:flex;gap:0;">', unsafe_allow_html=True)
         tab_l, tab_r = st.columns([1, 1], gap="xsmall")
 
         with tab_l:
