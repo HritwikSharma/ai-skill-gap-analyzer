@@ -1006,17 +1006,24 @@ def render_dashboard():
             fig = px.scatter_mapbox(
                 map_df, lat="lat", lon="lon",
                 size="openings", color="openings",
-                color_continuous_scale=[[0,"#1a2744"],[0.4,"#3b82f6"],[0.7,"#06b6d4"],[1,"#67e8f9"]],
-                size_max=55, zoom=4.0,
-                center={"lat":20.5937,"lon":78.9629},
+                # FIX 1: High-contrast neon scale (Deep Orange -> Hot Pink -> Bright Cyan/Teal)
+                color_continuous_scale=[[0,"#f43f5e"],[0.4,"#ec4899"],[0.7,"#06b6d4"],[1,"#10b981"]],
+                size_max=45, zoom=4.2, # Sightly adjusted max size so hubs don't overlap completely
+                center={"lat":21.5937,"lon":78.9629}, # Centered slightly north to account for height
                 mapbox_style="carto-darkmatter",
                 hover_name="city",
                 hover_data={"openings":True,"lat":False,"lon":False},
                 labels={"openings":"Open Positions"},
             )
             fig.update_layout(
+                template="plotly_dark", # FIX 2: Explicitly forces the chart wrapper engine into dark-mode rules
                 paper_bgcolor="rgba(0,0,0,0)",
                 margin={"r":0,"t":0,"l":0,"b":0}, height=580,
+                # FIX 3: Ensures map configuration properties load safely over container layers
+                mapbox=dict(
+                    bearing=0,
+                    pitch=0
+                ),
                 coloraxis_colorbar=dict(
                     title="Listings", thickness=14, len=0.6,
                     tickfont=dict(size=11, family="Inter,sans-serif", color="#aaa"),
