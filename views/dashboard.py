@@ -13,6 +13,25 @@ from utils.groq_analyzer import get_ai_analysis
 
 def render_dashboard():
     #st.title("TalentPulse Dashboard")
+    # 1. State setup
+    if "active_view" not in st.session_state:
+        st.session_state.active_view = "Dashboard"
+
+    # 2. Your NEW Navbar (Aligns top)
+    st.markdown("### TalentPulse") # This should now show up
+    c1, c2, c3 = st.columns(3)
+    if c1.button("Dashboard"): st.session_state.active_view = "Dashboard"; st.rerun()
+    if c2.button("Map"): st.session_state.active_view = "Map"; st.rerun()
+    if c3.button("AI Analyzer"): st.session_state.active_view = "AI Analyzer"; st.rerun()
+
+    # 3. BRIDGE: Instead of tabs, call the logic based on the state
+    if st.session_state.active_view == "Dashboard":
+        # Call the SAME function that you had inside tabs[0]
+        render_dashboard_content() 
+    elif st.session_state.active_view == "Map":
+        render_map_content()
+    elif st.session_state.active_view == "AI Analyzer":
+        render_ai_analyzer_content()
     # ─────────────────────────────────────────────
     #  DATABASE CREDENTIALS
     # ─────────────────────────────────────────────
