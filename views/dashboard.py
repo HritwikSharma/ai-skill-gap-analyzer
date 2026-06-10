@@ -75,6 +75,7 @@ def render_dashboard():
     @st.cache_data(ttl=300)
     def fetch_job_data():
         try:
+            # We use the clear hardcoded variables defined right above this block
             conn = psycopg2.connect(
                 host=DB_HOST,
                 user=DB_USER, 
