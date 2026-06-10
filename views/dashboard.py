@@ -401,7 +401,7 @@ def render_dashboard():
     filter_html = f"""
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
-    * {{ margin:0; padding:0; box-sizing:border-box; font-family:'Inter',sans-serif; margin-bottom:10px}}
+    * {{ margin:0; padding:0; box-sizing:border-box; font-family:'Inter',sans-serif; }}
     body {{ background:#0d0d0d; padding: 12px 32px; }}
     .filter-bar {{
         display: flex;
@@ -440,31 +440,17 @@ def render_dashboard():
     }}
     select:hover, select:focus {{ border-color: #3b82f6; }}
     select option {{ background: #1a1a1a; }}
-    .apply-btn {{
-        background: #3b82f6;
-        color: #fff;
-        border: none;
-        border-radius: 8px;
-        padding: 8px 20px;
-        font-size: 0.83rem;
-        font-weight: 600;
-        cursor: pointer;
-        white-space: nowrap;
-        transition: background 0.15s, transform 0.1s;
-        font-family: 'Inter', sans-serif;
-    }}
-    .apply-btn:hover {{ background: #2563eb; }}
-    .apply-btn:active {{ transform: scale(0.97); }}
     </style>
+    
     <div class="filter-bar">
         <span class="filter-label">Filter</span>
-        <select id="role">{opts_html(role_options, st.session_state["filter_role"])}</select>
-        <select id="loc">{opts_html(loc_options, st.session_state["filter_loc"])}</select>
-        <select id="exp">{opts_html(exp_options, st.session_state["filter_exp"])}</select>
-        <button class="apply-btn" onclick="applyFilters()">Apply</button>
+        <select id="role" onchange="dispatchFilters()">{opts_html(role_options, st.session_state["filter_role"])}</select>
+        <select id="loc" onchange="dispatchFilters()">{opts_html(loc_options, st.session_state["filter_loc"])}</select>
+        <select id="exp" onchange="dispatchFilters()">{opts_html(exp_options, st.session_state["filter_exp"])}</select>
     </div>
+    
     <script>
-    function applyFilters() {{
+    function dispatchFilters() {{
         const role = document.getElementById('role').value;
         const loc  = document.getElementById('loc').value;
         const exp  = document.getElementById('exp').value;
@@ -474,8 +460,29 @@ def render_dashboard():
         }}, '*');
     }}
     </script>
-    """
+    """    
+    # 1. Render the HTML component on the page and capture state transmissions
+    filter_interaction = components.html(filter_html, height=72, scrolling=False)
     
+    # 2. Check if an automatic drop-down change event came back
+    if filter_interaction:
+        try:
+            params = json.loads(filter_interaction)
+            
+            # Verify if the new value is actually different from current session state
+            if (params["role"] != st.session_state["filter_role"] or 
+                params["loc"] != st.session_state["filter_loc"] or 
+                params["exp"] != st.session_state["filter_exp"]):
+                
+                # Update settings and page index back to 1
+                st.session_state["filter_role"] = params["role"]
+                st.session_state["filter_loc"] = params["loc"]
+                st.session_state["filter_exp"] = params["exp"]
+                st.session_state["listing_page"] = 1
+                st.rerun()
+        except Exception:
+            pass
+            
     components.html(filter_html, height=72, scrolling=False)
     
     # ─────────────────────────────────────────────
