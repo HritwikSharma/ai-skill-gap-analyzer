@@ -852,7 +852,9 @@ def render_dashboard():
         # Back Arrow Button
         with cols[col_idx]:
             if st.button("‹", key="pg_prev", disabled=(page_num == 1)):
-                change_page(max(1, page_num - 1))
+                st.session_state["listing_page"] = max(1, page_num - 1)
+                # Force browser view to reload view context to the top via query param mutation
+                st.query_params["p"] = str(st.session_state["listing_page"])
                 st.rerun()
         col_idx += 1
 
@@ -864,14 +866,18 @@ def render_dashboard():
                     key=f"pg_{p}", 
                     type="primary" if p == page_num else "secondary"
                 ):
-                    change_page(p)
+                    st.session_state["listing_page"] = p
+                    # Force browser view to reload view context to the top via query param mutation
+                    st.query_params["p"] = str(p)
                     st.rerun()
             col_idx += 1
 
         # Forward Arrow Button
         with cols[col_idx]:
             if st.button("›", key="pg_next", disabled=(page_num == total_pages)):
-                change_page(min(total_pages, page_num + 1))
+                st.session_state["listing_page"] = min(total_pages, page_num + 1)
+                # Force browser view to reload view context to the top via query param mutation
+                st.query_params["p"] = str(st.session_state["listing_page"])
                 st.rerun()
     
     # ══════════════════════════════════════════════
