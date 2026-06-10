@@ -563,7 +563,20 @@ def render_dashboard():
     # Use the existing session state value as the default index
     tab_options = ["listings", "market", "salary", "companies", "map"]
     default_index = tab_options.index(st.session_state["active_tab"])
-    
+    st.markdown("""
+        <style>
+        /* Target the native Streamlit segmented control container alignment */
+        div[data-testid="stSegmentedControl"] {
+            display: flex !important;
+            justify-content: center !important; /* Centers the tab controls row */
+            width: 100% !important;
+        }
+        /* Keep the inner buttons looking tightly balanced inside their track */
+        div[data-testid="stSegmentedControl"] > div {
+            justify-content: center !important;
+        }
+        </style>
+    """, unsafe_allow_html=True)
     # Render the native, fully-functional selector
     selected_tab = st.segmented_control(
         "Navigation",
