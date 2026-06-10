@@ -1013,25 +1013,19 @@ def render_dashboard():
             
         if not st.session_state["user_profile_saved"]:
             st.markdown("""
-                <style>
-                /* Force form to occupy full width and prevent column-like side-by-side behavior */
-                div[data-testid="stForm"] {
-                    display: block !important;
-                    width: 100% !important;
-                    max-width: 800px !important;
-                    margin: 0 auto !important;
-                }
-                </style>
+                <div class='metric-card' style='margin-bottom: 25px;'>
+                    <h3 style='color: #67e8f9; margin-top:0;'>Setup Your Career Profile</h3>
+                    <p style='color: #94a3b8; font-size: 0.9rem;'>
+                        All fields are mandatory. Please complete your profile to unlock AI strategy metrics.
+                    </p>
+                </div>
             """, unsafe_allow_html=True)
 
-            # --- Unique Role Extraction ---
             available_roles = sorted(list(set(str(r).strip() for r in fdf["title"].dropna() if str(r).strip())))
             options = ["Select from Market Roles..."] + available_roles + ["✨ Add Custom Role..."]
 
             with st.form("onboarding_profile_form"):
-                st.subheader("Profile Details")
-                
-                # 1. Role Selection
+                # 1. Target Role Logic
                 selected_role = st.selectbox("🎯 Target Career Objective", options=options)
                 target_role = ""
                 if selected_role == "✨ Add Custom Role...":
@@ -1039,36 +1033,54 @@ def render_dashboard():
                 elif selected_role != "Select from Market Roles...":
                     target_role = selected_role
 
-                # 2. Experience (Dropdown)
+                # 2. Experience & Salary
                 exp_level = st.selectbox("💼 Professional Experience Level", [
                     "Student / Fresher", "Entry-Level (1-2 Years)", 
                     "Mid-Level (3-5 Years)", "Senior / Lead (5+ Years)"
                 ])
+                expected_salary = st.number_input("💰 Expected Annual Salary (INR)", min_value=0, step=50000)
+
+                # 3. Work History
+                work_history = st.text_input("🏢 Companies Worked At (comma separated, or N/A)", placeholder="e.g., Google, Amazon, N/A")
+
+                # 4. Education (Multiple Selection)
+                education = st.multiselect("🎓 Educational Background", [
+                    "B.E. / B.Tech", "M.Tech / M.S.", "BCA / MCA", 
+                    "BSc / MSc", "MBA", "Diploma", "Other"
+                ])
+
+                # 5. Typed Fields
+                skills_input = st.text_input("💻 Core Languages & Frameworks (comma separated)")
+                tools_input = st.text_input("🛠️ Cloud & Infrastructure (comma separated)")
+                certs_input = st.text_input("📜 Certifications (comma separated)")
                 
-                # 3. Typed Fields (Strictly Vertical)
-                skills_input = st.text_input("💻 Core Languages & Frameworks (use commas)")
-                tools_input = st.text_input("🛠️ Cloud & Infrastructure (use commas)")
-                preferred_city = st.text_input("📍 Preferred Job Location")
-                education = st.text_input("🎓 Educational Background")
+                # 6. Language Expertise
+                lang_input = st.text_input("🗣️ Languages Spoken", placeholder="e.g., English, Hindi")
+                lang_expertise = st.select_slider("Language Expertise Level", options=["Basic", "Conversational", "Fluent", "Native"])
                 
                 submit = st.form_submit_button("🚀 Generate AI Strategy", use_container_width=True)
                 
                 if submit:
-                    if target_role and skills_input and tools_input:
+                    # Mandatory validation check
+                    if not target_role or not skills_input or not tools_input or not work_history or not education:
+                        st.error("Please fill in ALL mandatory fields to proceed.")
+                    else:
                         st.session_state["profile_data"] = {
                             "role": target_role,
+                            "experience": exp_level,
+                            "salary": expected_salary,
+                            "work_history": [w.strip() for w in work_history.split(",")],
+                            "education": education,
                             "skills": [s.strip() for s in skills_input.split(",")],
                             "tools": [t.strip() for t in tools_input.split(",")],
-                            "experience": exp_level,
-                            "city": preferred_city,
-                            "education": education
+                            "certs": [c.strip() for c in certs_input.split(",")],
+                            "languages": {"lang": lang_input, "level": lang_expertise}
                         }
                         st.session_state["user_profile_saved"] = True
                         st.rerun()
-                    else:
-                        st.error("Please fill in the role, skills, and tools fields.")
         else:
-            st.success(f"Profile Active: {st.session_state['profile_data']['role']}")
+            # Dashboard View logic here...
+            st.success(f"Profile Active for: {st.session_state['profile_data']['role']}")
             if st.button("🔄 Reset Profile"):
                 st.session_state["user_profile_saved"] = False
                 st.rerun()    
