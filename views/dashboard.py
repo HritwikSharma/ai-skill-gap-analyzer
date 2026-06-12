@@ -42,11 +42,13 @@ def render_dashboard():
     }
     
     /* 1. CRITICAL: Force-collapse the header height to 0px and remove it from layout flow */
-    #MainMenu, footer, header, [data-testid="stHeader"] { 
+    /* 1. CRITICAL: Hide MainMenu and footer, but preserve header layer for sidebar toggles */
+    #MainMenu, footer { 
         display: none !important; 
-        height: 0px !important;
-        padding: 0 !important;
-        margin: 0 !important;
+    }
+    header, [data-testid="stHeader"] {
+        background: transparent !important;
+        pointer-events: none !important; /* Lets clicks pass through empty header space */
     }
     
     /* 2. Absolute guarantee that the main structural wrapper has zero top padding offset */
@@ -580,78 +582,32 @@ def render_dashboard():
     #  TAB NAV (Styled Native Segmented Control) - FIXED
     # ─────────────────────────────────────────────
     # Custom CSS to style the native segmented control to match your dark theme design
+    # ─────────────────────────────────────────────
+    #  SIDEBAR NAVIGATION INTERFACE
+    # ─────────────────────────────────────────────
     st.markdown("""
     <style>
-    /* Target the container of the segmented control */
-    div[data-testid="stSegmentedControl"] {
-        display: flex !important;
-        justify-content: center !important;
-        background-color: #111111 !important;
-        border: 1px solid #222222 !important;
-        border-radius: 12px !important;
-        padding: 4px !important;
-        gap: 4px !important;
-        max-width: fit-content !important;
-        margin: 10px auto 20px auto !important;
-    }
-    /* Style unselected tabs */
-    div[data-testid="stSegmentedControl"] button {
-        background: transparent !important;
-        border: none !important;
-        color: #888888 !important;
-        padding: 8px 16px !important;
-        font-size: 0.85rem !important;
-        font-weight: 500 !important;
-        font-family: 'Inter', sans-serif !important;
-        border-radius: 8px !important;
-        transition: all 0.15s ease !important;
-    }
-    /* Hover tab states */
-    div[data-testid="stSegmentedControl"] button:hover {
-        color: #e0e0e0 !important;
-        background: rgba(255,255,255,0.02) !important;
-    }
-    /* Active selected tab state styling */
-    div[data-testid="stSegmentedControl"] button[aria-checked="true"] {
-        color: #3b82f6 !important;
-        background: #1a1a1a !important;
-        font-weight: 600 !important;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.4) !important;
-    }
-    </style>
-    """, unsafe_allow_html=True)
-
-    # 1. Initialize session state to track data views
-    if "custom_active_tab" not in st.session_state:
-        st.session_state.custom_active_tab = "listings"
-
-    # 2. Inject CSS rules to style the sidebar panel and FORCE the toggle button to appear
-    st.markdown("""
-    <style>
-    /* ─── PUNCH THROUGH HIDDEN HEADER RULE TO SHOW SIDEBAR BUTTONS ─── */
-    header {
-        visibility: visible !important;
-        background: transparent !important;
-        pointer-events: none !important; /* Let clicks pass through empty header space */
-    }
-    
     header > div {
-        pointer-events: auto !important; /* Re-enable clicks specifically for icons */
+        pointer-events: auto !important; /* Re-enable pointer events for buttons only */
     }
 
-    /* Force the 3-line menu collapse/expand buttons to be visible and styled beautifully */
+    /* Force the 3-line menu collapse/expand buttons to be visible and float below top navbar */
     [data-testid="collapsedSidebarButton"],
     [data-testid="stSidebarCollapseButton"],
     button[aria-label="Open sidebar"],
     button[aria-label="Close sidebar"] {
         visibility: visible !important;
         display: flex !important;
+        position: fixed !important;
+        top: 72px !important; /* Shifts it safely below your 56px custom top navbar */
+        left: 16px !important;
         background: #141416 !important;
         border: 1px solid rgba(255, 255, 255, 0.1) !important;
         border-radius: 8px !important;
         color: #ffffff !important;
         box-shadow: 0 4px 12px rgba(0,0,0,0.5) !important;
         transition: all 0.2s ease-in-out !important;
+        z-index: 1000000 !important;
     }
 
     /* Hover effect for the menu toggle button */
@@ -661,13 +617,14 @@ def render_dashboard():
         border-color: #3b82f6 !important;
     }
 
-    /* ─── STYLE THE SIDEBAR DRAWER PANEL ─── */
+    /* Style the sidebar panel drawer background */
     [data-testid="stSidebar"] {
         background-color: #0e0e10 !important;
         border-right: 1px solid rgba(255, 255, 255, 0.06) !important;
+        z-index: 999998 !important;
     }
     
-    /* Convert buttons inside the sidebar into premium link rows */
+    /* Convert buttons inside the sidebar into clean dashboard rows */
     [data-testid="stSidebar"] div.stButton > button {
         background: transparent !important;
         border: none !important;
@@ -689,7 +646,7 @@ def render_dashboard():
         background: rgba(255, 255, 255, 0.04) !important;
     }
     
-    /* PREMIUM ACTIVE STATE INDICATOR LINE */
+    /* Premium active state indicator accent line */
     [data-testid="stSidebar"] div.stButton > button[kind="primary"] {
         background: rgba(37, 99, 235, 0.12) !important;
         color: #3b82f6 !important;
@@ -700,10 +657,14 @@ def render_dashboard():
     </style>
     """, unsafe_allow_html=True)
 
-    # 3. Render your navigation options inside the sidebar canvas drawer
+    # Initialize tracking if not present
+    if "custom_active_tab" not in st.session_state:
+        st.session_state.custom_active_tab = "listings"
+
+    # Render navigation options inside the sidebar canvas drawer
     with st.sidebar:
-        # Padding buffer zone to clear room for your top navbar or layout spacing
-        st.markdown("<div style='margin-top: 40px;'></div>", unsafe_allow_html=True)
+        # Spacing buffer zone to push elements below the fixed top header
+        st.markdown("<div style='margin-top: 80px;'></div>", unsafe_allow_html=True)
         st.markdown("<div style='font-family:\"Sora\",sans-serif; font-size:11px; font-weight:700; color:#4b5563; letter-spacing: 1px; padding-left:16px; margin-bottom:16px;'>PLATFORM ENGINE</div>", unsafe_allow_html=True)
         
         is_active = (st.session_state.custom_active_tab == "listings")
@@ -736,7 +697,7 @@ def render_dashboard():
             st.session_state.custom_active_tab = "ai_analyzer"
             st.rerun()
 
-    # Pass selection string parameter state down to render conditional pages
+    # Pass layout selection downstream to target content layout routers
     active = st.session_state.custom_active_tab    
     # ─────────────────────────────────────────────
     #  CONTENT AREA WRAPPER (shared padding & layout)
