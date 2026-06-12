@@ -625,68 +625,78 @@ def render_dashboard():
     if "custom_active_tab" not in st.session_state:
         st.session_state.custom_active_tab = "listings"
 
-    # 2. Inject an anchor point and CSS to pull the buttons together seamlessly
+    # 2. Inject an anchor point and CSS to smash the columns together into a solid pill track
     st.markdown('<div id="unified-tabs-track-anchor"></div>', unsafe_allow_html=True)
     st.markdown("""
     <style>
-    /* 1. FORCE THE CONTAINER TO KILL ALL INTERNAL LAYOUT GAPS */
+    /* 1. THE MAIN OUTER TRACK BOX CONTAINER */
     div:has(#unified-tabs-track-anchor) + div div[data-testid="stHorizontalBlock"] {
         background: #141416 !important;
-        border: 1px solid rgba(255, 255, 255, 0.07) !important;
-        border-radius: 30px !important;
+        border: 1px solid rgba(255, 255, 255, 0.08) !important;
+        border-radius: 24px !important;
         padding: 4px !important;
         max-width: 860px !important;
         margin: 20px auto 30px auto !important;
         display: flex !important;
-        justify-content: center !important;
+        flex-direction: row !important;
+        justify-content: space-between !important;
         align-items: center !important;
-        gap: 0px !important; /* Completely eliminates the gaps between segments */
+        gap: 0px !important; /* Kill container gap flex layout spacing */
         box-shadow: inset 0 1px 2px rgba(255,255,255,0.02), 0 8px 24px rgba(0,0,0,0.3) !important;
     }
 
-    /* 2. OVERRIDE STREAMLIT COLUMN GUTTERS TO MAKE THEM STICK TOGETHER */
+    /* 2. OVERRIDE STREAMLIT'S INLINE WIDTH CALCULATION (CRITICAL) */
     div:has(#unified-tabs-track-anchor) + div div[data-testid="stColumn"] {
-        flex: 1 1 0% !important;
+        flex: 1 1 0% !important; /* Force columns to share identical remaining track spaces */
+        width: 100% !important;   /* Overwrite the calc(16.66% - 10px) inline style rule */
         min-width: 0 !important;
         padding: 0px !important;
         margin: 0px !important;
-        gap: 0px !important; /* Removes column padding rules */
     }
 
-    /* 3. SET BASE UNSELECTED LOOK */
+    /* 3. ZERO OUT BUTTON WRAPPER MARGINS */
+    div:has(#unified-tabs-track-anchor) + div div.stButton {
+        width: 100% !important;
+        margin: 0px !important;
+        padding: 0px !important;
+        display: flex !important;
+    }
+
+    /* 4. BASE UNSELECTED INNER TAB LAYER BUTTONS */
     div:has(#unified-tabs-track-anchor) + div button {
         background: transparent !important;
-        border: none !important;
+        border: none !important; /* Remove individual default borders so they look stuck together */
         color: #8e929b !important;
-        border-radius: 26px !important;
+        border-radius: 20px !important; /* Smooth curvature edge rounding */
         font-family: 'Inter', sans-serif !important;
         font-size: 13px !important;
         font-weight: 500 !important;
-        padding: 8px 14px !important;
+        padding: 8px 12px !important;
         height: 38px !important;
         transition: all 0.15s ease-in-out !important;
-        margin: 0 !important;
+        margin: 0px !important;
         width: 100% !important;
+        display: inline-block !important;
     }
 
-    /* Hover effect over unselected options */
+    /* Transparent hover effect over adjacent unselected buttons */
     div:has(#unified-tabs-track-anchor) + div button:hover {
         color: #ffffff !important;
         background: rgba(255, 255, 255, 0.04) !important;
     }
 
-    /* 4. NEW NEW ACTIVE ACTIVE DESIGN: Vibrant Accent Blue Color State */
+    /* 5. ACTIVE SELECTED STATE OVERRIDE TRACK BUTTON STYLE */
     div:has(#unified-tabs-track-anchor) + div button[kind="primary"] {
-        background: #2563eb !important; /* Premium Electric Blue accent color */
+        background: #2563eb !important; /* High contrast energetic electric blue */
         border: none !important;
         color: #ffffff !important;
         font-weight: 600 !important;
-        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35) !important; /* Glow shadow matching the active tint */
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3) !important;
     }
     </style>
     """, unsafe_allow_html=True)
 
-    # 3. Render your 6 navigational elements directly into the box row
+    # 3. Render your 6 navigational elements directly into the block row track layout
     col1, col2, col3, col4, col5, col6 = st.columns(6)
     
     with col1:
@@ -725,7 +735,7 @@ def render_dashboard():
             st.session_state.custom_active_tab = "ai_analyzer"
             st.rerun()
 
-    # Pass the value back down to your page routing switch condition
+    # Pass selection string parameter state down to render conditional pages
     active = st.session_state.custom_active_tab    
     # ─────────────────────────────────────────────
     #  CONTENT AREA WRAPPER (shared padding & layout)
