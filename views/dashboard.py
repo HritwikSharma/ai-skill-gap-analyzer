@@ -41,10 +41,17 @@ def render_dashboard():
         font-family: 'Inter', sans-serif !important;
     }
     
-    /* CRITICAL FIX: display:none collapses the element space entirely instead of leaving a gap */
+    /* 1. CRITICAL: Force-collapse the header height to 0px and remove it from layout flow */
     #MainMenu, footer, header, [data-testid="stHeader"] { 
         display: none !important; 
         height: 0px !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+    
+    /* 2. Absolute guarantee that the main structural wrapper has zero top padding offset */
+    .main .block-container, [data-testid="stAppViewBlockContainer"] { 
+        padding-top: 0px !important; 
     }
     
     .block-container { padding: 0 !important; }
