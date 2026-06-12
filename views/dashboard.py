@@ -40,7 +40,13 @@ def render_dashboard():
         max-width: 100% !important;
         font-family: 'Inter', sans-serif !important;
     }
-    #MainMenu, footer, header { visibility: hidden; }
+    
+    /* CRITICAL FIX: display:none collapses the element space entirely instead of leaving a gap */
+    #MainMenu, footer, header, [data-testid="stHeader"] { 
+        display: none !important; 
+        height: 0px !important;
+    }
+    
     .block-container { padding: 0 !important; }
     [data-testid="stVerticalBlock"] > div { padding: 0 !important; }
     /* Hide Streamlit's iframe borders */
