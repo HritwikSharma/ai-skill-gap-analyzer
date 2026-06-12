@@ -664,8 +664,20 @@ def render_dashboard():
         box-sizing: border-box !important;
     }
     
-    /* CRITICAL FIX: Center the Job Listings / Market Overview tabs on the page */
-    [data-testid="stTabBar"], div[data-baseweb="tab-list"] {
+    /* CRITICAL FIX: Aggressively target every possible tab bar layout wrapper to center elements */
+    [data-testid="stTabNav"], 
+    [data-testid="stTabBar"], 
+    div[role="tablist"], 
+    div[data-baseweb="tab-list"] {
+        justify-content: center !important;
+        display: flex !important;
+        width: 100% !important;
+        margin: 0 auto !important;
+    }
+
+    /* Force the direct child container inside the navigation element to center its buttons */
+    [data-testid="stTabNav"] > div,
+    div[role="tablist"] > div {
         justify-content: center !important;
         display: flex !important;
         width: 100% !important;
