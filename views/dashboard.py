@@ -228,6 +228,7 @@ def render_dashboard():
     * { margin:0; padding:0; box-sizing:border-box; }
     body { background:#0d0d0d; }
     .nav {
+        margin:0;
         width: 100%;
         background: #111;
         border-bottom: 1px solid #222;
