@@ -621,42 +621,71 @@ def render_dashboard():
     </style>
     """, unsafe_allow_html=True)
 
-    # 1. Internal clean text keys that match your subsequent if/elif condition statements
-    # Initialize a session state cell to track the custom navigation routing matrix
+    # 1. Initialize session state to track data views
     if "custom_active_tab" not in st.session_state:
         st.session_state.custom_active_tab = "listings"
 
-    # Pure CSS injections to style the button elements into uniform pill tabs matching your dark theme
+    # 2. Inject an anchor point and CSS to sculpt the column row into a unified track box
+    st.markdown('<div id="unified-tabs-track-anchor"></div>', unsafe_allow_html=True)
     st.markdown("""
     <style>
-    /* target standard column buttons inside this row structure */
-    div.stButton > button {
-        background: rgba(255, 255, 255, 0.02) !important;
-        border: 1px solid rgba(255, 255, 255, 0.08) !important;
-        color: #9ca3af !important;
-        border-radius: 20px !important;
+    /* Isolate and style the structural block right next to our anchor */
+    div:has(#unified-tabs-track-anchor) + div div[data-testid="stHorizontalBlock"] {
+        background: #141416 !important;
+        border: 1px solid rgba(255, 255, 255, 0.07) !important;
+        border-radius: 30px !important;
+        padding: 4px !important;
+        max-width: 860px !important;
+        margin: 20px auto 30px auto !important;
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+        gap: 2px !important;
+        box-shadow: inset 0 1px 2px rgba(255,255,255,0.02), 0 8px 24px rgba(0,0,0,0.3) !important;
+    }
+
+    /* Keep column tracks uniformly locked next to each other with zero gaps */
+    div:has(#unified-tabs-track-anchor) + div div[data-testid="stColumn"] {
+        flex: 1 1 0% !important;
+        min-width: 0 !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    /* Convert standard buttons into flat transparent inner track segments */
+    div:has(#unified-tabs-track-anchor) + div button {
+        background: transparent !important;
+        border: none !important;
+        color: #8e929b !important;
+        border-radius: 26px !important;
         font-family: 'Inter', sans-serif !important;
         font-size: 13px !important;
-        padding: 6px 16px !important;
+        font-weight: 500 !important;
+        padding: 8px 14px !important;
+        height: 36px !important;
         transition: all 0.2s ease-in-out !important;
+        margin: 0 !important;
+        width: 100% !important;
     }
-    div.stButton > button:hover {
-        border-color: #3b82f6 !important;
+
+    /* Smooth glow transition when hovering over segments */
+    div:has(#unified-tabs-track-anchor) + div button:hover {
         color: #ffffff !important;
-        background: rgba(59, 130, 246, 0.08) !important;
+        background: rgba(255, 255, 255, 0.04) !important;
     }
-    /* Style rule override for the currently active tab */
-    div.stButton > button[kind="primary"] {
-        background: rgba(59, 130, 246, 0.15) !important;
-        border: 1px solid #3b82f6 !important;
+
+    /* Style the active selected segment (Primary Button Mode) */
+    div:has(#unified-tabs-track-anchor) + div button[kind="primary"] {
+        background: #222226 !important;
+        border: 1px solid rgba(255, 255, 255, 0.12) !important;
         color: #ffffff !important;
         font-weight: 600 !important;
-        box-shadow: 0 0 12px rgba(59, 130, 246, 0.2) !important;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4) !important;
     }
     </style>
     """, unsafe_allow_html=True)
 
-    # Create a 6-column horizontal tracking layout framework 
+    # 3. Render your 6 navigational elements directly into the box row
     col1, col2, col3, col4, col5, col6 = st.columns(6)
     
     with col1:
@@ -695,8 +724,7 @@ def render_dashboard():
             st.session_state.custom_active_tab = "ai_analyzer"
             st.rerun()
 
-    # Bind the layout selection back to your original active routing variable 
-    # This prevents breaking any of your existing downstream data views!
+    # Pass the value back down to your page routing switch condition
     active = st.session_state.custom_active_tab    
     # ─────────────────────────────────────────────
     #  CONTENT AREA WRAPPER (shared padding & layout)
