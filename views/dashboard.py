@@ -647,28 +647,30 @@ def render_dashboard():
     if not active:
         active = "listings"    
     # ─────────────────────────────────────────────
-    #  CONTENT AREA WRAPPER (shared padding)
-    # ─────────────────────────────────────────────
-    # ─────────────────────────────────────────────
-    #  CONTENT AREA WRAPPER (shared padding)
+    #  CONTENT AREA WRAPPER (shared padding & layout)
     # ─────────────────────────────────────────────
     st.markdown("""
     <style>
-    /* 1. Strip the global container padding so iframes (like your Navbar) can touch the absolute edges */
+    /* Absolute zero top-padding to let the navbar touch the top edge */
     [data-testid="stMainBlockContainer"] {
         padding: 0px 0px 60px 0px !important;
     }
     
-    /* 2. Re-apply the 32px side padding to all standard Streamlit elements */
-    /* We use :not(:has(iframe)) to exclude your custom HTML components (Navbar & KPIs) because they already handle their own internal padding perfectly */
+    /* Re-apply 32px side indent ONLY to native Streamlit widgets so they look centered */
     div.element-container:not(:has(iframe)) {
         padding-left: 32px !important;
         padding-right: 32px !important;
         width: 100% !important;
         box-sizing: border-box !important;
     }
-
-    /* Keep Plotly backgrounds transparent */
+    
+    /* CRITICAL FIX: Center the Job Listings / Market Overview tabs on the page */
+    [data-testid="stTabBar"], div[data-baseweb="tab-list"] {
+        justify-content: center !important;
+        display: flex !important;
+        width: 100% !important;
+    }
+    
     .js-plotly-plot .plotly, .plot-container { background: transparent !important; }
     </style>
     """, unsafe_allow_html=True)
