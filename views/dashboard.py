@@ -622,31 +622,82 @@ def render_dashboard():
     """, unsafe_allow_html=True)
 
     # 1. Internal clean text keys that match your subsequent if/elif condition statements
-    tab_options = ["listings", "market", "salary", "companies", "map", "ai_analyzer"]
+    # Initialize a session state cell to track the custom navigation routing matrix
+    if "custom_active_tab" not in st.session_state:
+        st.session_state.custom_active_tab = "listings"
 
-    # 2. Display labels mapped to each clean string option key
-    tab_labels = {
-        "listings": "📋 Job Listings",
-        "market": "📊 Market Overview",
-        "salary": "💰 Salary Insights",
-        "companies": "🏢 Companies",
-        "map": "🗺️ Heat Map",
-        "ai_analyzer": "🎯 AI Skill Analyzer"
+    # Pure CSS injections to style the button elements into uniform pill tabs matching your dark theme
+    st.markdown("""
+    <style>
+    /* target standard column buttons inside this row structure */
+    div.stButton > button {
+        background: rgba(255, 255, 255, 0.02) !important;
+        border: 1px solid rgba(255, 255, 255, 0.08) !important;
+        color: #9ca3af !important;
+        border-radius: 20px !important;
+        font-family: 'Inter', sans-serif !important;
+        font-size: 13px !important;
+        padding: 6px 16px !important;
+        transition: all 0.2s ease-in-out !important;
     }
+    div.stButton > button:hover {
+        border-color: #3b82f6 !important;
+        color: #ffffff !important;
+        background: rgba(59, 130, 246, 0.08) !important;
+    }
+    /* Style rule override for the currently active tab */
+    div.stButton > button[kind="primary"] {
+        background: rgba(59, 130, 246, 0.15) !important;
+        border: 1px solid #3b82f6 !important;
+        color: #ffffff !important;
+        font-weight: 600 !important;
+        box-shadow: 0 0 12px rgba(59, 130, 246, 0.2) !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
 
-    # 3. Render native segmented control using keys internally and showing labels on screen
-    active = st.segmented_control(
-        "Navigation",
-        options=tab_options,
-        default="listings",
-        format_func=lambda x: tab_labels[x],
-        label_visibility="collapsed",
-        selection_mode="single"
-    )
+    # Create a 6-column horizontal tracking layout framework 
+    col1, col2, col3, col4, col5, col6 = st.columns(6)
+    
+    with col1:
+        is_active = (st.session_state.custom_active_tab == "listings")
+        if st.button("📋 Job Listings", key="nav_btn_listings", use_container_width=True, type="primary" if is_active else "secondary"):
+            st.session_state.custom_active_tab = "listings"
+            st.rerun()
+            
+    with col2:
+        is_active = (st.session_state.custom_active_tab == "market")
+        if st.button("📊 Market", key="nav_btn_market", use_container_width=True, type="primary" if is_active else "secondary"):
+            st.session_state.custom_active_tab = "market"
+            st.rerun()
+            
+    with col3:
+        is_active = (st.session_state.custom_active_tab == "salary")
+        if st.button("💰 Salaries", key="nav_btn_salary", use_container_width=True, type="primary" if is_active else "secondary"):
+            st.session_state.custom_active_tab = "salary"
+            st.rerun()
+            
+    with col4:
+        is_active = (st.session_state.custom_active_tab == "companies")
+        if st.button("🏢 Companies", key="nav_btn_companies", use_container_width=True, type="primary" if is_active else "secondary"):
+            st.session_state.custom_active_tab = "companies"
+            st.rerun()
 
-    # 4. Fallback handler: if a user clicks an already active tab to clear selection, default back to listings
-    if not active:
-        active = "listings"    
+    with col5:
+        is_active = (st.session_state.custom_active_tab == "map")
+        if st.button("🗺️ Heat Map", key="nav_btn_map", use_container_width=True, type="primary" if is_active else "secondary"):
+            st.session_state.custom_active_tab = "map"
+            st.rerun()
+
+    with col6:
+        is_active = (st.session_state.custom_active_tab == "ai_analyzer")
+        if st.button("🎯 AI Analyzer", key="nav_btn_ai", use_container_width=True, type="primary" if is_active else "secondary"):
+            st.session_state.custom_active_tab = "ai_analyzer"
+            st.rerun()
+
+    # Bind the layout selection back to your original active routing variable 
+    # This prevents breaking any of your existing downstream data views!
+    active = st.session_state.custom_active_tab    
     # ─────────────────────────────────────────────
     #  CONTENT AREA WRAPPER (shared padding & layout)
     # ─────────────────────────────────────────────
