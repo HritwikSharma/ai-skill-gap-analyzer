@@ -636,11 +636,26 @@ def render_dashboard():
     # ─────────────────────────────────────────────
     #  CONTENT AREA WRAPPER (shared padding)
     # ─────────────────────────────────────────────
+    # ─────────────────────────────────────────────
+    #  CONTENT AREA WRAPPER (shared padding)
+    # ─────────────────────────────────────────────
     st.markdown("""
     <style>
+    /* 1. Strip the global container padding so iframes (like your Navbar) can touch the absolute edges */
     [data-testid="stMainBlockContainer"] {
-        padding: 24px 32px 60px !important;
+        padding: 0px 0px 60px 0px !important;
     }
+    
+    /* 2. Re-apply the 32px side padding to all standard Streamlit elements */
+    /* We use :not(:has(iframe)) to exclude your custom HTML components (Navbar & KPIs) because they already handle their own internal padding perfectly */
+    div.element-container:not(:has(iframe)) {
+        padding-left: 32px !important;
+        padding-right: 32px !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    /* Keep Plotly backgrounds transparent */
     .js-plotly-plot .plotly, .plot-container { background: transparent !important; }
     </style>
     """, unsafe_allow_html=True)
