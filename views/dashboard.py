@@ -625,11 +625,11 @@ def render_dashboard():
     if "custom_active_tab" not in st.session_state:
         st.session_state.custom_active_tab = "listings"
 
-    # 2. Inject an anchor point and CSS to sculpt the column row into a unified track box
+    # 2. Inject an anchor point and CSS to pull the buttons together seamlessly
     st.markdown('<div id="unified-tabs-track-anchor"></div>', unsafe_allow_html=True)
     st.markdown("""
     <style>
-    /* Isolate and style the structural block right next to our anchor */
+    /* 1. FORCE THE CONTAINER TO KILL ALL INTERNAL LAYOUT GAPS */
     div:has(#unified-tabs-track-anchor) + div div[data-testid="stHorizontalBlock"] {
         background: #141416 !important;
         border: 1px solid rgba(255, 255, 255, 0.07) !important;
@@ -640,19 +640,20 @@ def render_dashboard():
         display: flex !important;
         justify-content: center !important;
         align-items: center !important;
-        gap: 2px !important;
+        gap: 0px !important; /* Completely eliminates the gaps between segments */
         box-shadow: inset 0 1px 2px rgba(255,255,255,0.02), 0 8px 24px rgba(0,0,0,0.3) !important;
     }
 
-    /* Keep column tracks uniformly locked next to each other with zero gaps */
+    /* 2. OVERRIDE STREAMLIT COLUMN GUTTERS TO MAKE THEM STICK TOGETHER */
     div:has(#unified-tabs-track-anchor) + div div[data-testid="stColumn"] {
         flex: 1 1 0% !important;
         min-width: 0 !important;
-        padding: 0 !important;
-        margin: 0 !important;
+        padding: 0px !important;
+        margin: 0px !important;
+        gap: 0px !important; /* Removes column padding rules */
     }
 
-    /* Convert standard buttons into flat transparent inner track segments */
+    /* 3. SET BASE UNSELECTED LOOK */
     div:has(#unified-tabs-track-anchor) + div button {
         background: transparent !important;
         border: none !important;
@@ -662,25 +663,25 @@ def render_dashboard():
         font-size: 13px !important;
         font-weight: 500 !important;
         padding: 8px 14px !important;
-        height: 36px !important;
-        transition: all 0.2s ease-in-out !important;
+        height: 38px !important;
+        transition: all 0.15s ease-in-out !important;
         margin: 0 !important;
         width: 100% !important;
     }
 
-    /* Smooth glow transition when hovering over segments */
+    /* Hover effect over unselected options */
     div:has(#unified-tabs-track-anchor) + div button:hover {
         color: #ffffff !important;
         background: rgba(255, 255, 255, 0.04) !important;
     }
 
-    /* Style the active selected segment (Primary Button Mode) */
+    /* 4. NEW NEW ACTIVE ACTIVE DESIGN: Vibrant Accent Blue Color State */
     div:has(#unified-tabs-track-anchor) + div button[kind="primary"] {
-        background: #222226 !important;
-        border: 1px solid rgba(255, 255, 255, 0.12) !important;
+        background: #2563eb !important; /* Premium Electric Blue accent color */
+        border: none !important;
         color: #ffffff !important;
         font-weight: 600 !important;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4) !important;
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35) !important; /* Glow shadow matching the active tint */
     }
     </style>
     """, unsafe_allow_html=True)
