@@ -625,16 +625,49 @@ def render_dashboard():
     if "custom_active_tab" not in st.session_state:
         st.session_state.custom_active_tab = "listings"
 
-    # 2. Inject CSS rules to transform the sidebar into a premium dark drawer panel
+    # 2. Inject CSS rules to style the sidebar panel and FORCE the toggle button to appear
     st.markdown("""
     <style>
-    /* Style the main vertical drawer panel container */
+    /* ─── PUNCH THROUGH HIDDEN HEADER RULE TO SHOW SIDEBAR BUTTONS ─── */
+    header {
+        visibility: visible !important;
+        background: transparent !important;
+        pointer-events: none !important; /* Let clicks pass through empty header space */
+    }
+    
+    header > div {
+        pointer-events: auto !important; /* Re-enable clicks specifically for icons */
+    }
+
+    /* Force the 3-line menu collapse/expand buttons to be visible and styled beautifully */
+    [data-testid="collapsedSidebarButton"],
+    [data-testid="stSidebarCollapseButton"],
+    button[aria-label="Open sidebar"],
+    button[aria-label="Close sidebar"] {
+        visibility: visible !important;
+        display: flex !important;
+        background: #141416 !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        border-radius: 8px !important;
+        color: #ffffff !important;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.5) !important;
+        transition: all 0.2s ease-in-out !important;
+    }
+
+    /* Hover effect for the menu toggle button */
+    [data-testid="stSidebarCollapseButton"]:hover,
+    button[aria-label="Open sidebar"]:hover {
+        background: #2563eb !important;
+        border-color: #3b82f6 !important;
+    }
+
+    /* ─── STYLE THE SIDEBAR DRAWER PANEL ─── */
     [data-testid="stSidebar"] {
         background-color: #0e0e10 !important;
         border-right: 1px solid rgba(255, 255, 255, 0.06) !important;
     }
     
-    /* Force buttons in the sidebar to look like clean row links */
+    /* Convert buttons inside the sidebar into premium link rows */
     [data-testid="stSidebar"] div.stButton > button {
         background: transparent !important;
         border: none !important;
@@ -656,21 +689,21 @@ def render_dashboard():
         background: rgba(255, 255, 255, 0.04) !important;
     }
     
-    /* PREMIUM ACTIVE STATE: Clean vertical indicator accent line */
+    /* PREMIUM ACTIVE STATE INDICATOR LINE */
     [data-testid="stSidebar"] div.stButton > button[kind="primary"] {
-        background: rgba(37, 99, 235, 0.12) !important; /* Premium translucent electric blue tint */
-        color: #3b82f6 !important; /* High contrast bright blue text */
+        background: rgba(37, 99, 235, 0.12) !important;
+        color: #3b82f6 !important;
         font-weight: 600 !important;
-        border-left: 3px solid #3b82f6 !important; /* Elegant accent strip on the side */
+        border-left: 3px solid #3b82f6 !important;
         border-radius: 0px 8px 8px 0px !important;
     }
     </style>
     """, unsafe_allow_html=True)
 
-    # 3. Render your navigation inside the sidebar canvas drawer
+    # 3. Render your navigation options inside the sidebar canvas drawer
     with st.sidebar:
-        # Push items down slightly to clear your top navbar space
-        st.markdown("<div style='margin-top: 50px;'></div>", unsafe_allow_html=True)
+        # Padding buffer zone to clear room for your top navbar or layout spacing
+        st.markdown("<div style='margin-top: 40px;'></div>", unsafe_allow_html=True)
         st.markdown("<div style='font-family:\"Sora\",sans-serif; font-size:11px; font-weight:700; color:#4b5563; letter-spacing: 1px; padding-left:16px; margin-bottom:16px;'>PLATFORM ENGINE</div>", unsafe_allow_html=True)
         
         is_active = (st.session_state.custom_active_tab == "listings")
@@ -703,7 +736,7 @@ def render_dashboard():
             st.session_state.custom_active_tab = "ai_analyzer"
             st.rerun()
 
-    # Pass selection string parameters back to the core conditional engine
+    # Pass selection string parameter state down to render conditional pages
     active = st.session_state.custom_active_tab    
     # ─────────────────────────────────────────────
     #  CONTENT AREA WRAPPER (shared padding & layout)
