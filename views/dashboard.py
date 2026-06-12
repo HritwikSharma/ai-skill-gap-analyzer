@@ -625,117 +625,85 @@ def render_dashboard():
     if "custom_active_tab" not in st.session_state:
         st.session_state.custom_active_tab = "listings"
 
-    # 2. Inject an anchor point and CSS to smash the columns together into a solid pill track
-    st.markdown('<div id="unified-tabs-track-anchor"></div>', unsafe_allow_html=True)
+    # 2. Inject CSS rules to transform the sidebar into a premium dark drawer panel
     st.markdown("""
     <style>
-    /* 1. THE MAIN OUTER TRACK BOX CONTAINER */
-    div:has(#unified-tabs-track-anchor) + div div[data-testid="stHorizontalBlock"] {
-        background: #141416 !important;
-        border: 1px solid rgba(255, 255, 255, 0.08) !important;
-        border-radius: 24px !important;
-        padding: 4px !important;
-        max-width: 860px !important;
-        margin: 20px auto 30px auto !important;
-        display: flex !important;
-        flex-direction: row !important;
-        justify-content: space-between !important;
-        align-items: center !important;
-        gap: 0px !important; /* Kill container gap flex layout spacing */
-        box-shadow: inset 0 1px 2px rgba(255,255,255,0.02), 0 8px 24px rgba(0,0,0,0.3) !important;
+    /* Style the main vertical drawer panel container */
+    [data-testid="stSidebar"] {
+        background-color: #0e0e10 !important;
+        border-right: 1px solid rgba(255, 255, 255, 0.06) !important;
     }
-
-    /* 2. OVERRIDE STREAMLIT'S INLINE WIDTH CALCULATION (CRITICAL) */
-    div:has(#unified-tabs-track-anchor) + div div[data-testid="stColumn"] {
-        flex: 1 1 0% !important; /* Force columns to share identical remaining track spaces */
-        width: 100% !important;   /* Overwrite the calc(16.66% - 10px) inline style rule */
-        min-width: 0 !important;
-        padding: 0px !important;
-        margin: 0px !important;
-    }
-
-    /* 3. ZERO OUT BUTTON WRAPPER MARGINS */
-    div:has(#unified-tabs-track-anchor) + div div.stButton {
-        width: 100% !important;
-        margin: 0px !important;
-        padding: 0px !important;
-        display: flex !important;
-    }
-
-    /* 4. BASE UNSELECTED INNER TAB LAYER BUTTONS */
-    div:has(#unified-tabs-track-anchor) + div button {
+    
+    /* Force buttons in the sidebar to look like clean row links */
+    [data-testid="stSidebar"] div.stButton > button {
         background: transparent !important;
-        border: none !important; /* Remove individual default borders so they look stuck together */
+        border: none !important;
         color: #8e929b !important;
-        border-radius: 20px !important; /* Smooth curvature edge rounding */
+        text-align: left !important;
+        justify-content: flex-start !important;
+        border-radius: 8px !important;
         font-family: 'Inter', sans-serif !important;
-        font-size: 13px !important;
-        font-weight: 500 !important;
-        padding: 8px 12px !important;
-        height: 38px !important;
-        transition: all 0.15s ease-in-out !important;
-        margin: 0px !important;
+        font-size: 13.5px !important;
+        padding: 10px 16px !important;
+        margin-bottom: 4px !important;
+        transition: all 0.2s ease-in-out !important;
         width: 100% !important;
-        display: inline-block !important;
     }
-
-    /* Transparent hover effect over adjacent unselected buttons */
-    div:has(#unified-tabs-track-anchor) + div button:hover {
+    
+    /* Interactive hover state for sidebar options */
+    [data-testid="stSidebar"] div.stButton > button:hover {
         color: #ffffff !important;
         background: rgba(255, 255, 255, 0.04) !important;
     }
-
-    /* 5. ACTIVE SELECTED STATE OVERRIDE TRACK BUTTON STYLE */
-    div:has(#unified-tabs-track-anchor) + div button[kind="primary"] {
-        background: #2563eb !important; /* High contrast energetic electric blue */
-        border: none !important;
-        color: #ffffff !important;
+    
+    /* PREMIUM ACTIVE STATE: Clean vertical indicator accent line */
+    [data-testid="stSidebar"] div.stButton > button[kind="primary"] {
+        background: rgba(37, 99, 235, 0.12) !important; /* Premium translucent electric blue tint */
+        color: #3b82f6 !important; /* High contrast bright blue text */
         font-weight: 600 !important;
-        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3) !important;
+        border-left: 3px solid #3b82f6 !important; /* Elegant accent strip on the side */
+        border-radius: 0px 8px 8px 0px !important;
     }
     </style>
     """, unsafe_allow_html=True)
 
-    # 3. Render your 6 navigational elements directly into the block row track layout
-    col1, col2, col3, col4, col5, col6 = st.columns(6)
-    
-    with col1:
+    # 3. Render your navigation inside the sidebar canvas drawer
+    with st.sidebar:
+        # Push items down slightly to clear your top navbar space
+        st.markdown("<div style='margin-top: 50px;'></div>", unsafe_allow_html=True)
+        st.markdown("<div style='font-family:\"Sora\",sans-serif; font-size:11px; font-weight:700; color:#4b5563; letter-spacing: 1px; padding-left:16px; margin-bottom:16px;'>PLATFORM ENGINE</div>", unsafe_allow_html=True)
+        
         is_active = (st.session_state.custom_active_tab == "listings")
-        if st.button("📋 Job Listings", key="nav_btn_listings", use_container_width=True, type="primary" if is_active else "secondary"):
+        if st.button("📋 Job Listings", key="side_btn_listings", use_container_width=True, type="primary" if is_active else "secondary"):
             st.session_state.custom_active_tab = "listings"
             st.rerun()
             
-    with col2:
         is_active = (st.session_state.custom_active_tab == "market")
-        if st.button("📊 Market", key="nav_btn_market", use_container_width=True, type="primary" if is_active else "secondary"):
+        if st.button("📊 Market Overview", key="side_btn_market", use_container_width=True, type="primary" if is_active else "secondary"):
             st.session_state.custom_active_tab = "market"
             st.rerun()
             
-    with col3:
         is_active = (st.session_state.custom_active_tab == "salary")
-        if st.button("💰 Salaries", key="nav_btn_salary", use_container_width=True, type="primary" if is_active else "secondary"):
+        if st.button("💰 Salary Insights", key="side_btn_salary", use_container_width=True, type="primary" if is_active else "secondary"):
             st.session_state.custom_active_tab = "salary"
             st.rerun()
             
-    with col4:
         is_active = (st.session_state.custom_active_tab == "companies")
-        if st.button("🏢 Companies", key="nav_btn_companies", use_container_width=True, type="primary" if is_active else "secondary"):
+        if st.button("🏢 Companies", key="side_btn_companies", use_container_width=True, type="primary" if is_active else "secondary"):
             st.session_state.custom_active_tab = "companies"
             st.rerun()
 
-    with col5:
         is_active = (st.session_state.custom_active_tab == "map")
-        if st.button("🗺️ Heat Map", key="nav_btn_map", use_container_width=True, type="primary" if is_active else "secondary"):
+        if st.button("🗺️ Heat Map", key="side_btn_map", use_container_width=True, type="primary" if is_active else "secondary"):
             st.session_state.custom_active_tab = "map"
             st.rerun()
 
-    with col6:
         is_active = (st.session_state.custom_active_tab == "ai_analyzer")
-        if st.button("🎯 AI Analyzer", key="nav_btn_ai", use_container_width=True, type="primary" if is_active else "secondary"):
+        if st.button("🎯 AI Skill Analyzer", key="side_btn_ai", use_container_width=True, type="primary" if is_active else "secondary"):
             st.session_state.custom_active_tab = "ai_analyzer"
             st.rerun()
 
-    # Pass selection string parameter state down to render conditional pages
+    # Pass selection string parameters back to the core conditional engine
     active = st.session_state.custom_active_tab    
     # ─────────────────────────────────────────────
     #  CONTENT AREA WRAPPER (shared padding & layout)
