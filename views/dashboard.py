@@ -42,13 +42,27 @@ def render_dashboard():
     }
     
     /* 1. CRITICAL: Force-collapse the header height to 0px and remove it from layout flow */
-    /* 1. CRITICAL: Hide MainMenu and footer, but preserve header layer for sidebar toggles */
+    /* 1. Completely hide the cloud cluster toolbar (Share, Star, Edit, Deploy, GitHub buttons) */
+    [data-testid="stHeaderActionElements"], 
+    .stAppDeployButton, 
+    [data-testid="stHeaderToolbar"],
+    button[title*="GitHub"],
+    button[aria-label*="GitHub"],
+    .stActionButton {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        width: 0px !important;
+        height: 0px !important;
+    }
+
     #MainMenu, footer { 
         display: none !important; 
     }
+
     header, [data-testid="stHeader"] {
         background: transparent !important;
-        pointer-events: none !important; /* Lets clicks pass through empty header space */
+        pointer-events: none !important;
     }
     
     /* 2. Absolute guarantee that the main structural wrapper has zero top padding offset */
@@ -577,54 +591,71 @@ def render_dashboard():
     # ─────────────────────────────────────────────
     #  TAB NAV (Native Segmented Control)
     # ─────────────────────────────────────────────
-    # Use the existing session state value as the default index
-    # ─────────────────────────────────────────────
-    #  TAB NAV (Styled Native Segmented Control) - FIXED
-    # ─────────────────────────────────────────────
-    # Custom CSS to style the native segmented control to match your dark theme design
-    # ─────────────────────────────────────────────
     #  SIDEBAR NAVIGATION INTERFACE
     # ─────────────────────────────────────────────
     st.markdown("""
     <style>
-    header > div {
-        pointer-events: auto !important; /* Re-enable pointer events for buttons only */
-    }
-
-    /* Force the 3-line menu collapse/expand buttons to be visible and float below top navbar */
-    [data-testid="collapsedSidebarButton"],
-    [data-testid="stSidebarCollapseButton"],
-    button[aria-label="Open sidebar"],
-    button[aria-label="Close sidebar"] {
+    header, [data-testid="stHeader"] {
         visibility: visible !important;
-        display: flex !important;
-        position: fixed !important;
-        top: 72px !important; /* Shifts it safely below your 56px custom top navbar */
-        left: 16px !important;
-        background: #141416 !important;
-        border: 1px solid rgba(255, 255, 255, 0.1) !important;
-        border-radius: 8px !important;
-        color: #ffffff !important;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.5) !important;
-        transition: all 0.2s ease-in-out !important;
-        z-index: 1000000 !important;
+    }
+    header > div {
+        pointer-events: auto !important;
     }
 
-    /* Hover effect for the menu toggle button */
-    [data-testid="stSidebarCollapseButton"]:hover,
-    button[aria-label="Open sidebar"]:hover {
-        background: #2563eb !important;
-        border-color: #3b82f6 !important;
-    }
-
-    /* Style the sidebar panel drawer background */
+    /* 1. FIX THE OVERLAPPING PANEL: Drop the entire sidebar below your 58px navbar */
     [data-testid="stSidebar"] {
         background-color: #0e0e10 !important;
         border-right: 1px solid rgba(255, 255, 255, 0.06) !important;
-        z-index: 999998 !important;
+        top: 58px !important; /* Matches your navbar height perfectly */
+        height: calc(100vh - 58px) !important;
+        z-index: 99999 !important;
+    }
+
+    /* 2. CUSTOM OPEN TOGGLE BUTTON UI & POSITIONING */
+    [data-testid="collapsedSidebarButton"] {
+        position: fixed !important;
+        top: 76px !important; /* Clean floating position below the navbar track */
+        left: 20px !important;
+        background: #141416 !important;
+        border: 1px solid rgba(255, 255, 255, 0.08) !important;
+        border-radius: 8px !important;
+        padding: 6px !important;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.5) !important;
+        z-index: 100000 !important;
+        cursor: pointer !important;
+        transition: all 0.2s ease;
+    }
+
+    /* 3. CUSTOM CLOSE TOGGLE BUTTON UI & POSITIONING */
+    [data-testid="stSidebarCollapseButton"] {
+        position: absolute !important;
+        top: 15px !important;
+        left: 16px !important;
+        background: #141416 !important;
+        border: 1px solid rgba(255, 255, 255, 0.08) !important;
+        border-radius: 8px !important;
+        z-index: 100000 !important;
+    }
+
+    /* Style look and feel of the icons to match your theme */
+    [data-testid="collapsedSidebarButton"] svg,
+    [data-testid="stSidebarCollapseButton"] svg {
+        color: #3b82f6 !important; /* High-vis blue lines */
+        width: 18px !important;
+        height: 18px !important;
+    }
+
+    [data-testid="collapsedSidebarButton"]:hover,
+    [data-testid="stSidebarCollapseButton"]:hover {
+        background: #2563eb !important;
+        border-color: #3b82f6 !important;
+    }
+    [data-testid="collapsedSidebarButton"]:hover svg,
+    [data-testid="stSidebarCollapseButton"]:hover svg {
+        color: #ffffff !important;
     }
     
-    /* Convert buttons inside the sidebar into clean dashboard rows */
+    /* 4. CLEAN VERTICAL ROW NAVIGATION DESIGN */
     [data-testid="stSidebar"] div.stButton > button {
         background: transparent !important;
         border: none !important;
@@ -640,13 +671,12 @@ def render_dashboard():
         width: 100% !important;
     }
     
-    /* Interactive hover state for sidebar options */
     [data-testid="stSidebar"] div.stButton > button:hover {
         color: #ffffff !important;
         background: rgba(255, 255, 255, 0.04) !important;
     }
     
-    /* Premium active state indicator accent line */
+    /* Vibrant highlight style for active navigation row items */
     [data-testid="stSidebar"] div.stButton > button[kind="primary"] {
         background: rgba(37, 99, 235, 0.12) !important;
         color: #3b82f6 !important;
