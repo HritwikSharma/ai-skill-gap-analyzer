@@ -1,9 +1,11 @@
 import psycopg2
+import streamlit as st
 
-DB_HOST = "job-db.clgqc6scelz7.eu-north-1.rds.amazonaws.com"
-DB_USER = "postgres"
-DB_NAME = "postgres"
-DB_PASSWORD = "HRITWIKSHARMA"
+# Secure database credential acquisition
+DB_HOST     = st.secrets["database"]["host"]
+DB_USER     = st.secrets["database"]["user"]
+DB_NAME     = st.secrets["database"]["database"]
+DB_PASSWORD = st.secrets["database"]["password"]
 
 def create_unified_table():
     """
