@@ -15,12 +15,12 @@ from utils.gemini_analyzer import get_ai_analysis
 def render_dashboard():
     #st.title("TalentPulse Dashboard")
     # ─────────────────────────────────────────────
-    #  DATABASE CREDENTIALS
+    #  DATABASE CREDENTIALS (SECURED VIA SECRETS)
     # ─────────────────────────────────────────────
-    DB_HOST     = "job-db.clgqc6scelz7.eu-north-1.rds.amazonaws.com"
-    DB_USER     = "postgres"
-    DB_NAME     = "postgres"
-    DB_PASSWORD = "HRITWIKSHARMA"
+    DB_HOST     = st.secrets["database"]["host"]
+    DB_USER     = st.secrets["database"]["user"]
+    DB_NAME     = st.secrets["database"]["database"]
+    DB_PASSWORD = st.secrets["database"]["password"]
     
     # ─────────────────────────────────────────────
     #  PAGE CONFIG — minimal Streamlit chrome
