@@ -4,16 +4,17 @@ import time
 import requests
 import psycopg2
 from psycopg2.extras import Json
+import streamlit as st
 
-# AWS Database Connection Credentials
-DB_HOST = "job-db.clgqc6scelz7.eu-north-1.rds.amazonaws.com"
-DB_USER = "postgres"
-DB_NAME = "postgres"
-DB_PASSWORD = "HRITWIKSHARMA"
+# Secure credentials fetched from secrets management container
+DB_HOST     = st.secrets["database"]["host"]
+DB_USER     = st.secrets["database"]["user"]
+DB_NAME     = st.secrets["database"]["database"]
+DB_PASSWORD = st.secrets["database"]["password"]
 
-# API Credentials
-ADZUNA_APP_ID = "856e2554"
-ADZUNA_APP_KEY = "89750d033fe565146c9e91e81966272e"
+# API Credentials safely abstracted
+ADZUNA_APP_ID  = st.secrets["adzuna"]["app_id"]
+ADZUNA_APP_KEY = st.secrets["adzuna"]["app_key"]
 
 # Core target sectors to prevent junk data from diluting the index
 TARGET_KEYWORDS = ["Data Analyst", "Data Scientist", "Business Analyst", "Data Engineer", "Machine Learning"]
