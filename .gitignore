@@ -300,4 +300,6 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
+.streamlit/secrets.toml
+
 # End of https://www.toptal.com/developers/gitignore/api/windows,macos,jupyternotebooks
