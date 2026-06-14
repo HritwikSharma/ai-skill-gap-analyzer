@@ -15,12 +15,12 @@ from utils.gemini_analyzer import get_ai_analysis
 def render_dashboard():
     #st.title("TalentPulse Dashboard")
     # ─────────────────────────────────────────────
-    #  DATABASE CREDENTIALS (SECURED VIA SECRETS)
+    #  DATABASE CREDENTIALS
     # ─────────────────────────────────────────────
-    DB_HOST     = st.secrets["database"]["host"]
-    DB_USER     = st.secrets["database"]["user"]
-    DB_NAME     = st.secrets["database"]["database"]
-    DB_PASSWORD = st.secrets["database"]["password"]
+    DB_HOST     = "job-db.clgqc6scelz7.eu-north-1.rds.amazonaws.com"
+    DB_USER     = "postgres"
+    DB_NAME     = "postgres"
+    DB_PASSWORD = "HRITWIKSHARMA"
     
     # ─────────────────────────────────────────────
     #  PAGE CONFIG — minimal Streamlit chrome
@@ -40,36 +40,7 @@ def render_dashboard():
         max-width: 100% !important;
         font-family: 'Inter', sans-serif !important;
     }
-    
-    /* 1. CRITICAL: Force-collapse the header height to 0px and remove it from layout flow */
-    /* 1. Completely hide the cloud cluster toolbar (Share, Star, Edit, Deploy, GitHub buttons) */
-    [data-testid="stHeaderActionElements"], 
-    .stAppDeployButton, 
-    [data-testid="stHeaderToolbar"],
-    button[title*="GitHub"],
-    button[aria-label*="GitHub"],
-    .stActionButton {
-        display: none !important;
-        visibility: hidden !important;
-        opacity: 0 !important;
-        width: 0px !important;
-        height: 0px !important;
-    }
-
-    #MainMenu, footer { 
-        display: none !important; 
-    }
-
-    header, [data-testid="stHeader"] {
-        background: transparent !important;
-        pointer-events: none !important;
-    }
-    
-    /* 2. Absolute guarantee that the main structural wrapper has zero top padding offset */
-    .main .block-container, [data-testid="stAppViewBlockContainer"] { 
-        padding-top: 0px !important; 
-    }
-    
+    #MainMenu, footer, header { visibility: hidden; }
     .block-container { padding: 0 !important; }
     [data-testid="stVerticalBlock"] > div { padding: 0 !important; }
     /* Hide Streamlit's iframe borders */
@@ -244,7 +215,6 @@ def render_dashboard():
     * { margin:0; padding:0; box-sizing:border-box; }
     body { background:#0d0d0d; }
     .nav {
-        margin:0;
         width: 100%;
         background: #111;
         border-bottom: 1px solid #222;
@@ -591,181 +561,101 @@ def render_dashboard():
     # ─────────────────────────────────────────────
     #  TAB NAV (Native Segmented Control)
     # ─────────────────────────────────────────────
-    #  SIDEBAR NAVIGATION INTERFACE
+    # Use the existing session state value as the default index
     # ─────────────────────────────────────────────
+    #  TAB NAV (Styled Native Segmented Control) - FIXED
+    # ─────────────────────────────────────────────
+    # Custom CSS to style the native segmented control to match your dark theme design
     st.markdown("""
     <style>
-    header, [data-testid="stHeader"] {
-        visibility: visible !important;
+    /* Target the container of the segmented control */
+    div[data-testid="stSegmentedControl"] {
+        display: flex !important;
+        justify-content: center !important;
+        background-color: #111111 !important;
+        border: 1px solid #222222 !important;
+        border-radius: 12px !important;
+        padding: 4px !important;
+        gap: 4px !important;
+        max-width: fit-content !important;
+        margin: 10px auto 20px auto !important;
     }
-    header > div {
-        pointer-events: auto !important;
-    }
-
-    /* 1. FIX THE OVERLAPPING PANEL: Drop the entire sidebar below your 58px navbar */
-    [data-testid="stSidebar"] {
-        background-color: #0e0e10 !important;
-        border-right: 1px solid rgba(255, 255, 255, 0.06) !important;
-        top: 58px !important; /* Matches your navbar height perfectly */
-        height: calc(100vh - 58px) !important;
-        z-index: 99999 !important;
-    }
-
-    /* 2. CUSTOM OPEN TOGGLE BUTTON UI & POSITIONING */
-    [data-testid="collapsedSidebarButton"] {
-        position: fixed !important;
-        top: 76px !important; /* Clean floating position below the navbar track */
-        left: 20px !important;
-        background: #141416 !important;
-        border: 1px solid rgba(255, 255, 255, 0.08) !important;
-        border-radius: 8px !important;
-        padding: 6px !important;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.5) !important;
-        z-index: 100000 !important;
-        cursor: pointer !important;
-        transition: all 0.2s ease;
-    }
-
-    /* 3. CUSTOM CLOSE TOGGLE BUTTON UI & POSITIONING */
-    [data-testid="stSidebarCollapseButton"] {
-        position: absolute !important;
-        top: 15px !important;
-        left: 16px !important;
-        background: #141416 !important;
-        border: 1px solid rgba(255, 255, 255, 0.08) !important;
-        border-radius: 8px !important;
-        z-index: 100000 !important;
-    }
-
-    /* Style look and feel of the icons to match your theme */
-    [data-testid="collapsedSidebarButton"] svg,
-    [data-testid="stSidebarCollapseButton"] svg {
-        color: #3b82f6 !important; /* High-vis blue lines */
-        width: 18px !important;
-        height: 18px !important;
-    }
-
-    [data-testid="collapsedSidebarButton"]:hover,
-    [data-testid="stSidebarCollapseButton"]:hover {
-        background: #2563eb !important;
-        border-color: #3b82f6 !important;
-    }
-    [data-testid="collapsedSidebarButton"]:hover svg,
-    [data-testid="stSidebarCollapseButton"]:hover svg {
-        color: #ffffff !important;
-    }
-    
-    /* 4. CLEAN VERTICAL ROW NAVIGATION DESIGN */
-    [data-testid="stSidebar"] div.stButton > button {
+    /* Style unselected tabs */
+    div[data-testid="stSegmentedControl"] button {
         background: transparent !important;
         border: none !important;
-        color: #8e929b !important;
-        text-align: left !important;
-        justify-content: flex-start !important;
-        border-radius: 8px !important;
+        color: #888888 !important;
+        padding: 8px 16px !important;
+        font-size: 0.85rem !important;
+        font-weight: 500 !important;
         font-family: 'Inter', sans-serif !important;
-        font-size: 13.5px !important;
-        padding: 10px 16px !important;
-        margin-bottom: 4px !important;
-        transition: all 0.2s ease-in-out !important;
-        width: 100% !important;
+        border-radius: 8px !important;
+        transition: all 0.15s ease !important;
     }
-    
-    [data-testid="stSidebar"] div.stButton > button:hover {
-        color: #ffffff !important;
-        background: rgba(255, 255, 255, 0.04) !important;
+    /* Hover tab states */
+    div[data-testid="stSegmentedControl"] button:hover {
+        color: #e0e0e0 !important;
+        background: rgba(255,255,255,0.02) !important;
     }
-    
-    /* Vibrant highlight style for active navigation row items */
-    [data-testid="stSidebar"] div.stButton > button[kind="primary"] {
-        background: rgba(37, 99, 235, 0.12) !important;
+    /* Active selected tab state styling */
+    div[data-testid="stSegmentedControl"] button[aria-checked="true"] {
         color: #3b82f6 !important;
+        background: #1a1a1a !important;
         font-weight: 600 !important;
-        border-left: 3px solid #3b82f6 !important;
-        border-radius: 0px 8px 8px 0px !important;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.4) !important;
     }
     </style>
     """, unsafe_allow_html=True)
 
-    # Initialize tracking if not present
-    if "custom_active_tab" not in st.session_state:
-        st.session_state.custom_active_tab = "listings"
+    # 1. Internal clean text keys that match your subsequent if/elif condition statements
+    tab_options = ["listings", "market", "salary", "companies", "map", "ai_analyzer"]
 
-    # Render navigation options inside the sidebar canvas drawer
-    with st.sidebar:
-        # Spacing buffer zone to push elements below the fixed top header
-        st.markdown("<div style='margin-top: 80px;'></div>", unsafe_allow_html=True)
-        st.markdown("<div style='font-family:\"Sora\",sans-serif; font-size:11px; font-weight:700; color:#4b5563; letter-spacing: 1px; padding-left:16px; margin-bottom:16px;'>PLATFORM ENGINE</div>", unsafe_allow_html=True)
-        
-        is_active = (st.session_state.custom_active_tab == "listings")
-        if st.button("📋 Job Listings", key="side_btn_listings", use_container_width=True, type="primary" if is_active else "secondary"):
-            st.session_state.custom_active_tab = "listings"
-            st.rerun()
-            
-        is_active = (st.session_state.custom_active_tab == "market")
-        if st.button("📊 Market Overview", key="side_btn_market", use_container_width=True, type="primary" if is_active else "secondary"):
-            st.session_state.custom_active_tab = "market"
-            st.rerun()
-            
-        is_active = (st.session_state.custom_active_tab == "salary")
-        if st.button("💰 Salary Insights", key="side_btn_salary", use_container_width=True, type="primary" if is_active else "secondary"):
-            st.session_state.custom_active_tab = "salary"
-            st.rerun()
-            
-        is_active = (st.session_state.custom_active_tab == "companies")
-        if st.button("🏢 Companies", key="side_btn_companies", use_container_width=True, type="primary" if is_active else "secondary"):
-            st.session_state.custom_active_tab = "companies"
-            st.rerun()
+    # 2. Display labels mapped to each clean string option key
+    tab_labels = {
+        "listings": "📋 Job Listings",
+        "market": "📊 Market Overview",
+        "salary": "💰 Salary Insights",
+        "companies": "🏢 Companies",
+        "map": "🗺️ Heat Map",
+        "ai_analyzer": "🎯 AI Skill Analyzer"
+    }
 
-        is_active = (st.session_state.custom_active_tab == "map")
-        if st.button("🗺️ Heat Map", key="side_btn_map", use_container_width=True, type="primary" if is_active else "secondary"):
-            st.session_state.custom_active_tab = "map"
-            st.rerun()
+    # 3. Render native segmented control using keys internally and showing labels on screen
+    active = st.segmented_control(
+        "Navigation",
+        options=tab_options,
+        default="listings",
+        format_func=lambda x: tab_labels[x],
+        label_visibility="collapsed",
+        selection_mode="single"
+    )
 
-        is_active = (st.session_state.custom_active_tab == "ai_analyzer")
-        if st.button("🎯 AI Skill Analyzer", key="side_btn_ai", use_container_width=True, type="primary" if is_active else "secondary"):
-            st.session_state.custom_active_tab = "ai_analyzer"
-            st.rerun()
-
-    # Pass layout selection downstream to target content layout routers
-    active = st.session_state.custom_active_tab    
+    # 4. Fallback handler: if a user clicks an already active tab to clear selection, default back to listings
+    if not active:
+        active = "listings"    
     # ─────────────────────────────────────────────
-    #  CONTENT AREA WRAPPER (shared padding & layout)
+    #  CONTENT AREA WRAPPER (shared padding)
+    # ─────────────────────────────────────────────
+    # ─────────────────────────────────────────────
+    #  CONTENT AREA WRAPPER (shared padding)
     # ─────────────────────────────────────────────
     st.markdown("""
     <style>
-    /* Absolute zero top-padding to let the navbar touch the top edge */
+    /* 1. Strip the global container padding so iframes (like your Navbar) can touch the absolute edges */
     [data-testid="stMainBlockContainer"] {
         padding: 0px 0px 60px 0px !important;
     }
     
-    /* Re-apply 32px side indent ONLY to native Streamlit widgets so they look centered */
+    /* 2. Re-apply the 32px side padding to all standard Streamlit elements */
+    /* We use :not(:has(iframe)) to exclude your custom HTML components (Navbar & KPIs) because they already handle their own internal padding perfectly */
     div.element-container:not(:has(iframe)) {
         padding-left: 32px !important;
         padding-right: 32px !important;
         width: 100% !important;
         box-sizing: border-box !important;
     }
-    
-    /* CRITICAL FIX: Aggressively target every possible tab bar layout wrapper to center elements */
-    [data-testid="stTabNav"], 
-    [data-testid="stTabBar"], 
-    div[role="tablist"], 
-    div[data-baseweb="tab-list"] {
-        justify-content: center !important;
-        display: flex !important;
-        width: 100% !important;
-        margin: 0 auto !important;
-    }
 
-    /* Force the direct child container inside the navigation element to center its buttons */
-    [data-testid="stTabNav"] > div,
-    div[role="tablist"] > div {
-        justify-content: center !important;
-        display: flex !important;
-        width: 100% !important;
-    }
-    
+    /* Keep Plotly backgrounds transparent */
     .js-plotly-plot .plotly, .plot-container { background: transparent !important; }
     </style>
     """, unsafe_allow_html=True)
